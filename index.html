@@ -261,6 +261,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 .book-new-appointment-btn{display:block;width:100%;margin:14px 0 0;padding:12px 16px;border:0;border-radius:13px;background:#111827;color:#fff;font-weight:750;font-size:14px;cursor:pointer;transition:.15s}
 .book-new-appointment-btn:hover{background:#1f2937}
 .optional{font-weight:500;color:#98a2b3;font-size:11px}
+.field textarea#reason{height:46px;min-height:46px;resize:none;}
 </style>
 </head>
 <body>
@@ -298,7 +299,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
       <div class="field full"><label for="childName">Child's name <span class="required">*</span></label><input id="childName" autocomplete="name" placeholder="Enter child's full name"></div>
       <div class="field"><label for="ageValue">Child's age <span class="required">*</span></label><div class="age-row"><input id="ageValue" type="number" min="0" step="1" placeholder="Age"><select id="ageUnit"><option value="days">Days</option><option value="months">Months</option><option value="years" selected>Years</option></select></div></div>
       <div class="field"><label>Patient type <span class="required">*</span></label><div class="toggle"><button type="button" class="patientType active" data-value="New">New</button><button type="button" class="patientType" data-value="Follow-up">Follow-up</button></div>
-<div class="field full"><label for="reason">Reason for visit <span class="notice">(optional)</span></label><textarea id="reason" rows="3" placeholder="Briefly mention the main concern, if you wish"></textarea></div>
+<div class="field full"><label for="reason">Reason for visit <span class="notice">(optional)</span></label><textarea id="reason" rows="1" placeholder="Patient Complaints"></textarea></div>
 <div class="field">
   <label for="referredBy">Referred By Dr. <span class="optional">(optional)</span></label>
   <input id="referredBy" type="text" maxlength="100" placeholder="Enter referring physician name">
