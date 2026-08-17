@@ -1318,7 +1318,7 @@ function showEEGSuccess(result){
 
   $("eegSuccessCard").querySelector("p").textContent =
     updated
-      ? "The EEG charges were updated successfully. The original EEG appointment ID remains unchanged."
+      ? "The EEG charges were updated successfully."
       : alreadyBooked
         ? "This EEG booking was made on an earlier date. Its charges cannot be changed now."
         : "The EEG appointment has been booked successfully.";
@@ -1461,7 +1461,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     try{
       try{
-        const result=await api("bookAppointment",requestPayload,30000);
+        const result=await api("bookAppointment",requestPayload,20000);
         showOPDSuccess(result);
         return;
       }catch(firstError){
@@ -1489,7 +1489,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           const existing=await api("checkBookingRequest",{
             bookingRequestId,
             city:selectedLocation
-          },15000);
+          },7000);
 
           if(existing.found){
             showOPDSuccess(existing);
@@ -1513,7 +1513,7 @@ document.addEventListener("DOMContentLoaded",()=>{
         const retryResult=await api(
           "bookAppointment",
           requestPayload,
-          30000
+          20000
         );
 
         showOPDSuccess(retryResult);
@@ -1935,7 +1935,7 @@ function syncEEGCityWithSelectedLocation(){
        * If the browser loses the response, we query the spreadsheet
        * authoritatively using the appointment ID.
        */
-      const result=await api("bookEEG",requestPayload,30000);
+      const result=await api("bookEEG",requestPayload,20000);
 
       /*
        * Keep the selected patient's local state synchronized so that
@@ -1965,7 +1965,7 @@ function syncEEGCityWithSelectedLocation(){
             appointmentId,
             city
           },
-          15000
+          7000
         );
 
         if(status.found && status.eegBooked){
