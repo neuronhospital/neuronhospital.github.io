@@ -83,6 +83,28 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 .eeg-lookup-row input{flex:1;min-width:0}
 .eeg-lookup-btn{border:0;border-radius:13px;background:#5b21b6;color:#fff;padding:0 16px;font-weight:850;white-space:nowrap}
 .eeg-lookup-btn:disabled{opacity:.55;cursor:not-allowed}
+.eeg-city-select{
+  width:100%;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  border-radius:13px;
+  padding:13px 14px;
+  font:inherit;
+  font-weight:700;
+  outline:none;
+}
+.eeg-city-select:focus{
+  border-color:#7c3aed;
+  box-shadow:0 0 0 3px #7c3aed18;
+}
+.eeg-city-status{
+  margin-top:7px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.45;
+}
+
 .eeg-patient{display:none;margin-top:14px;border:1px solid #e5dbff;background:#fff;border-radius:15px;padding:14px}
 .eeg-patient.show{display:block}
 .eeg-patient-list{display:grid;gap:10px}
@@ -475,7 +497,96 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 .whatsapp-check.failed .whatsapp-check-box{border-color:#b42318;color:#b42318;background:#fff}
 .locations.whatsapp-locked{opacity:.55;pointer-events:none;filter:grayscale(.15)}
 
+
+/* v14: complete visit information + automatic visit-city selection */
+.selected-location{margin-top:14px}
+.selected-city{font-size:20px;font-weight:850;margin-bottom:10px}
+.selected-hospital,.selected-address,.selected-schedule,.selected-time,.selected-phone{margin:7px 0;line-height:1.45}
+.selected-phone{font-weight:750}
+.eeg-city-status{line-height:1.4}
+
+/* v23: structured city information + clickable appointment phone */
+.selected-location{
+  padding:18px 18px 16px;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 3px 12px rgba(0,0,0,.06);
+}
+.selected-city{
+  margin:0 0 14px;
+  font-size:22px;
+  line-height:1.15;
+  font-weight:900;
+  color:#32105d;
+}
+.visit-auto-note{
+  margin:0 0 10px;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:800;
+  color:#5b21b6;
+}
+.visit-detail-row{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr);
+  column-gap:8px;
+  align-items:start;
+  margin:8px 0;
+  line-height:1.5;
+}
+.visit-detail-label{
+  width:30px;
+  min-height:1px;
+  text-align:left;
+  font-size:16px;
+  line-height:1.5;
+}
+.visit-detail-value{
+  min-width:0;
+  font-size:15px;
+  color:#344054;
+  overflow-wrap:anywhere;
+}
+.visit-detail-value b{
+  font-weight:800;
+  color:#172033;
+}
+.visit-address-row .visit-detail-value{
+  color:#475467;
+}
+.visit-phone-row{
+  margin-top:12px;
+  padding-top:11px;
+  border-top:1px solid #edf0f4;
+}
+.appointment-phone-link{
+  color:#5b21b6;
+  font-weight:850;
+  text-decoration:none;
+  white-space:nowrap;
+  border-radius:6px;
+}
+.appointment-phone-link:hover,
+.appointment-phone-link:focus{
+  text-decoration:underline;
+}
+.phone-separator{
+  color:#667085;
+}
+@media(max-width:480px){
+  .selected-location{padding:16px 14px 14px}
+  .selected-city{font-size:21px;margin-bottom:13px}
+  .visit-detail-row{
+    grid-template-columns:28px minmax(0,1fr);
+    column-gap:7px;
+    margin:7px 0;
+  }
+  .visit-detail-label{width:28px;font-size:15px}
+  .visit-detail-value{font-size:14px;line-height:1.5}
+}
 </style>
+<meta name="application-version" content="2026-08-17-opd-eeg-v23">
 </head>
 <body>
 <div class="wrap">
@@ -587,6 +698,25 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
     <p class="sub">Enter the WhatsApp number to find all registered patients linked to it.</p>
 
     <div class="field full">
+      <label for="eegCity">EEG Booking City <span class="required">*</span></label>
+      <select id="eegCity" class="eeg-city-select">
+        <option value="">Select city</option>
+        <option value="Latur">Latur</option>
+        <option value="Nilanga">Nilanga</option>
+        <option value="Udgir">Udgir</option>
+        <option value="Beed">Beed</option>
+        <option value="Ambajogai">Ambajogai</option>
+        <option value="Parli">Parli</option>
+        <option value="Dharashiv">Dharashiv</option>
+        <option value="Omerga">Omerga</option>
+        <option value="Barshi">Barshi</option>
+      </select>
+      <div class="eeg-city-status" id="eegCityStatus">
+        Today’s visit city is selected automatically. You can select another city if needed.
+      </div>
+    </div>
+
+    <div class="field full">
       <label for="eegWhatsapp">WhatsApp number <span class="required">*</span></label>
       <div class="eeg-lookup-row">
         <input id="eegWhatsapp" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10-digit mobile number">
@@ -603,6 +733,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
     <div class="field full eeg-charge-field">
       <label for="eegCharges">EEG Charges <span class="required">*</span></label>
       <input id="eegCharges" type="number" min="0" step="1" value="1600" inputmode="decimal">
+      <div class="eeg-status" id="eegChargeStatus"></div>
     </div>
 
     <div class="field full appointment-action-area">
@@ -618,7 +749,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
   <div class="summary" id="summary"></div>
   <div class="success-actions">
     <button type="button" id="bookNewAppointmentBtn" class="book-new-appointment-btn">Book New OPD</button>
-    <button type="button" id="bookNewEEGFromSuccess" class="book-new-appointment-btn">New EEG</button>
+    <button type="button" id="bookNewEEGFromSuccess" class="book-new-appointment-btn">Book New EEG</button>
   </div>
 </section>
 
@@ -644,25 +775,83 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 <div class="error-popup" id="errorPopup"><button id="closeError">Close</button><strong id="errorTitle">Please correct the highlighted field.</strong><div id="errorText" style="margin-top:6px;color:#667085;font-size:13px"></div></div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOLIGN5o8yz2cp8xyt3J_fF4-JEnMcizQuoBFFQHKe1o7nbEH8e8Qy4NImWwJZRle4Q/exec";
+// IMPORTANT: after deploying the NEW Code.gs as a Web App,
+// paste the NEW /exec URL between the quotation marks below.
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaNoN0IEcvt9CEaVDkaUhS89WJldf9sl9aJMpQWWfIXMnJKAJoqfPO6SRXLNCFptOf/exec";
 
 const LOCATIONS = {
-  "Latur": {hospital:"NEURON Hospital", address:"Below Jockey Store, Near Patil Plaza, in front of Ashwini Hospital, Ausa Road, Latur"},
-  "Nilanga": {hospital:"Salunke Hospital", address:"Opp. Bus Stand, Nilanga"},
-  "Udgir": {hospital:"Shiv Parvati Hospital", address:"Opp. Axis Bank, Degloor Road, Udgir"},
-  "Beed": {hospital:"Shivkamal Hospital", address:"Jalna Road, Beed"},
-  "Ambajogai": {hospital:"Vaidyanath Hospital", address:"Reddy Hospital Ground Floor, Behind Bus Stand, Ambajogai"},
-  "Parli": {hospital:"Arogya Hospital", address:"Nath Road, Parli"},
-  "Dharashiv": {hospital:"Pranada Clinic", address:"Opp. Central Jail, Yedshi Road, Dharashiv"},
-  "Barshi": {hospital:"Jagdale Mama Hospital", address:"Barshi"},
-  "Omerga": {hospital:"Aadhar Hospital", address:"Near Birajdar Children Hospital, New Arogya Nagar, Omerga"}
+  "Latur": {
+    hospital:"NEURON Hospital",
+    address:"Below Jockey Store, In front of Ashwini Hospital, Near Patil Plaza, Ausa Road, Latur",
+    schedule:"Daily (Except Thursday & Sunday) • Mon–Friday 9 AM–9 PM • Saturday 3 PM–9 PM • 5th Thursday 9 AM–9 PM",
+    rule:"latur",
+    phone:"02382 242581"
+  },
+  "Nilanga": {
+    hospital:"Salunke Hospital",
+    address:"Opp. Bus Stand, Nilanga",
+    schedule:"1st Saturday of Every Month • 9 AM–1 PM",
+    rule:"1stSat",
+    phone:"9172515151"
+  },
+  "Udgir": {
+    hospital:"Shiv Parvati Hospital",
+    address:"Opp. Axis Bank, Degloor Road, Udgir",
+    schedule:"2nd & 4th Sunday of Every Month • 9 AM–5 PM",
+    rule:"2nd4thSun",
+    phone:"7821960813"
+  },
+  "Beed": {
+    hospital:"Shivkamal Hospital",
+    address:"Behind Mantri Bank, Jalna Road, Beed",
+    schedule:"2nd & 4th Thursday of Every Month • 9 AM–5 PM",
+    rule:"2nd4thThu",
+    phone:"02442 223636, 9359449022"
+  },
+  "Ambajogai": {
+    hospital:"Vaidyanath Hospital",
+    address:"Reddy Hospital Ground Floor, Behind Bus Stand, Ambajogai",
+    schedule:"1st & 3rd Sunday of Every Month • 2 PM–6 PM",
+    rule:"1st3rdSun",
+    phone:"9075246888"
+  },
+  "Parli": {
+    hospital:"Arogya Hospital",
+    address:"Nath Road, Parli",
+    schedule:"1st & 3rd Sunday of Every Month • 9 AM–1 PM",
+    rule:"1st3rdSun",
+    phone:"9284235642, 8605052726"
+  },
+  "Dharashiv": {
+    hospital:"Pranada Clinic",
+    address:"Opp. Central Jail, Yedshi Road, Dharashiv",
+    schedule:"1st & 3rd Thursday of Every Month • 9 AM–1 PM",
+    rule:"1st3rdThu",
+    phone:"9405788011"
+  },
+  "Barshi": {
+    hospital:"Jagdale Mama Hospital",
+    address:"Barshi",
+    schedule:"1st & 3rd Thursday of Every Month • 3 PM–5 PM",
+    rule:"1st3rdThu",
+    phone:"8010824285"
+  },
+  "Omerga": {
+    hospital:"Aadhar Hospital",
+    address:"Near Birajdar Children Hospital, New Arogya Nagar, Omerga",
+    schedule:"Every Saturday (Except 1st) • 9 AM–1 PM",
+    rule:"satExcept1",
+    phone:"8010824285"
+  }
 };
 
 let selectedLocation = "";
+let opdCityManuallySelected = false;
 let patientType = "New";
 let whatsappVerified = false;
 let whatsappVerificationNumber = "";
 let selectedEEGPatient = null;
+let eegCityManuallySelected = false;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -680,8 +869,13 @@ function displayDate(ddmmyyyy){
 }
 
 async function api(action,payload,timeoutMs=20000){
+  if(!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR_NEW_WEB_APP_EXEC_URL_HERE")){
+    throw new Error("The new Web App /exec URL has not been entered in index.html.");
+  }
+
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeoutMs);
+
   try{
     const res=await fetch(SCRIPT_URL,{
       method:"POST",
@@ -689,15 +883,32 @@ async function api(action,payload,timeoutMs=20000){
       body:JSON.stringify({action,...payload}),
       signal:controller.signal
     });
+
     const text=await res.text();
     let data;
-    try{data=JSON.parse(text)}catch(e){throw new Error("Invalid response from booking server.")};
+
+    try{
+      data=JSON.parse(text);
+    }catch(e){
+      throw new Error(
+        `Server returned HTTP ${res.status} but not JSON. ` +
+        "Check that the NEW Apps Script Web App deployment is active and accessible to anyone."
+      );
+    }
+
+    if(!res.ok){
+      throw new Error(data.error || `Server returned HTTP ${res.status}.`);
+    }
+
     if(!data.ok) throw new Error(data.error||"Request failed");
     return data;
+
   }catch(e){
     if(e.name==="AbortError") throw new Error("Booking server timed out.");
     throw e;
-  }finally{clearTimeout(timer)}
+  }finally{
+    clearTimeout(timer);
+  }
 }
 
 function popup(title,text,target){
@@ -785,20 +996,141 @@ function renderLocations(){
   });
 }
 
-function selectLocation(city){
-  if(!requireWhatsappVerification()) return;
-  selectedLocation=city;
-  renderLocations();
+function renderVisitDetails(city, autoSelected=false){
   const v=LOCATIONS[city];
+  if(!v){
+    $("visitDetails").innerHTML="";
+    return;
+  }
+
+  /*
+   * Keep the location information visually structured:
+   * City heading → hospital → address → schedule → appointment.
+   * Appointment numbers are real tel: links so Android/iOS can open
+   * the phone dialer directly.
+   */
+  const phoneLinks=String(v.phone||"")
+    .split(",")
+    .map(x=>x.trim())
+    .filter(Boolean)
+    .map(number=>{
+      const telNumber=number.replace(/[^\d+]/g,"");
+      return `<a href="tel:${esc(telNumber)}" class="appointment-phone-link" aria-label="Call appointment number ${esc(number)}">${esc(number)}</a>`;
+    })
+    .join(`<span class="phone-separator">, </span>`);
+
+  let scheduleMarkup="";
+
+  if(city==="Latur"){
+    scheduleMarkup=`
+      <div class="visit-detail-row">
+        <div class="visit-detail-label">🗓️</div>
+        <div class="visit-detail-value"><b>Daily (Except Thursday &amp; Sunday)</b></div>
+      </div>
+      <div class="visit-detail-row">
+        <div class="visit-detail-label"></div>
+        <div class="visit-detail-value"><b>Mon - Friday :</b> 9 AM - 9 PM</div>
+      </div>
+      <div class="visit-detail-row">
+        <div class="visit-detail-label"></div>
+        <div class="visit-detail-value"><b>Saturday :</b> 3 PM - 9 PM</div>
+      </div>
+      <div class="visit-detail-row">
+        <div class="visit-detail-label"></div>
+        <div class="visit-detail-value"><b>Thursday &amp; Sunday :</b> Closed</div>
+      </div>
+      <div class="visit-detail-row">
+        <div class="visit-detail-label"></div>
+        <div class="visit-detail-value"><b>5th Thursday :</b> 9 AM - 9 PM</div>
+      </div>`;
+  }else{
+    const scheduleParts=String(v.schedule||"").split("•");
+    const dayText=scheduleParts[0]||"";
+    const timeText=scheduleParts.slice(1).join(" • ");
+
+    scheduleMarkup=`
+      <div class="visit-detail-row">
+        <div class="visit-detail-label">🗓️</div>
+        <div class="visit-detail-value"><b>${esc(dayText)}</b></div>
+      </div>
+      ${timeText ? `
+      <div class="visit-detail-row">
+        <div class="visit-detail-label"></div>
+        <div class="visit-detail-value">${esc(timeText)}</div>
+      </div>` : ""}`;
+  }
+
   $("visitDetails").innerHTML=`
     <div class="selected-location">
+      ${autoSelected ? `<div class="visit-auto-note">📍 Today’s active visit — selected automatically</div>` : ""}
       <div class="selected-city">${esc(city)}</div>
-      <div class="selected-hospital">🏥 <b><i>${esc(v.hospital)}</i></b></div>
-      <div class="selected-address">${esc(v.address)}</div>
+
+      <div class="visit-detail-row">
+        <div class="visit-detail-label">📍</div>
+        <div class="visit-detail-value"><b><i>${esc(v.hospital)}</i></b></div>
+      </div>
+
+      <div class="visit-detail-row visit-address-row">
+        <div class="visit-detail-label"></div>
+        <div class="visit-detail-value">${esc(v.address)}</div>
+      </div>
+
+      ${scheduleMarkup}
+
+      <div class="visit-detail-row visit-phone-row">
+        <div class="visit-detail-label">☎️</div>
+        <div class="visit-detail-value">
+          <b>Appointment :</b> ${phoneLinks}
+        </div>
+      </div>
+    </div>`;
+}
+
+function selectLocation(city){
+  if(!requireWhatsappVerification()) return;
+  opdCityManuallySelected=true;
+  selectedLocation=city;
+  renderLocations();
+  renderVisitDetails(city, false);
+}
+
+/*
+ * OPD default city:
+ * Automatically select the city where the doctor is actually visiting
+ * at the current India date/time. The patient can still choose another
+ * city manually after WhatsApp verification.
+ */
+function setDefaultOPDCityToToday(){
+  const todayCities=getTodayVisitCities();
+
+  // Do not overwrite a city the patient has already selected manually.
+  if(opdCityManuallySelected) return;
+
+  if(todayCities.length){
+    selectedLocation=todayCities[0];
+    renderLocations();
+    renderVisitDetails(selectedLocation, true);
+    return;
+  }
+
+  // Outside all scheduled visit windows, don't silently choose a city.
+  renderLocations();
+  $("visitDetails").innerHTML=`
+    <div class="selected-location">
+      <div style="font-size:12px;font-weight:800;color:#667085;margin-bottom:8px">ℹ️ No visit is currently active</div>
+      <div style="font-size:13px;color:#475467;line-height:1.5">Please select the city where you want to book the appointment.</div>
     </div>`;
 }
 
 function resetOPD(){
+  /*
+   * Start a completely fresh OPD booking, but ALWAYS rebuild the city
+   * selector after switching back from EEG.  Previously the EEG -> New OPD
+   * flow cleared #locations and depended on a later render call, which could
+   * leave the city area empty on some Android/WebView loads.
+   */
+  opdCityManuallySelected=false;
+
   $("bookingForm").reset();
   $("ageValue").step="0.1";
   $("opdCharges").value="500";
@@ -807,17 +1139,46 @@ function resetOPD(){
   $("reason").value="";
   $("childName").value="";
   $("ageValue").value="";
+
   patientType="New";
-  document.querySelectorAll(".patientType").forEach(b=>b.classList.toggle("active",b.dataset.value==="New"));
+  document.querySelectorAll(".patientType").forEach(b=>{
+    b.classList.toggle("active",b.dataset.value==="New");
+  });
+
   selectedLocation="";
-  $("locations").innerHTML="";
-  $("visitDetails").innerHTML="";
   resetWhatsappVerification();
+
   $("successCard").classList.remove("show");
   $("eegSuccessCard").classList.remove("show");
   $("bookingCard").classList.remove("hidden");
+
   showOPD();
+
+  /*
+   * Critical: render the city buttons immediately, then select today's
+   * active city. Do not clear #locations before rendering.
+   */
   renderLocations();
+  setDefaultOPDCityToToday();
+
+  /*
+   * Safety fallback: if today's schedule calculation returns no city,
+   * the complete city list must still remain visible for manual selection.
+   */
+  if(!$("locations").children.length){
+    selectedLocation="";
+    renderLocations();
+    $("visitDetails").innerHTML=`
+      <div class="selected-location">
+        <div style="font-size:12px;font-weight:800;color:#667085;margin-bottom:8px">
+          📍 Select the city for your appointment
+        </div>
+        <div style="font-size:13px;color:#475467;line-height:1.5">
+          Select the required city. Today's active visit is selected automatically when available.
+        </div>
+      </div>`;
+  }
+
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -829,6 +1190,7 @@ function showOPD(){
   $("bookingForm").hidden=false;
   $("eegPanel").hidden=true;
   $("bookingCard").querySelector("h2").textContent="Appointment details";
+  if(!selectedLocation) setDefaultOPDCityToToday();
 }
 
 function showEEG(){
@@ -839,6 +1201,7 @@ function showEEG(){
   $("bookingForm").hidden=true;
   $("eegPanel").hidden=false;
   $("bookingCard").querySelector("h2").textContent="Book an Appointment";
+  syncEEGCityWithSelectedLocation();
   $("eegWhatsapp").focus();
 }
 
@@ -856,33 +1219,110 @@ function showOPDSuccess(result){
 }
 
 function resetEEG(){
+  eegCityManuallySelected=false;
   $("eegWhatsapp").value="";
   $("eegCharges").value="1600";
   $("eegLookupStatus").textContent="";
+  $("eegChargeStatus").textContent="";
   $("eegPatientCard").classList.remove("show");
   $("eegPatientList").innerHTML="";
   $("eegPatientTitle").textContent="Registered patients";
   selectedEEGPatient=null;
   $("bookEEGBtn").disabled=false;
   $("bookEEGBtn").textContent="Book EEG Test";
+  $("eegCharges").disabled=false;
+}
+
+function eegBookingIsToday(patient){
+  if(!patient || !patient.date) return false;
+  const raw=String(patient.date).replace(/\D/g,"");
+  if(raw.length!==8) return false;
+
+  const parts=new Intl.DateTimeFormat("en-GB",{
+    timeZone:"Asia/Kolkata",
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
+  }).formatToParts(new Date());
+
+  const day=parts.find(p=>p.type==="day")?.value || "";
+  const month=parts.find(p=>p.type==="month")?.value || "";
+  const year=parts.find(p=>p.type==="year")?.value || "";
+
+  // Spreadsheet stores appointment date as DDMMYYYY.
+  const today=day+month+year;
+
+  return raw===today;
+}
+
+function updateEEGActionState(){
+  const btn=$("bookEEGBtn");
+  const chargeInput=$("eegCharges");
+  const status=$("eegChargeStatus");
+
+  if(!selectedEEGPatient){
+    btn.textContent="Book EEG Test";
+    status.textContent="";
+    chargeInput.disabled=false;
+    return;
+  }
+
+  const hasEEG=selectedEEGPatient.eegCharges !== "" &&
+               selectedEEGPatient.eegCharges !== null &&
+               selectedEEGPatient.eegCharges !== undefined;
+
+  if(!hasEEG){
+    btn.textContent="Book EEG Test";
+    status.textContent="";
+    chargeInput.disabled=false;
+    return;
+  }
+
+  if(eegBookingIsToday(selectedEEGPatient)){
+    btn.textContent="Update EEG Charges";
+    chargeInput.disabled=false;
+    chargeInput.value=String(selectedEEGPatient.eegCharges);
+    status.textContent=
+      `Existing EEG booking: ₹${selectedEEGPatient.eegCharges}. Same-day charge update is allowed.`;
+  }else{
+    btn.textContent="EEG Already Booked";
+    chargeInput.disabled=true;
+    chargeInput.value=String(selectedEEGPatient.eegCharges);
+    status.textContent=
+      `EEG was booked on ${displayDate(selectedEEGPatient.date)}. Charges can only be changed on the booking date.`;
+  }
 }
 
 function showEEGSuccess(result){
   const alreadyBooked=!!result.alreadyBooked;
+  const updated=!!result.updated;
 
   $("eegSummary").innerHTML=`
     <div><span>Patient Name</span><b>${esc(result.patientName)}</b></div>
     <div><span>Appointment ID</span><b>${esc(result.appointmentId)}</b></div>
     <div><span>EEG Charges Paid</span><b>₹${esc(result.eegCharges)}</b></div>
-    ${alreadyBooked
-      ? `<div><span>Status</span><b>EEG already booked</b></div>`
-      : `<div><span>Status</span><b>EEG booking successful</b></div>`}`;
+    <div><span>Status</span><b>${
+      updated
+        ? "EEG charges updated successfully"
+        : alreadyBooked
+          ? "EEG already booked"
+          : "EEG booking successful"
+    }</b></div>`;
+
   $("eegSuccessCard").querySelector("h2").textContent =
-    alreadyBooked ? "EEG Already Booked" : "EEG Booking Successful";
+    updated
+      ? "EEG Charges Updated"
+      : alreadyBooked
+        ? "EEG Already Booked"
+        : "EEG Booking Successful";
+
   $("eegSuccessCard").querySelector("p").textContent =
-    alreadyBooked
-      ? "This patient already has an EEG booking. No duplicate booking was created."
-      : "The EEG appointment has been booked successfully.";
+    updated
+      ? "The EEG charges were updated successfully. The original EEG appointment ID remains unchanged."
+      : alreadyBooked
+        ? "This EEG booking was made on an earlier date. Its charges cannot be changed now."
+        : "The EEG appointment has been booked successfully.";
+
   $("bookingCard").classList.add("hidden");
   $("successCard").classList.remove("show");
   $("eegSuccessCard").classList.add("show");
@@ -893,28 +1333,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   resetWhatsappVerification();
   renderLocations();
 
-  document.querySelectorAll(".patientType").forEach(b=>{
-    b.addEventListener("click",()=>{
-      patientType=b.dataset.value;
-      document.querySelectorAll(".patientType").forEach(x=>x.classList.toggle("active",x===b));
-    });
-  });
-
-  $("opdModeBtn").addEventListener("click",showOPD);
-  $("eegModeBtn").addEventListener("click",showEEG);
-
-  $("whatsapp").addEventListener("input",e=>{
-    e.target.value=e.target.value.replace(/\D/g,"").slice(0,10);
-
-    // Any change after verification invalidates the check.
-    whatsappVerified=false;
-    whatsappVerificationNumber="";
-    selectedLocation="";
-    $("visitDetails").innerHTML="";
-    setWhatsappVerification("pending");
-    lockLocations();
-  });
-
+  /*
+   * Register WhatsApp first. The WhatsApp implementation is copied from
+   * the known-working old HTML. It must not depend on city/schedule
+   * initialization succeeding.
+   */
   $("openWhatsappBtn").addEventListener("click",()=>{
     const phone=$("whatsapp").value.replace(/\D/g,"").slice(0,10);
     $("whatsapp").value=phone;
@@ -949,6 +1372,40 @@ document.addEventListener("DOMContentLoaded",()=>{
         $("openWhatsappBtn")
       );
     }
+  });
+
+  /*
+   * Automatic city selection is secondary UI initialization. Keep it after
+   * the WhatsApp handler so a schedule calculation cannot disable the button.
+   */
+  try{
+    setDefaultOPDCityToToday();
+    setDefaultEEGCityToToday();
+  }catch(scheduleError){
+    console.error("Automatic city selection failed:", scheduleError);
+  }
+
+  document.querySelectorAll(".patientType").forEach(b=>{
+    b.addEventListener("click",()=>{
+      patientType=b.dataset.value;
+      document.querySelectorAll(".patientType").forEach(x=>x.classList.toggle("active",x===b));
+    });
+  });
+
+  $("opdModeBtn").addEventListener("click",showOPD);
+  $("eegModeBtn").addEventListener("click",showEEG);
+
+  $("whatsapp").addEventListener("input",e=>{
+    e.target.value=e.target.value.replace(/\D/g,"").slice(0,10);
+
+    // Any change after verification invalidates the check.
+    whatsappVerified=false;
+    whatsappVerificationNumber="";
+    selectedLocation="";
+    $("visitDetails").innerHTML="";
+    setWhatsappVerification("pending");
+    lockLocations();
+    setDefaultOPDCityToToday();
   });
 
   $("ageValue").addEventListener("input",()=>{
@@ -1009,6 +1466,19 @@ document.addEventListener("DOMContentLoaded",()=>{
         return;
       }catch(firstError){
 
+        // Only perform recovery/status checks for likely network/timeout
+        // failures. Validation/server errors should be shown immediately.
+        const transient = firstError && (
+          /timed out/i.test(firstError.message||"") ||
+          /failed to fetch/i.test(firstError.message||"") ||
+          /network/i.test(firstError.message||"") ||
+          /connection/i.test(firstError.message||"")
+        );
+
+        if(!transient){
+          throw firstError;
+        }
+
         /*
          * The server may already have written the appointment while the
          * browser lost the response. Check the spreadsheet FIRST.
@@ -1017,7 +1487,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 
         try{
           const existing=await api("checkBookingRequest",{
-            bookingRequestId
+            bookingRequestId,
+            city:selectedLocation
           },15000);
 
           if(existing.found){
@@ -1050,8 +1521,10 @@ document.addEventListener("DOMContentLoaded",()=>{
       }
     }catch(err){
       popup(
-        "Booking status could not be confirmed",
-        "The connection was interrupted and the booking status could not be confirmed. Please check your internet connection before trying again.",
+        "OPD booking failed",
+        err && err.message
+          ? err.message
+          : "The booking could not be completed. Please try again.",
         btn
       );
     }finally{
@@ -1077,8 +1550,166 @@ document.addEventListener("DOMContentLoaded",()=>{
     }).format(d);
   }
 
+  /*
+   * EEG RETRIEVAL
+   *
+   * The user first selects the city. The backend then searches only
+   * that city's sheet for the WhatsApp number.
+   */
+  $("eegCity").addEventListener("change",()=>{
+    const city=$("eegCity").value;
+    eegCityManuallySelected = !!city;
+
+    selectedEEGPatient=null;
+    $("eegPatientCard").classList.remove("show");
+    $("eegPatientList").innerHTML="";
+    $("eegLookupStatus").textContent="";
+    $("eegChargeStatus").textContent="";
+
+    if(city){
+      $("eegCityStatus").textContent =
+        `EEG retrieval will search only the ${city} sheet.`;
+    }else{
+      $("eegCityStatus").textContent =
+        "Select the city where the EEG booking is recorded.";
+    }
+
+    updateEEGActionState();
+  });
+
+  /*
+   * When EEG panel is opened after an OPD booking, preselect the
+   * currently selected OPD city. The user can still change it.
+   */
+  function indianNow(){
+  const parts=new Intl.DateTimeFormat("en-IN",{
+    timeZone:"Asia/Kolkata",
+    year:"numeric",month:"2-digit",day:"2-digit",
+    hour:"2-digit",minute:"2-digit",hour12:false
+  }).formatToParts(new Date());
+  const get=k=>Number(parts.find(x=>x.type===k)?.value||0);
+  return new Date(get("year"),get("month")-1,get("day"),get("hour"),get("minute"));
+}
+
+function visitOrdinal(day){
+  return Math.floor((day-1)/7)+1;
+}
+
+function isTodayVisitCity(city, now){
+  const day=now.getDay(); // Sun=0 ... Sat=6
+  const date=now.getDate();
+  const monthOrdinal=visitOrdinal(date);
+  const minutes=now.getHours()*60+now.getMinutes();
+
+  if(city==="Latur"){
+    // Thursday is normally closed; the 5th Thursday is an exception.
+    if(day===4) return monthOrdinal===5 && minutes>=9*60 && minutes<21*60;
+    if(day>=1 && day<=3) return minutes>=9*60 && minutes<21*60;
+    if(day===5) return minutes>=9*60 && minutes<21*60;
+    if(day===6) return minutes>=15*60 && minutes<21*60;
+    return false;
+  }
+
+  if(city==="Nilanga") return day===6 && monthOrdinal===1 && minutes>=9*60 && minutes<13*60;
+  if(city==="Omerga") return day===6 && monthOrdinal!==1 && minutes>=9*60 && minutes<13*60;
+  if(city==="Udgir") return day===0 && (monthOrdinal===2 || monthOrdinal===4) && minutes>=9*60 && minutes<17*60;
+  if(city==="Beed") return day===4 && (monthOrdinal===2 || monthOrdinal===4) && minutes>=9*60 && minutes<17*60;
+  if(city==="Ambajogai") return day===0 && (monthOrdinal===1 || monthOrdinal===3) && minutes>=14*60 && minutes<18*60;
+  if(city==="Parli") return day===0 && (monthOrdinal===1 || monthOrdinal===3) && minutes>=9*60 && minutes<13*60;
+  if(city==="Dharashiv") return day===4 && (monthOrdinal===1 || monthOrdinal===3) && minutes>=9*60 && minutes<13*60;
+  if(city==="Barshi") return day===4 && (monthOrdinal===1 || monthOrdinal===3) && minutes>=15*60 && minutes<17*60;
+  return false;
+}
+
+function getTodayVisitCities(){
+  const now=indianNow();
+  return Object.keys(LOCATIONS).filter(city=>isTodayVisitCity(city,now));
+}
+
+function setDefaultEEGCityToToday(){
+  const select=$("eegCity");
+  if(!select) return;
+
+  // Never override a city that the user deliberately selected.
+  if(eegCityManuallySelected) return;
+
+  const todayCities=getTodayVisitCities();
+
+  if(todayCities.length){
+    const preferred=todayCities[0];
+    if(Array.from(select.options).some(o=>o.value===preferred)){
+      select.value=preferred;
+      const active=todayCities.join(" & ");
+      $("eegCityStatus").textContent =
+        `Today’s active visit: ${active}. EEG retrieval will search only ${preferred} unless you select another city.`;
+      return;
+    }
+  }
+
+  // If no visit is active right now, keep the dropdown editable.
+  select.value="";
+  $("eegCityStatus").textContent =
+    "No scheduled visit is active right now. Select the city where the EEG booking is recorded.";
+}
+
+function syncEEGCityWithSelectedLocation(){
+  const select=$("eegCity");
+  if(!select) return;
+
+  // Automatic default is always based on the current India date/time.
+  if(!eegCityManuallySelected){
+    const todayCities=getTodayVisitCities();
+    if(todayCities.length){
+      const preferred=todayCities[0];
+      if(Array.from(select.options).some(o=>o.value===preferred)){
+        select.value=preferred;
+        $("eegCityStatus").textContent =
+          `Today’s active visit: ${todayCities.join(" & ")}. EEG retrieval will search only ${preferred} unless you select another city.`;
+        return;
+      }
+    }
+
+    // If there is no active visit, use the OPD city only as a convenient
+    // fallback; the user can still change it before retrieval.
+    if(selectedLocation && Array.from(select.options).some(o=>o.value===selectedLocation)){
+      select.value=selectedLocation;
+      $("eegCityStatus").textContent =
+        `No visit is active at this time. EEG retrieval will search only the ${selectedLocation} sheet unless you select another city.`;
+    }else{
+      select.value="";
+      $("eegCityStatus").textContent =
+        "No scheduled visit is active right now. Select the city where the EEG booking is recorded.";
+    }
+  }
+}
+
+  /*
+   * Keep EEG city aligned with the OPD city when the EEG panel becomes visible.
+   * The dropdown remains editable by the user.
+   */
+  const eegPanelObserver=new MutationObserver(()=>{
+    const panel=$("eegPanel");
+    if(panel && !panel.hidden){
+      syncEEGCityWithSelectedLocation();
+    }
+  });
+
+  eegPanelObserver.observe($("eegPanel"),{
+    attributes:true,
+    attributeFilter:["hidden"]
+  });
+
   $("eegLookupBtn").addEventListener("click",async()=>{
     const phone=$("eegWhatsapp").value.trim();
+    const city=$("eegCity").value.trim();
+
+    if(!city){
+      return popup(
+        "Select city",
+        "Select the city where the EEG booking is recorded before retrieving the patient.",
+        $("eegCity")
+      );
+    }
 
     if(!/^[6-9]\d{9}$/.test(phone)){
       return popup(
@@ -1091,7 +1722,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     const btn=$("eegLookupBtn");
     btn.disabled=true;
     btn.textContent="Searching…";
-    $("eegLookupStatus").textContent="Retrieving all patients for this number…";
+    $("eegLookupStatus").textContent=
+      `Searching ${city} for this WhatsApp number…`;
+    $("eegChargeStatus").textContent="";
     $("eegPatientCard").classList.remove("show");
     $("eegPatientList").innerHTML="";
     selectedEEGPatient=null;
@@ -1099,8 +1732,11 @@ document.addEventListener("DOMContentLoaded",()=>{
     try{
       const result=await api(
         "getPatientByWhatsApp",
-        {whatsapp:phone},
-        20000
+        {
+          whatsapp:phone,
+          city:city
+        },
+        15000
       );
 
       const patients=Array.isArray(result.patients)
@@ -1109,14 +1745,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       if(!patients.length){
         throw new Error(
-          "No registered patient was found with this WhatsApp number."
+          `No registered patient was found with this WhatsApp number in ${city}.`
         );
       }
 
       $("eegPatientTitle").textContent =
         patients.length===1
-          ? "Registered patient"
-          : `${patients.length} registered patients found — select patient`;
+          ? `Registered patient — ${city}`
+          : `${patients.length} registered patients found in ${city} — select patient`;
 
       $("eegPatientList").innerHTML=patients.map((p,i)=>`
         <button
@@ -1172,6 +1808,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
             $("eegLookupStatus").textContent =
               `Selected: ${selectedEEGPatient.name} (${selectedEEGPatient.appointmentId}).`;
+            updateEEGActionState();
           });
         });
 
@@ -1186,14 +1823,11 @@ document.addEventListener("DOMContentLoaded",()=>{
           "Selected for EEG";
 
         $("eegLookupStatus").textContent =
-          "Patient found and selected. You can now book the EEG.";
+          `Patient found in ${city} and selected.`;
+        updateEEGActionState();
       }else{
-        /*
-         * Never silently select the first patient when siblings share
-         * the same parent's mobile number.
-         */
         $("eegLookupStatus").textContent =
-          "Multiple patients found. Select the correct patient before booking.";
+          `Multiple patients found in ${city}. Select the correct patient before booking.`;
       }
 
       $("eegPatientCard").classList.add("show");
@@ -1204,7 +1838,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       popup(
         "Patient not found",
         err.message ||
-          "No registered patient was found with this WhatsApp number.",
+          `No registered patient was found with this WhatsApp number in ${city}.`,
         $("eegWhatsapp")
       );
     }finally{
@@ -1213,106 +1847,194 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
   });
 
+
   $("bookEEGBtn").addEventListener("click",async()=>{
     const phone=$("eegWhatsapp").value.trim();
+    const city=$("eegCity").value.trim();
     const charges=$("eegCharges").value.trim();
 
-    if(!/^[6-9]\d{9}$/.test(phone)) return popup("Invalid WhatsApp number","Retrieve the patient using a valid 10-digit WhatsApp number.",$("eegWhatsapp"));
-    if(charges==="" || Number(charges)<0) return popup("EEG Charges required","Enter the EEG charges.",$("eegCharges"));
-    if(!$("eegPatientCard").classList.contains("show")) return popup("Retrieve patient first","Click Retrieve to load the registered patients.",$("eegLookupBtn"));
-    if(!selectedEEGPatient) return popup("Select patient","This WhatsApp number is linked to multiple patients. Select the patient for whom the EEG is being booked.",$("eegPatientList"));
+    if(!city)
+      return popup(
+        "Select city",
+        "Select the city where the EEG booking is recorded.",
+        $("eegCity")
+      );
+
+    if(!/^[6-9]\d{9}$/.test(phone))
+      return popup(
+        "Invalid WhatsApp number",
+        "Retrieve the patient using a valid 10-digit WhatsApp number.",
+        $("eegWhatsapp")
+      );
+
+    if(charges==="" || !Number.isFinite(Number(charges)) || Number(charges)<0)
+      return popup(
+        "EEG Charges required",
+        "Enter a valid EEG charge.",
+        $("eegCharges")
+      );
+
+    if(!$("eegPatientCard").classList.contains("show"))
+      return popup(
+        "Retrieve patient first",
+        "Click Retrieve to load the registered patients.",
+        $("eegLookupBtn")
+      );
+
+    if(!selectedEEGPatient)
+      return popup(
+        "Select patient",
+        "This WhatsApp number is linked to multiple patients. Select the patient for whom the EEG is being booked.",
+        $("eegPatientList")
+      );
+
+    const hasExistingEEG=
+      selectedEEGPatient.eegCharges !== "" &&
+      selectedEEGPatient.eegCharges !== null &&
+      selectedEEGPatient.eegCharges !== undefined;
+
+    if(hasExistingEEG && !eegBookingIsToday(selectedEEGPatient)){
+      return popup(
+        "EEG charges cannot be changed",
+        `This EEG was booked on ${displayDate(selectedEEGPatient.date)}. Charges can only be updated on the booking date.`,
+        $("eegCharges")
+      );
+    }
+
+    const appointmentId=String(selectedEEGPatient.appointmentId||"");
+    const requestedCharges=Number(charges);
+    const isUpdate=hasExistingEEG;
 
     const btn=$("bookEEGBtn");
     btn.disabled=true;
-    btn.textContent="Booking…";
+    btn.textContent=isUpdate ? "Updating…" : "Booking…";
+    $("eegChargeStatus").textContent="";
 
     /*
-     * One EEG request ID = one EEG booking attempt.
-     * The same ID is used for checking/retrying after a timeout.
+     * One request ID represents this exact operation.
+     * It is reused if we have to verify the result after a network timeout.
      */
-    const eegBookingRequestId = window.crypto && crypto.randomUUID
-      ? crypto.randomUUID()
-      : ("eeg-req-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+    const eegBookingRequestId =
+      window.crypto && crypto.randomUUID
+        ? crypto.randomUUID()
+        : ("eeg-req-" + Date.now() + "-" + Math.random().toString(36).slice(2));
 
     const requestPayload={
       eegBookingRequestId,
       whatsapp:phone,
-      appointmentId:selectedEEGPatient.appointmentId,
-      eegCharges:Number(charges)
+      appointmentId,
+      city,
+      eegCharges:requestedCharges
     };
 
     try{
+      /*
+       * Normal path: one backend call.
+       *
+       * There is deliberately NO blind second booking call.
+       * If the browser loses the response, we query the spreadsheet
+       * authoritatively using the appointment ID.
+       */
+      const result=await api("bookEEG",requestPayload,30000);
+
+      /*
+       * Keep the selected patient's local state synchronized so that
+       * the success screen and any subsequent UI state show the actual
+       * spreadsheet value.
+       */
+      selectedEEGPatient.eegCharges=result.eegCharges;
+
+      showEEGSuccess(result);
+      return;
+
+    }catch(err){
+
+      /*
+       * A timeout/network interruption does NOT tell us whether Apps
+       * Script completed the write. Therefore never blindly retry.
+       *
+       * Ask the backend for the current spreadsheet state instead.
+       */
+      btn.textContent="Checking status…";
+
       try{
-        const result=await api("bookEEG",requestPayload,30000);
-        showEEGSuccess(result);
-        return;
-      }catch(firstError){
-
-        /*
-         * First check whether the EEG booking was already written to
-         * the spreadsheet before attempting another booking.
-         */
-        btn.textContent="Checking booking…";
-
-        try{
-          const existing=await api("checkEEGBookingRequest",{
-            eegBookingRequestId
-          },15000);
-
-          if(existing.found){
-            showEEGSuccess(existing);
-            return;
-          }
-        }catch(checkError){
-          /*
-           * If the status check also fails, retrying with the SAME request
-           * ID is safe because the backend checks idempotency under a lock.
-           */
-        }
-
-        /*
-         * If not recorded, create it.
-         * If it was recorded just before this retry, the backend returns
-         * the existing EEG booking instead of writing it again.
-         */
-        btn.textContent="Confirming…";
-
-        const retryResult=await api(
-          "bookEEG",
-          requestPayload,
-          30000
+        const status=await api(
+          "getEEGStatus",
+          {
+            whatsapp:phone,
+            appointmentId,
+            city
+          },
+          15000
         );
 
-        showEEGSuccess(retryResult);
-        return;
-      }
-    }catch(err){
-      /*
-       * A business-rule response such as "EEG already booked" must not be
-       * presented as a network failure. If an older backend version still
-       * returns that message as an error, check the selected appointment
-       * directly before showing a failure dialog.
-       */
-      const msg=String(err && err.message || "");
+        if(status.found && status.eegBooked){
 
-      if(/already booked/i.test(msg)){
-        showEEGSuccess({
-          alreadyBooked:true,
-          patientName:selectedEEGPatient ? selectedEEGPatient.name : "",
-          appointmentId:selectedEEGPatient ? selectedEEGPatient.appointmentId : "",
-          eegCharges:charges
-        });
-        return;
+          const actualCharges=Number(status.eegCharges);
+          selectedEEGPatient.eegCharges=status.eegCharges;
+
+          /*
+           * If the spreadsheet already contains the requested amount,
+           * the original operation succeeded even if its response was lost.
+           */
+          if(actualCharges===requestedCharges){
+            showEEGSuccess({
+              ok:true,
+              updated:isUpdate,
+              alreadyRecorded:true,
+              patientName:status.patientName,
+              appointmentId:status.appointmentId,
+              eegCharges:status.eegCharges,
+              city:status.city
+            });
+            return;
+          }
+
+          /*
+           * For an existing EEG, a different amount means the requested
+           * concession was NOT applied. Do not overwrite it automatically.
+           */
+          if(isUpdate){
+            throw new Error(
+              `The EEG charge is still ₹${status.eegCharges}. The requested ₹${requestedCharges} was not applied.`
+            );
+          }
+
+          /*
+           * For a first booking, any existing EEG charge means the booking
+           * was created with another value. Report that exact state.
+           */
+          throw new Error(
+            `An EEG booking already exists with charges ₹${status.eegCharges}.`
+          );
+        }
+
+        throw new Error(
+          "The EEG booking could not be confirmed on the server."
+        );
+
+      }catch(statusError){
+
+        /*
+         * Show the actual reason instead of the previous generic
+         * "connection interrupted" message.
+         */
+        popup(
+          isUpdate
+            ? "EEG charge update failed"
+            : "EEG booking failed",
+          statusError && statusError.message
+            ? statusError.message
+            : (err && err.message
+                ? err.message
+                : "Please try again."),
+          btn
+        );
       }
 
-      popup(
-        "EEG booking status could not be confirmed",
-        "The connection was interrupted and the EEG booking status could not be confirmed. Please check your internet connection before trying again.",
-        btn
-      );
     }finally{
       btn.disabled=false;
-      btn.textContent="Book EEG Test";
+      updateEEGActionState();
     }
   });
 
@@ -1341,6 +2063,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   });
 
   showOPD();
+
+  // Keep automatic city selection current if the page remains open across
+  // a visit start/end time. Manual city selections are never overridden.
+  setInterval(()=>{
+    if(!opdCityManuallySelected){
+      setDefaultOPDCityToToday();
+    }
+    if(!eegCityManuallySelected){
+      syncEEGCityWithSelectedLocation();
+    }
+  },60000);
 });
 </script>
 </body>
