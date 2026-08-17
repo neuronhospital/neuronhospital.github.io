@@ -644,7 +644,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 <div class="error-popup" id="errorPopup"><button id="closeError">Close</button><strong id="errorTitle">Please correct the highlighted field.</strong><div id="errorText" style="margin-top:6px;color:#667085;font-size:13px"></div></div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4pkX-2FvzdKMC76ZQ0oBO7FVwEV5I5uHfVxf4p0RgCUxdzBRF9cX1nALqlQ8RSz-c5A/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOLIGN5o8yz2cp8xyt3J_fF4-JEnMcizQuoBFFQHKe1o7nbEH8e8Qy4NImWwJZRle4Q/exec";
 
 const LOCATIONS = {
   "Latur": {hospital:"NEURON Hospital", address:"Below Jockey Store, Near Patil Plaza, in front of Ashwini Hospital, Ausa Road, Latur"},
@@ -868,10 +868,21 @@ function resetEEG(){
 }
 
 function showEEGSuccess(result){
+  const alreadyBooked=!!result.alreadyBooked;
+
   $("eegSummary").innerHTML=`
     <div><span>Patient Name</span><b>${esc(result.patientName)}</b></div>
     <div><span>Appointment ID</span><b>${esc(result.appointmentId)}</b></div>
-    <div><span>EEG Charges Paid</span><b>₹${esc(result.eegCharges)}</b></div>`;
+    <div><span>EEG Charges Paid</span><b>₹${esc(result.eegCharges)}</b></div>
+    ${alreadyBooked
+      ? `<div><span>Status</span><b>EEG already booked</b></div>`
+      : `<div><span>Status</span><b>EEG booking successful</b></div>`}`;
+  $("eegSuccessCard").querySelector("h2").textContent =
+    alreadyBooked ? "EEG Already Booked" : "EEG Booking Successful";
+  $("eegSuccessCard").querySelector("p").textContent =
+    alreadyBooked
+      ? "This patient already has an EEG booking. No duplicate booking was created."
+      : "The EEG appointment has been booked successfully.";
   $("bookingCard").classList.add("hidden");
   $("successCard").classList.remove("show");
   $("eegSuccessCard").classList.add("show");
@@ -1276,6 +1287,24 @@ document.addEventListener("DOMContentLoaded",()=>{
         return;
       }
     }catch(err){
+      /*
+       * A business-rule response such as "EEG already booked" must not be
+       * presented as a network failure. If an older backend version still
+       * returns that message as an error, check the selected appointment
+       * directly before showing a failure dialog.
+       */
+      const msg=String(err && err.message || "");
+
+      if(/already booked/i.test(msg)){
+        showEEGSuccess({
+          alreadyBooked:true,
+          patientName:selectedEEGPatient ? selectedEEGPatient.name : "",
+          appointmentId:selectedEEGPatient ? selectedEEGPatient.appointmentId : "",
+          eegCharges:charges
+        });
+        return;
+      }
+
       popup(
         "EEG booking status could not be confirmed",
         "The connection was interrupted and the EEG booking status could not be confirmed. Please check your internet connection before trying again.",
