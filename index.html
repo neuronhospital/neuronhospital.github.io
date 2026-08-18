@@ -715,6 +715,41 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
     font-size:13px;
   }
 }
+
+/* v41: secure administrative Patient / EEG Retrieval System */
+.retrieval-entry{margin:18px 0 24px;text-align:center}
+.retrieval-entry-btn{width:100%;border:1px solid #d9c9ff;background:#fff;color:#4c1d95;border-radius:14px;padding:12px 15px;font-weight:850;box-shadow:0 4px 14px rgba(52,16,95,.06)}
+.retrieval-entry-btn:hover{background:#faf8ff}
+.retrieval-card{display:none}
+.retrieval-card.show{display:block}
+.retrieval-lock{max-width:460px;margin:0 auto}
+.retrieval-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.retrieval-results{margin-top:18px}
+.retrieval-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.retrieval-stat{border:1px solid #e7e0f5;background:#faf8ff;border-radius:14px;padding:12px;text-align:center}
+.retrieval-stat span{display:block;font-size:11px;color:#667085;font-weight:750}
+.retrieval-stat strong{display:block;margin-top:4px;font-size:18px;color:#32105d}
+.retrieval-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:15px;background:#fff;-webkit-overflow-scrolling:touch}
+.retrieval-table{width:100%;border-collapse:collapse;min-width:620px;font-size:13px}
+.retrieval-table th{background:#f7f5fb;color:#32105d;font-weight:900;text-align:left;white-space:nowrap}
+.retrieval-table th,.retrieval-table td{padding:10px 11px;border-bottom:1px solid #edf0f4}
+.retrieval-table td:nth-child(1),.retrieval-table th:nth-child(1){text-align:center;width:55px}
+.retrieval-table td.charge,.retrieval-table th.charge{text-align:right;white-space:nowrap}
+.retrieval-table td.mobile,.retrieval-table th.mobile{white-space:nowrap}
+.retrieval-table tfoot td{font-weight:900;background:#fafafa;border-bottom:0}
+.retrieval-empty{text-align:center;padding:28px 15px;color:#667085;border:1px dashed #d8dbe5;border-radius:14px;background:#fff}
+.retrieval-status{font-size:13px;color:#667085;margin-top:9px;min-height:18px}
+.retrieval-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.retrieval-secondary{border:1px solid #d9dce5;background:#fff;color:#475467;border-radius:13px;padding:12px;font-weight:850}
+.retrieval-primary{border:0;background:#5b21b6;color:#fff;border-radius:13px;padding:12px;font-weight:850}
+.retrieval-danger{border:1px solid #f0c9c5;background:#fff;color:#b42318;border-radius:13px;padding:12px;font-weight:850;margin-top:10px;width:100%}
+.retrieval-back{margin-top:14px}
+@media(max-width:680px){
+  .retrieval-controls{grid-template-columns:1fr}
+  .retrieval-summary{grid-template-columns:1fr 1fr}
+  .retrieval-summary .retrieval-stat:last-child{grid-column:1 / -1}
+}
+
 </style>
 <meta name="application-version" content="2026-08-17-opd-eeg-fast-network-v25">
 </head>
@@ -891,6 +926,69 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
     <div class="field full appointment-action-area">
       <button type="button" class="cta" id="bookEEGBtn">Book EEG Test</button>
     </div>
+  </div>
+</section>
+
+
+<div class="retrieval-entry" id="retrievalEntry">
+  <button type="button" class="retrieval-entry-btn" id="openRetrievalBtn">🔐 Patient / EEG Records</button>
+</div>
+
+<section class="card retrieval-card" id="retrievalCard">
+  <div class="eeg-badge">🔐 Secure Records</div>
+  <h2>Patient / EEG Retrieval</h2>
+  <p class="sub">Administrative access only. Patient records are read-only here.</p>
+
+  <div id="retrievalLoginPanel" class="retrieval-lock">
+    <div class="field full">
+      <label for="retrievalPassword">Password <span class="required">*</span></label>
+      <input id="retrievalPassword" type="password" autocomplete="off" inputmode="numeric" maxlength="32" placeholder="Enter password">
+      <div class="retrieval-status" id="retrievalLoginStatus"></div>
+    </div>
+    <button type="button" class="retrieval-primary" id="retrievalLoginBtn">Access Records</button>
+  </div>
+
+  <div id="retrievalWorkspace" hidden>
+    <div class="retrieval-controls">
+      <div class="field full">
+        <label for="retrievalCity">City</label>
+        <select id="retrievalCity" class="eeg-city-select">
+          <option value="Latur" selected>Latur</option>
+          <option value="Nilanga">Nilanga</option>
+          <option value="Udgir">Udgir</option>
+          <option value="Beed">Beed</option>
+          <option value="Ambajogai">Ambajogai</option>
+          <option value="Parli">Parli</option>
+          <option value="Dharashiv">Dharashiv</option>
+          <option value="Omerga">Omerga</option>
+          <option value="Barshi">Barshi</option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <label for="retrievalPeriod">Date</label>
+        <select id="retrievalPeriod" class="eeg-city-select"></select>
+      </div>
+
+      <div class="field full">
+        <label for="retrievalShow">Show</label>
+        <select id="retrievalShow" class="eeg-city-select">
+          <option value="patient">Patient Only</option>
+          <option value="eeg">EEG Only</option>
+          <option value="both" selected>Both</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="retrieval-actions">
+      <button type="button" class="retrieval-primary" id="retrieveRecordsBtn">Retrieve Records</button>
+      <button type="button" class="retrieval-secondary" id="clearRecordsBtn">Clear</button>
+    </div>
+
+    <div class="retrieval-status" id="retrievalStatus"></div>
+    <div class="retrieval-results" id="retrievalResults"></div>
+
+    <button type="button" class="retrieval-danger" id="closeRetrievalBtn">🔒 Close Records</button>
   </div>
 </section>
 
@@ -2418,6 +2516,228 @@ function syncEEGCityWithSelectedLocation(){
     resetEEG();
     $("bookingCard").scrollIntoView({behavior:"smooth",block:"start"});
   });
+
+
+  /* ========================================================================
+     SECURE PATIENT / EEG RETRIEVAL SYSTEM
+     This is completely separate from OPD/EEG booking handlers above.
+     ======================================================================== */
+  let retrievalSessionToken = "";
+
+  function retrievalPeriodLabel_(value){
+    if(value === "today") return "Today";
+    if(value === "yesterday") return "Yesterday";
+    const m = String(value).match(/^(\d{4})-(\d{2})$/);
+    if(!m) return value;
+    const d = new Date(Number(m[1]), Number(m[2])-1, 1);
+    return new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric"}).format(d);
+  }
+
+  function buildRetrievalPeriodOptions_(){
+    const select = $("retrievalPeriod");
+    if(!select) return;
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-IN",{
+      timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"
+    }).formatToParts(now);
+    const year = Number(parts.find(p=>p.type==="year")?.value || 0);
+    const month = Number(parts.find(p=>p.type==="month")?.value || 0);
+
+    select.innerHTML = `<option value="today">Today</option>` +
+      `<option value="yesterday">Yesterday</option>`;
+
+    for(let i=0;i<6;i++){
+      let y=year, m=month-i;
+      while(m<=0){m+=12;y--;}
+      const value = `${y}-${String(m).padStart(2,"0")}`;
+      select.insertAdjacentHTML("beforeend",
+        `<option value="${value}">${esc(retrievalPeriodLabel_(value))}</option>`
+      );
+    }
+    select.value="today";
+  }
+
+  function resetRetrievalUI_(){
+    retrievalSessionToken="";
+    $("retrievalPassword").value="";
+    $("retrievalLoginStatus").textContent="";
+    $("retrievalStatus").textContent="";
+    $("retrievalResults").innerHTML="";
+    $("retrievalWorkspace").hidden=true;
+    $("retrievalLoginPanel").hidden=false;
+    $("retrievalLoginBtn").disabled=false;
+    $("retrievalLoginBtn").textContent="Access Records";
+    $("retrievalCard").classList.remove("show");
+    $("bookingCard").classList.remove("hidden");
+    $("successCard").classList.remove("show");
+    $("eegSuccessCard").classList.remove("show");
+    $("retrievalEntry").style.display="block";
+  }
+
+  $("openRetrievalBtn").addEventListener("click",()=>{
+    buildRetrievalPeriodOptions_();
+    retrievalSessionToken="";
+    $("retrievalPassword").value="";
+    $("retrievalLoginStatus").textContent="";
+    $("retrievalResults").innerHTML="";
+    $("retrievalStatus").textContent="Enter the password to access records.";
+    $("retrievalWorkspace").hidden=true;
+    $("retrievalLoginPanel").hidden=false;
+    $("retrievalCard").classList.add("show");
+    $("bookingCard").classList.add("hidden");
+    $("successCard").classList.remove("show");
+    $("eegSuccessCard").classList.remove("show");
+    $("retrievalEntry").style.display="none";
+    $("retrievalCard").scrollIntoView({behavior:"smooth",block:"start"});
+    setTimeout(()=>$("retrievalPassword").focus(),250);
+  });
+
+  $("retrievalPassword").addEventListener("keydown",e=>{
+    if(e.key==="Enter") $("retrievalLoginBtn").click();
+  });
+
+  $("retrievalLoginBtn").addEventListener("click",async()=>{
+    const password=$("retrievalPassword").value;
+    if(!password){
+      $("retrievalLoginStatus").textContent="Enter the password.";
+      $("retrievalPassword").focus();
+      return;
+    }
+
+    const btn=$("retrievalLoginBtn");
+    btn.disabled=true;
+    btn.textContent="Verifying…";
+    $("retrievalLoginStatus").textContent="";
+
+    try{
+      const result=await api("retrievalLogin",{password},8000);
+      retrievalSessionToken=result.token;
+      $("retrievalLoginPanel").hidden=true;
+      $("retrievalWorkspace").hidden=false;
+      $("retrievalStatus").textContent="Access granted. Select filters and retrieve records.";
+      $("retrievalCity").value="Latur";
+      $("retrievalPeriod").value="today";
+      $("retrievalShow").value="both";
+      $("retrievalResults").innerHTML="";
+    }catch(err){
+      $("retrievalLoginStatus").textContent=err.message||"Incorrect password.";
+    }finally{
+      btn.disabled=false;
+      btn.textContent="Access Records";
+    }
+  });
+
+  $("retrieveRecordsBtn").addEventListener("click",async()=>{
+    if(!retrievalSessionToken){
+      resetRetrievalUI_();
+      $("openRetrievalBtn").click();
+      return;
+    }
+
+    const btn=$("retrieveRecordsBtn");
+    btn.disabled=true;
+    btn.textContent="Retrieving…";
+    $("retrievalStatus").textContent="Searching the selected city sheet…";
+    $("retrievalResults").innerHTML="";
+
+    try{
+      const result=await api("retrieveRecords",{
+        token:retrievalSessionToken,
+        city:$("retrievalCity").value,
+        period:$("retrievalPeriod").value,
+        showMode:$("retrievalShow").value
+      },12000);
+
+      renderRetrievalResults_(result);
+      $("retrievalStatus").textContent=
+        `${result.rows.length} record${result.rows.length===1?"":"s"} found.`;
+    }catch(err){
+      const msg=String(err.message||"");
+      $("retrievalStatus").textContent=msg;
+      if(/session expired|password again/i.test(msg)){
+        retrievalSessionToken="";
+        $("retrievalWorkspace").hidden=true;
+        $("retrievalLoginPanel").hidden=false;
+        $("retrievalLoginStatus").textContent=msg;
+        $("retrievalPassword").value="";
+        setTimeout(()=>$("retrievalPassword").focus(),50);
+      }
+    }finally{
+      btn.disabled=false;
+      btn.textContent="Retrieve Records";
+    }
+  });
+
+  $("clearRecordsBtn").addEventListener("click",()=>{
+    $("retrievalResults").innerHTML="";
+    $("retrievalStatus").textContent="Filters are ready. Click Retrieve Records.";
+  });
+
+  $("closeRetrievalBtn").addEventListener("click",()=>{
+    resetRetrievalUI_();
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+
+  function money_(value){
+    return `₹${Number(value||0).toLocaleString("en-IN")}`;
+  }
+
+  function renderRetrievalResults_(result){
+    const rows=Array.isArray(result.rows)?result.rows:[];
+    const mode=result.showMode;
+    const totals=result.totals||{};
+    const heading = mode==="patient" ? "Patient Records" :
+                    mode==="eeg" ? "EEG Records" : "Patient + EEG Records";
+
+    const stats = mode==="patient"
+      ? `<div class="retrieval-stat"><span>Total Patients</span><strong>${esc(totals.patientCount||0)}</strong></div>
+         <div class="retrieval-stat"><span>Total OPD Charges</span><strong>${money_(totals.opdTotal)}</strong></div>`
+      : mode==="eeg"
+      ? `<div class="retrieval-stat"><span>Total EEG Records</span><strong>${esc(totals.eegCount||0)}</strong></div>
+         <div class="retrieval-stat"><span>Total EEG Charges</span><strong>${money_(totals.eegTotal)}</strong></div>`
+      : `<div class="retrieval-stat"><span>Total Patients</span><strong>${esc(totals.patientCount||0)}</strong></div>
+         <div class="retrieval-stat"><span>Total OPD Charges</span><strong>${money_(totals.opdTotal)}</strong></div>
+         <div class="retrieval-stat"><span>Total EEG Charges</span><strong>${money_(totals.eegTotal)}</strong></div>`;
+
+    if(!rows.length){
+      $("retrievalResults").innerHTML=`
+        <div class="retrieval-stat" style="margin-bottom:12px;text-align:left">
+          <span>${esc(result.city)} • ${esc(result.periodLabel)}</span>
+          <strong style="font-size:16px">${esc(heading)}</strong>
+        </div>
+        <div class="retrieval-empty">No records found for the selected filters.</div>`;
+      return;
+    }
+
+    let table="";
+    if(mode==="patient"){
+      table=`<table class="retrieval-table">
+        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">OPD Charges</th><th class="mobile">Mobile Number</th></tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.opdCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.opdTotal)}</td><td></td></tr></tfoot>
+      </table>`;
+    }else if(mode==="eeg"){
+      table=`<table class="retrieval-table">
+        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">EEG Charges</th><th class="mobile">Mobile Number</th></tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.eegCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.eegTotal)}</td><td></td></tr></tfoot>
+      </table>`;
+    }else{
+      table=`<table class="retrieval-table">
+        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">OPD Charges</th><th class="charge">EEG Charges</th><th class="mobile">Mobile Number</th></tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.opdCharges)}</td><td class="charge">${r.eegCharges===null?"—":money_(r.eegCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.opdTotal)}</td><td class="charge">${money_(totals.eegTotal)}</td><td></td></tr></tfoot>
+      </table>`;
+    }
+
+    $("retrievalResults").innerHTML=`
+      <div class="retrieval-stat" style="margin-bottom:12px;text-align:left">
+        <span>${esc(result.city)} • ${esc(result.periodLabel)}</span>
+        <strong style="font-size:16px">${esc(heading)}</strong>
+      </div>
+      <div class="retrieval-summary">${stats}</div>
+      <div class="retrieval-table-wrap">${table}</div>`;
+  }
 
   showOPD();
 
