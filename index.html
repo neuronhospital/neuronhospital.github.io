@@ -962,6 +962,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
           <option value="Dharashiv">Dharashiv</option>
           <option value="Omerga">Omerga</option>
           <option value="Barshi">Barshi</option>
+          <option value="All">All</option>
         </select>
       </div>
 
@@ -2536,24 +2537,35 @@ function syncEEGCityWithSelectedLocation(){
   function buildRetrievalPeriodOptions_(){
     const select = $("retrievalPeriod");
     if(!select) return;
+
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-IN",{
       timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"
     }).formatToParts(now);
+
     const year = Number(parts.find(p=>p.type==="year")?.value || 0);
     const month = Number(parts.find(p=>p.type==="month")?.value || 0);
 
-    select.innerHTML = `<option value="today">Today</option>` +
+    select.innerHTML =
+      `<option value="today">Today</option>` +
       `<option value="yesterday">Yesterday</option>`;
 
-    for(let i=0;i<6;i++){
+    // Current month + previous 23 calendar months = 24 selectable months.
+    for(let i=0;i<24;i++){
       let y=year, m=month-i;
       while(m<=0){m+=12;y--;}
+
       const value = `${y}-${String(m).padStart(2,"0")}`;
       select.insertAdjacentHTML("beforeend",
         `<option value="${value}">${esc(retrievalPeriodLabel_(value))}</option>`
       );
     }
+
+    select.insertAdjacentHTML("beforeend",
+      `<option value="last6">Last 6 Months Combined</option>` +
+      `<option value="last12">Last 1 Year Combined</option>`
+    );
+
     select.value="today";
   }
 
@@ -2640,7 +2652,11 @@ function syncEEGCityWithSelectedLocation(){
     const btn=$("retrieveRecordsBtn");
     btn.disabled=true;
     btn.textContent="Retrieving…";
-    $("retrievalStatus").textContent="Searching the selected city sheet…";
+    const selectedRetrievalCity=$("retrievalCity").value;
+    $("retrievalStatus").textContent =
+      selectedRetrievalCity === "All"
+        ? "Searching all city sheets…"
+        : "Searching the selected city sheet…";
     $("retrievalResults").innerHTML="";
     if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(false);
 
@@ -2711,7 +2727,14 @@ function syncEEGCityWithSelectedLocation(){
           <span>${esc(result.city)} • ${esc(result.periodLabel)}</span>
           <strong style="font-size:16px">${esc(heading)}</strong>
         </div>
-        <div class="retrieval-empty">No records found for the selected filters.</div>`;
+        <div class="retrieval-empty">
+          <strong>No record available.</strong><br>
+          No ${esc(heading.toLowerCase())} are available for
+          <strong>${esc(result.periodLabel)}</strong>
+          ${result.city==="All"
+            ? "across <strong>all cities</strong>."
+            : 'in <strong>'+esc(result.city)+'</strong>.'}
+        </div>`;
       return;
     }
 
