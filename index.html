@@ -1370,7 +1370,7 @@ function resetEEG(){
   eegCityManuallySelected=false;
   setEEGRetrievalDateToday();
   $("eegWhatsapp").value="";
-  $("eegCharges").value = $("eegCity").value === "Latur" ? "1000" : "1600";
+  $("eegCharges").value="1600";
   $("eegLookupStatus").textContent="";
   $("eegChargeStatus").textContent="";
   $("eegPatientCard").classList.remove("show");
@@ -1815,21 +1815,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
 
   /*
-   * EEG charge defaults:
-   * Latur = ₹1000
-   * All other cities = ₹1600
-   *
-   * The field remains editable in all cases. Existing same-day EEG
-   * bookings are handled separately by updateEEGActionState().
-   */
-  function setDefaultEEGChargesForCity(city){
-    if(!selectedEEGPatient){
-      $("eegCharges").value = city === "Latur" ? "1000" : "1600";
-      $("eegChargeStatus").textContent = "";
-    }
-  }
-
-  /*
    * EEG RETRIEVAL
    *
    * The user first selects the city. The backend then searches only
@@ -1853,9 +1838,12 @@ document.addEventListener("DOMContentLoaded",()=>{
         "Select the city where the EEG booking is recorded.";
     }
 
-    // Apply the city-specific default immediately.
-    // Existing selected patients are handled separately by updateEEGActionState().
-    setDefaultEEGChargesForCity(city);
+    // Default EEG charges are city-specific, but always editable.
+    // Existing EEG bookings are handled separately by updateEEGActionState().
+    if(!selectedEEGPatient){
+      $("eegCharges").value = city === "Latur" ? "1000" : "1600";
+    }
+
     updateEEGActionState();
   });
 
@@ -1945,7 +1933,6 @@ function syncEEGCityWithSelectedLocation(){
       const preferred=todayCities[0];
       if(Array.from(select.options).some(o=>o.value===preferred)){
         select.value=preferred;
-        setDefaultEEGChargesForCity(preferred);
         $("eegCityStatus").textContent =
           `Today’s active visit: ${todayCities.join(" & ")}. EEG retrieval will search only ${preferred} unless you select another city.`;
         return;
@@ -1956,7 +1943,6 @@ function syncEEGCityWithSelectedLocation(){
     // fallback; the user can still change it before retrieval.
     if(selectedLocation && Array.from(select.options).some(o=>o.value===selectedLocation)){
       select.value=selectedLocation;
-      setDefaultEEGChargesForCity(selectedLocation);
       $("eegCityStatus").textContent =
         `No visit is active at this time. EEG retrieval will search only the ${selectedLocation} sheet unless you select another city.`;
     }else{
