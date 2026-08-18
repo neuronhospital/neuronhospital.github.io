@@ -2756,5 +2756,90 @@ function syncEEGCityWithSelectedLocation(){
   },60000);
 });
 </script>
+
+<button id="downloadRetrievalCsvBtn" type="button" class="secondary-btn" hidden
+        style="margin:12px 0; width:100%;">
+  ↓ Download CSV
+</button>
+
+
+<script>
+/* Retrieval CSV download — frontend only; Code.gs unchanged. */
+(function(){
+  const btn = document.getElementById("downloadRetrievalCsvBtn");
+  if(!btn) return;
+
+  function csvEscape(value){
+    const s = String(value ?? "").replace(/\r?\n/g, " ").trim();
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+
+  function tableToCsv(table){
+    const rows = [];
+    table.querySelectorAll("tr").forEach(tr=>{
+      const cells = Array.from(tr.querySelectorAll("th,td"));
+      if(cells.length) rows.push(cells.map(c=>csvEscape(c.innerText)).join(","));
+    });
+    return rows.join("\r\n");
+  }
+
+  function downloadCsv(){
+    const tables = Array.from(document.querySelectorAll(
+      "#retrievalResults table, #recordsResults table, table"
+    ));
+    const table = tables.find(t => {
+      const r = t.closest("#retrievalResults, #recordsResults");
+      return r && !t.closest("[hidden]");
+    }) || tables[tables.length-1];
+
+    if(!table){
+      alert("Retrieve records first.");
+      return;
+    }
+
+    const csv = "\uFEFF" + tableToCsv(table);
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+
+    const city =
+      document.querySelector("#retrievalCity")?.value ||
+      document.querySelector("#recordsCity")?.value ||
+      "Records";
+
+    const date =
+      document.querySelector("#retrievalDate")?.value ||
+      document.querySelector("#recordsDate")?.value ||
+      "Report";
+
+    const show =
+      document.querySelector("#retrievalShow")?.value ||
+      document.querySelector("#recordsShow")?.value ||
+      "Records";
+
+    const safe = v => String(v).replace(/[^a-z0-9_-]+/gi,"_");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${safe(city)}_${safe(date)}_${safe(show)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+
+  btn.addEventListener("click", downloadCsv);
+
+  /* Make the button visible whenever retrieval results are displayed. */
+  const observer = new MutationObserver(()=>{
+    const result =
+      document.querySelector("#retrievalResults") ||
+      document.querySelector("#recordsResults");
+    const hasTable = !!result?.querySelector("table");
+    btn.hidden = !hasTable;
+  });
+
+  observer.observe(document.body,{subtree:true,childList:true,attributes:true});
+})();
+</script>
+
 </body>
 </html>
