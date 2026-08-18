@@ -2563,6 +2563,7 @@ function syncEEGCityWithSelectedLocation(){
     $("retrievalLoginStatus").textContent="";
     $("retrievalStatus").textContent="";
     $("retrievalResults").innerHTML="";
+    if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(false);
     $("retrievalWorkspace").hidden=true;
     $("retrievalLoginPanel").hidden=false;
     $("retrievalLoginBtn").disabled=false;
@@ -2580,6 +2581,7 @@ function syncEEGCityWithSelectedLocation(){
     $("retrievalPassword").value="";
     $("retrievalLoginStatus").textContent="";
     $("retrievalResults").innerHTML="";
+    if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(false);
     $("retrievalStatus").textContent="Enter the password to access records.";
     $("retrievalWorkspace").hidden=true;
     $("retrievalLoginPanel").hidden=false;
@@ -2619,6 +2621,7 @@ function syncEEGCityWithSelectedLocation(){
       $("retrievalPeriod").value="today";
       $("retrievalShow").value="both";
       $("retrievalResults").innerHTML="";
+      if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(false);
     }catch(err){
       $("retrievalLoginStatus").textContent=err.message||"Incorrect password.";
     }finally{
@@ -2639,6 +2642,7 @@ function syncEEGCityWithSelectedLocation(){
     btn.textContent="Retrieving…";
     $("retrievalStatus").textContent="Searching the selected city sheet…";
     $("retrievalResults").innerHTML="";
+    if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(false);
 
     try{
       const result=await api("retrieveRecords",{
@@ -2670,6 +2674,7 @@ function syncEEGCityWithSelectedLocation(){
 
   $("clearRecordsBtn").addEventListener("click",()=>{
     $("retrievalResults").innerHTML="";
+    if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(false);
     $("retrievalStatus").textContent="Filters are ready. Click Retrieve Records.";
   });
 
@@ -2700,6 +2705,7 @@ function syncEEGCityWithSelectedLocation(){
          <div class="retrieval-stat"><span>Total EEG Charges</span><strong>${money_(totals.eegTotal)}</strong></div>`;
 
     if(!rows.length){
+      if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(false);
       $("retrievalResults").innerHTML=`
         <div class="retrieval-stat" style="margin-bottom:12px;text-align:left">
           <span>${esc(result.city)} • ${esc(result.periodLabel)}</span>
@@ -2737,6 +2743,7 @@ function syncEEGCityWithSelectedLocation(){
       </div>
       <div class="retrieval-summary">${stats}</div>
       <div class="retrieval-table-wrap">${table}</div>`;
+    if(window.setRetrievalCsvButtonVisible) window.setRetrievalCsvButtonVisible(true);
   }
 
   showOPD();
@@ -2762,12 +2769,15 @@ function syncEEGCityWithSelectedLocation(){
   ↓ Download CSV
 </button>
 
-
 <script>
-/* Retrieval CSV download — frontend only; Code.gs unchanged. */
+/* Retrieval CSV download — frontend only; no DOM observer. */
 (function(){
   const btn = document.getElementById("downloadRetrievalCsvBtn");
   if(!btn) return;
+
+  window.setRetrievalCsvButtonVisible = function(visible){
+    btn.hidden = !visible;
+  };
 
   function csvEscape(value){
     const s = String(value ?? "").replace(/\r?\n/g, " ").trim();
@@ -2783,14 +2793,9 @@ function syncEEGCityWithSelectedLocation(){
     return rows.join("\r\n");
   }
 
-  function downloadCsv(){
-    const tables = Array.from(document.querySelectorAll(
-      "#retrievalResults table, #recordsResults table, table"
-    ));
-    const table = tables.find(t => {
-      const r = t.closest("#retrievalResults, #recordsResults");
-      return r && !t.closest("[hidden]");
-    }) || tables[tables.length-1];
+  btn.addEventListener("click",()=>{
+    const result = document.getElementById("retrievalResults");
+    const table = result?.querySelector("table");
 
     if(!table){
       alert("Retrieve records first.");
@@ -2801,22 +2806,11 @@ function syncEEGCityWithSelectedLocation(){
     const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
     const url = URL.createObjectURL(blob);
 
-    const city =
-      document.querySelector("#retrievalCity")?.value ||
-      document.querySelector("#recordsCity")?.value ||
-      "Records";
-
-    const date =
-      document.querySelector("#retrievalDate")?.value ||
-      document.querySelector("#recordsDate")?.value ||
-      "Report";
-
-    const show =
-      document.querySelector("#retrievalShow")?.value ||
-      document.querySelector("#recordsShow")?.value ||
-      "Records";
-
+    const city = document.querySelector("#retrievalCity")?.value || "Records";
+    const date = document.querySelector("#retrievalPeriod")?.value || "Report";
+    const show = document.querySelector("#retrievalShow")?.value || "Records";
     const safe = v => String(v).replace(/[^a-z0-9_-]+/gi,"_");
+
     const a = document.createElement("a");
     a.href = url;
     a.download = `${safe(city)}_${safe(date)}_${safe(show)}.csv`;
@@ -2824,20 +2818,7 @@ function syncEEGCityWithSelectedLocation(){
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
-  }
-
-  btn.addEventListener("click", downloadCsv);
-
-  /* Make the button visible whenever retrieval results are displayed. */
-  const observer = new MutationObserver(()=>{
-    const result =
-      document.querySelector("#retrievalResults") ||
-      document.querySelector("#recordsResults");
-    const hasTable = !!result?.querySelector("table");
-    btn.hidden = !hasTable;
   });
-
-  observer.observe(document.body,{subtree:true,childList:true,attributes:true});
 })();
 </script>
 
