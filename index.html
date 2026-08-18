@@ -2290,6 +2290,12 @@ function setDefaultEEGCityToToday(){
     const preferred=todayCities[0];
     if(Array.from(select.options).some(o=>o.value===preferred)){
       select.value=preferred;
+      // When the city is selected automatically from the doctor's visit
+      // schedule, apply the matching default EEG charge as well. The field
+      // remains editable by the user.
+      if(!selectedEEGPatient){
+        $("eegCharges").value = preferred === "Latur" ? "1100" : "1600";
+      }
       const active=todayCities.join(" & ");
       $("eegCityStatus").textContent =
         `Today’s active visit: ${active}. EEG retrieval will search only ${preferred} unless you select another city.`;
@@ -2314,6 +2320,12 @@ function syncEEGCityWithSelectedLocation(){
       const preferred=todayCities[0];
       if(Array.from(select.options).some(o=>o.value===preferred)){
         select.value=preferred;
+        // The EEG panel can become visible after the initial page setup.
+        // Keep the default charge synchronized with the automatically
+        // selected city. Existing retrieved bookings are never overwritten.
+        if(!selectedEEGPatient){
+          $("eegCharges").value = preferred === "Latur" ? "1100" : "1600";
+        }
         $("eegCityStatus").textContent =
           `Today’s active visit: ${todayCities.join(" & ")}. EEG retrieval will search only ${preferred} unless you select another city.`;
         return;
