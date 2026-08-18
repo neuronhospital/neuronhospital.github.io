@@ -60,7 +60,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 .confirmation-view .hero-subtitle{display:none!important}
 .confirmation-view .success-actions{padding-bottom:60px}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:20px;margin:16px 0}.card h2{font-size:19px;margin:0 0 5px}.sub{color:var(--muted);font-size:13px;margin:0 0 18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:13px;font-weight:750}.required{color:#b42318}.field input,.field select,.field textarea{width:100%;border:1px solid #dfe1e8;background:#fff;border-radius:13px;padding:12px 13px;outline:none;transition:.15s}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8b5cf6;box-shadow:0 0 0 4px #8b5cf61a}.whatsapp-input-row{display:flex;align-items:stretch;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:20px;margin:16px 0}.card h2{font-size:19px;margin:0 0 5px}.sub{color:var(--muted);font-size:13px;margin:0 0 18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:7px}#nextFollowupCityField[hidden]{display:none!important}.field.full{grid-column:1/-1}.field label{font-size:13px;font-weight:750}.required{color:#b42318}.field input,.field select,.field textarea{width:100%;border:1px solid #dfe1e8;background:#fff;border-radius:13px;padding:12px 13px;outline:none;transition:.15s}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8b5cf6;box-shadow:0 0 0 4px #8b5cf61a}.whatsapp-input-row{display:flex;align-items:stretch;gap:8px}
 .whatsapp-input-row input{flex:1;min-width:0}
 .whatsapp-open-btn{width:46px;min-width:46px;height:46px;border:1px solid #dfe1e8;background:#fff;border-radius:13px;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;flex:0 0 46px}
 .whatsapp-open-btn:hover{border-color:#86efac;background:#f0fdf4}.whatsapp-icon{width:25px;height:25px;fill:#25D366;display:block}
@@ -887,6 +887,22 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
         <div id="visitDetails" class="selected-visit-details"></div>
       </div>
 
+      <div class="field full" id="nextFollowupCityField" hidden>
+        <label for="nextFollowupCity">Next Followup City <span class="required">*</span></label>
+        <select id="nextFollowupCity">
+          <option value="Latur" selected>Latur</option>
+          <option value="Nilanga">Nilanga</option>
+          <option value="Udgir">Udgir</option>
+          <option value="Beed">Beed</option>
+          <option value="Ambajogai">Ambajogai</option>
+          <option value="Parli">Parli</option>
+          <option value="Dharashiv">Dharashiv</option>
+          <option value="Omerga">Omerga</option>
+          <option value="Barshi">Barshi</option>
+        </select>
+        <div class="opd-charge-status">For Latur OPD only. Select where the patient would prefer the next follow-up/visit.</div>
+      </div>
+
       <div class="field full appointment-action-area">
         <button type="submit" class="cta" id="submitBtn">Book OPD Appointment</button>
       </div>
@@ -1195,6 +1211,31 @@ const LOCATIONS = {
 
 let selectedLocation = "";
 let opdCityManuallySelected = false;
+
+const FOLLOWUP_CITIES = [
+  "Latur","Nilanga","Udgir","Beed","Ambajogai",
+  "Parli","Dharashiv","Omerga","Barshi"
+];
+
+function syncNextFollowupCityField(){
+  const field=$("nextFollowupCityField");
+  const select=$("nextFollowupCity");
+  if(!field || !select) return;
+
+  const isLatur = selectedLocation === "Latur";
+  field.hidden = !isLatur;
+  select.required = isLatur;
+
+  if(isLatur){
+    // Latur is the compulsory default for every new Latur OPD booking.
+    if(!FOLLOWUP_CITIES.includes(select.value)){
+      select.value = "Latur";
+    }
+  }else{
+    select.value = "";
+  }
+}
+
 let patientType = "New";
 let whatsappVerified = false;
 let whatsappVerificationNumber = "";
@@ -1484,6 +1525,7 @@ function selectLocation(city){
   selectedLocation=city;
   renderLocations();
   renderVisitDetails(city, false);
+  syncNextFollowupCityField();
 }
 
 function resetOPD(){
@@ -1503,6 +1545,7 @@ function resetOPD(){
   $("reason").value="";
   $("childName").value="";
   $("ageValue").value="";
+  $("nextFollowupCity").value="Latur";
 
   patientType="New";
   document.querySelectorAll(".patientType").forEach(b=>{
@@ -1510,6 +1553,7 @@ function resetOPD(){
   });
 
   selectedLocation="";
+  syncNextFollowupCityField();
   resetWhatsappVerification();
 
   $("successCard").classList.remove("show");
@@ -1642,25 +1686,43 @@ function showOPDChargeSuccess_(result){
 
 function setDefaultOPDChargeCityToToday_(){
   const select=$("opdChargeCity");
-  if(!select) return;
+  if(!select) return "";
 
-  const todayCities=getTodayVisitCities();
+  // EEG is the proven automatic-city implementation. Synchronize OPD
+  // Charges with the same automatically selected EEG city.
+  // If EEG has not yet been initialized, calculate it from the same
+  // visit schedule as a fallback.
+  let city="";
 
-  if(todayCities.length){
-    const preferred=todayCities[0];
-    if(Array.from(select.options).some(o=>o.value===preferred)){
-      select.value=preferred;
-      const active=todayCities.join(" & ");
+  if(typeof eegCityManuallySelected!=="undefined" && !eegCityManuallySelected){
+    city=$("eegCity") ? $("eegCity").value : "";
+  }
+
+  if(!city){
+    city=getCurrentDoctorVisitCity_();
+  }
+
+  if(city){
+    const index=Array.from(select.options).findIndex(o=>o.value===city);
+    if(index>=0){
+      select.selectedIndex=index;
+      select.value=city;
+
+      const activeCities=getTodayVisitCities();
       $("opdChargeCityStatus").textContent =
-        `Today’s active visit: ${active}. OPD retrieval will search only ${preferred} unless you select another city.`;
-      return;
+        activeCities.length
+          ? `Today’s active visit: ${activeCities.join(" & ")}. OPD retrieval will search only ${city} unless you select another city.`
+          : `Default city: ${city}. You can change the city if required.`;
+
+      return city;
     }
   }
 
-  // If no visit is active right now, keep the dropdown editable.
+  select.selectedIndex=0;
   select.value="";
   $("opdChargeCityStatus").textContent =
     "No scheduled visit is active right now. Select the city where the OPD booking is recorded.";
+  return "";
 }
 
 function resetOPDCharge_(){
@@ -1681,9 +1743,6 @@ function resetOPDCharge_(){
   $("updateOPDChargeBtn").textContent="Update OPD Charges";
   selectedOPDChargePatient=null;
 
-  // Use the same current India date/time visit schedule as EEG.
-  // This is only a default; the user can change the city manually.
-  setDefaultOPDChargeCityToToday_();
 }
 
 function showOPDChargePanel_(){
@@ -1692,14 +1751,24 @@ function showOPDChargePanel_(){
   $("successCard").classList.remove("show");
   $("eegSuccessCard").classList.remove("show");
   $("opdChargeSuccessCard").classList.remove("show");
+
   $("bookingForm").hidden=true;
   $("eegPanel").hidden=true;
   $("opdChargePanel").hidden=false;
   $("opdModeBtn").classList.remove("active");
   $("eegModeBtn").classList.remove("active");
+
+  // Reset patient/search state first.
   resetOPDCharge_();
-  setOPDChargeRetrievalDateToday();
+  $("opdChargeCity").dataset.manual="false";
+
+  // Now the panel is visible: apply the same current doctor visit city
+  // calculation used by EEG.
+  setDefaultOPDChargeCityToToday_();
+
   $("opdChargeEntry").style.display="none";
+  setOPDChargeRetrievalDateToday();
+
   $("opdChargeCity").focus();
 }
 
@@ -1736,6 +1805,7 @@ function showOPDSuccess(result){
     <div><span>Date</span><b>${esc(displayDate(result.date))}</b></div>
     <div><span>Age</span><b>${esc(result.age)} ${esc(result.ageUnit)}</b></div>
     <div><span>City</span><b>${esc(result.city)}</b></div>
+    ${result.city === "Latur" && result.nextFollowupCity ? `<div><span>Next Followup City</span><b>${esc(result.nextFollowupCity)}</b></div>` : ""}
     <div><span>OPD Charges Paid</span><b>₹${esc(result.opdCharges)}</b></div>`;
   $("bookingCard").classList.add("hidden");
   $("successCard").classList.add("show");
@@ -1911,6 +1981,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   setEEGRetrievalDateToday();
   resetWhatsappVerification();
   renderLocations();
+  syncNextFollowupCityField();
 
   /*
    * Register WhatsApp first. The WhatsApp implementation is copied from
@@ -1977,6 +2048,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     whatsappVerificationNumber="";
     selectedLocation="";
     $("visitDetails").innerHTML="";
+    syncNextFollowupCityField();
     setWhatsappVerification("pending");
     lockLocations();
   });
@@ -1997,6 +2069,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const opdCharges=$("opdCharges").value.trim();
     const reason=$("reason").value.trim();
     const referredBy=$("referredBy").value.trim();
+    const nextFollowupCity=$("nextFollowupCity").value.trim();
 
     if(!name) return popup("Child's name is required","Please enter the child's full name.",$("childName"));
     if(age==="" || !Number.isFinite(Number(age)) || Number(age)<0) return popup("Age is required","Please enter a valid age.",$("ageValue"));
@@ -2005,6 +2078,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!requireWhatsappVerification()) return;
     if(opdCharges==="" || Number(opdCharges)<0) return popup("OPD Charges required","Enter the OPD charges.",$("opdCharges"));
     if(!selectedLocation) return popup("Location is required","Please select the visit location.",$("locations"));
+
+    if(selectedLocation === "Latur" && !FOLLOWUP_CITIES.includes(nextFollowupCity)){
+      syncNextFollowupCityField();
+      return popup(
+        "Next Followup City required",
+        "Please select the city for the next follow-up/visit.",
+        $("nextFollowupCity")
+      );
+    }
 
     const btn=$("submitBtn");
     btn.disabled=true;
@@ -2028,7 +2110,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       city:selectedLocation,
       reason,
       referredBy,
-      opdCharges:Number(opdCharges)
+      opdCharges:Number(opdCharges),
+      nextFollowupCity: selectedLocation === "Latur" ? nextFollowupCity : ""
     };
 
     /*
@@ -2277,6 +2360,13 @@ function getTodayVisitCities(){
   return Object.keys(LOCATIONS).filter(city=>isTodayVisitCity(city,now));
 }
 
+function getCurrentDoctorVisitCity_(){
+  // Single source of truth for the current doctor's scheduled visit.
+  // This is the same India date/time + visit schedule already used by EEG.
+  const cities=getTodayVisitCities();
+  return cities.length ? cities[0] : "";
+}
+
 function setDefaultEEGCityToToday(){
   const select=$("eegCity");
   if(!select) return;
@@ -2290,6 +2380,17 @@ function setDefaultEEGCityToToday(){
     const preferred=todayCities[0];
     if(Array.from(select.options).some(o=>o.value===preferred)){
       select.value=preferred;
+
+      // Keep Update OPD Charges synchronized with the same automatic city.
+      const opdCity=$("opdChargeCity");
+      if(opdCity && !opdCity.dataset.manual){
+        const opdIndex=Array.from(opdCity.options).findIndex(o=>o.value===preferred);
+        if(opdIndex>=0){
+          opdCity.selectedIndex=opdIndex;
+          opdCity.value=preferred;
+        }
+      }
+
       // When the city is selected automatically from the doctor's visit
       // schedule, apply the matching default EEG charge as well. The field
       // remains editable by the user.
@@ -2908,6 +3009,7 @@ function syncEEGCityWithSelectedLocation(){
   });
 
   $("opdChargeCity").addEventListener("change",()=>{
+    $("opdChargeCity").dataset.manual="true";
     selectedOPDChargePatient=null;
     $("opdChargePatientCard").classList.remove("show");
     $("opdChargePatientList").innerHTML="";
@@ -3266,24 +3368,28 @@ function syncEEGCityWithSelectedLocation(){
       return;
     }
 
+    // Follow-up City is intentionally exposed only for Latur retrieval.
+    // Other city retrieval tables remain exactly as before.
+    const showFollowupCity = result.city === "Latur";
+
     let table="";
     if(mode==="patient"){
       table=`<table class="retrieval-table">
-        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">OPD Charges</th><th class="mobile">Mobile Number</th></tr></thead>
-        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.opdCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.opdTotal)}</td><td></td></tr></tfoot>
+        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">OPD Charges</th><th class="mobile">Mobile Number</th>${showFollowupCity ? "<th>Follow-up City</th>" : ""}</tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.opdCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td>${showFollowupCity ? `<td>${esc(r.followupCity||"")}</td>` : ""}</tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.opdTotal)}</td><td></td>${showFollowupCity ? "<td></td>" : ""}</tr></tfoot>
       </table>`;
     }else if(mode==="eeg"){
       table=`<table class="retrieval-table">
-        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">EEG Charges</th><th class="mobile">Mobile Number</th></tr></thead>
-        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.eegCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.eegTotal)}</td><td></td></tr></tfoot>
+        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">EEG Charges</th><th class="mobile">Mobile Number</th>${showFollowupCity ? "<th>Follow-up City</th>" : ""}</tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.eegCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td>${showFollowupCity ? `<td>${esc(r.followupCity||"")}</td>` : ""}</tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.eegTotal)}</td><td></td>${showFollowupCity ? "<td></td>" : ""}</tr></tfoot>
       </table>`;
     }else{
       table=`<table class="retrieval-table">
-        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">OPD Charges</th><th class="charge">EEG Charges</th><th class="mobile">Mobile Number</th></tr></thead>
-        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.opdCharges)}</td><td class="charge">${r.eegCharges===null?"—":money_(r.eegCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.opdTotal)}</td><td class="charge">${money_(totals.eegTotal)}</td><td></td></tr></tfoot>
+        <thead><tr><th>Sr.No</th><th>Patient Name</th><th class="charge">OPD Charges</th><th class="charge">EEG Charges</th><th class="mobile">Mobile Number</th>${showFollowupCity ? "<th>Follow-up City</th>" : ""}</tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.patientName)}</td><td class="charge">${money_(r.opdCharges)}</td><td class="charge">${r.eegCharges===null?"—":money_(r.eegCharges)}</td><td class="mobile">${esc(r.mobileNumber)}</td>${showFollowupCity ? `<td>${esc(r.followupCity||"")}</td>` : ""}</tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="charge">${money_(totals.opdTotal)}</td><td class="charge">${money_(totals.eegTotal)}</td><td></td>${showFollowupCity ? "<td></td>" : ""}</tr></tfoot>
       </table>`;
     }
 
