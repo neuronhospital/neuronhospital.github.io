@@ -1292,8 +1292,12 @@ function isTransientNetworkError(err){
     .test(String(err.message||""));
 }
 
+/* v49 reliability optimization: bounded recovery.
+ * A transient write failure gets up to two status checks, one same-ID retry,
+ * then two final status checks. The request ID is never regenerated.
+ */
 function networkRetryDelay_(attempt){
-  return Math.min(1200, 450 * (attempt + 1));
+  return Math.min(900, 350 * (attempt + 1));
 }
 
 function sleep(ms){
@@ -2024,7 +2028,7 @@ document.addEventListener("DOMContentLoaded",()=>{
          * Check several times because the mobile connection itself may
          * briefly disappear.
          */
-        for(let attempt=0;attempt<3;attempt++){
+        for(let attempt=0;attempt<2;attempt++){
           try{
             const existing=await api(
               "checkBookingRequest",
@@ -2040,7 +2044,7 @@ document.addEventListener("DOMContentLoaded",()=>{
               return;
             }
           }catch(checkError){
-            if(!isTransientNetworkError(checkError) && attempt===2){
+            if(!isTransientNetworkError(checkError) && attempt===1){
               throw checkError;
             }
           }
@@ -2077,7 +2081,7 @@ document.addEventListener("DOMContentLoaded",()=>{
            */
           btn.textContent="Final confirmation…";
 
-          for(let attempt=0;attempt<3;attempt++){
+          for(let attempt=0;attempt<2;attempt++){
             try{
               const finalStatus=await api(
                 "checkBookingRequest",
@@ -2093,7 +2097,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 return;
               }
             }catch(finalError){
-              if(!isTransientNetworkError(finalError) && attempt===2){
+              if(!isTransientNetworkError(finalError) && attempt===1){
                 throw finalError;
               }
             }
@@ -2590,7 +2594,7 @@ function syncEEGCityWithSelectedLocation(){
          */
         btn.textContent="Confirming EEG…";
 
-        for(let attempt=0;attempt<3;attempt++){
+        for(let attempt=0;attempt<2;attempt++){
           try{
             const status=await api(
               "getEEGStatus",
@@ -2630,7 +2634,7 @@ function syncEEGCityWithSelectedLocation(){
               );
             }
           }catch(statusError){
-            if(!isTransientNetworkError(statusError) && attempt===2){
+            if(!isTransientNetworkError(statusError) && attempt===1){
               throw statusError;
             }
           }
@@ -2669,7 +2673,7 @@ function syncEEGCityWithSelectedLocation(){
            */
           btn.textContent="Final confirmation…";
 
-          for(let attempt=0;attempt<3;attempt++){
+          for(let attempt=0;attempt<2;attempt++){
             try{
               const finalStatus=await api(
                 "getEEGStatus",
@@ -2709,7 +2713,7 @@ function syncEEGCityWithSelectedLocation(){
                 );
               }
             }catch(finalError){
-              if(!isTransientNetworkError(finalError) && attempt===2){
+              if(!isTransientNetworkError(finalError) && attempt===1){
                 throw finalError;
               }
             }
@@ -3021,7 +3025,7 @@ function syncEEGCityWithSelectedLocation(){
       }catch(firstError){
         if(!isTransientNetworkError(firstError)) throw firstError;
         btn.textContent="Confirming…";
-        for(let attempt=0;attempt<3;attempt++){
+        for(let attempt=0;attempt<2;attempt++){
           try{
             const status=await api("getOPDChargeStatus",{whatsapp:phone,appointmentId:String(selectedOPDChargePatient.appointmentId||""),city},STATUS_TIMEOUT);
             if(status.found && Number(status.opdCharges)===requestedCharges){
@@ -3030,7 +3034,7 @@ function syncEEGCityWithSelectedLocation(){
               return;
             }
           }catch(statusError){
-            if(!isTransientNetworkError(statusError) && attempt===2) throw statusError;
+            if(!isTransientNetworkError(statusError) && attempt===1) throw statusError;
           }
           if(attempt<2) await sleep(networkRetryDelay_(attempt));
         }
@@ -3043,7 +3047,7 @@ function syncEEGCityWithSelectedLocation(){
         }catch(retryError){
           if(!isTransientNetworkError(retryError)) throw retryError;
           btn.textContent="Final confirmation…";
-          for(let attempt=0;attempt<3;attempt++){
+          for(let attempt=0;attempt<2;attempt++){
             try{
               const finalStatus=await api("getOPDChargeStatus",{whatsapp:phone,appointmentId:String(selectedOPDChargePatient.appointmentId||""),city},STATUS_TIMEOUT);
               if(finalStatus.found && Number(finalStatus.opdCharges)===requestedCharges){
@@ -3052,7 +3056,7 @@ function syncEEGCityWithSelectedLocation(){
                 return;
               }
             }catch(finalError){
-              if(!isTransientNetworkError(finalError) && attempt===2) throw finalError;
+              if(!isTransientNetworkError(finalError) && attempt===1) throw finalError;
             }
             if(attempt<2) await sleep(networkRetryDelay_(attempt));
           }
