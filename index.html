@@ -1640,6 +1640,29 @@ function showOPDChargeSuccess_(result){
   $("opdChargeSuccessCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
+function setDefaultOPDChargeCityToToday_(){
+  const select=$("opdChargeCity");
+  if(!select) return;
+
+  const todayCities=getTodayVisitCities();
+
+  if(todayCities.length){
+    const preferred=todayCities[0];
+    if(Array.from(select.options).some(o=>o.value===preferred)){
+      select.value=preferred;
+      const active=todayCities.join(" & ");
+      $("opdChargeCityStatus").textContent =
+        `Today’s active visit: ${active}. OPD retrieval will search only ${preferred} unless you select another city.`;
+      return;
+    }
+  }
+
+  // If no visit is active right now, keep the dropdown editable.
+  select.value="";
+  $("opdChargeCityStatus").textContent =
+    "No scheduled visit is active right now. Select the city where the OPD booking is recorded.";
+}
+
 function resetOPDCharge_(){
   $("opdChargeEntry").style.display="block";
   setOPDChargeRetrievalDateToday();
@@ -1657,6 +1680,10 @@ function resetOPDCharge_(){
   $("updateOPDChargeBtn").disabled=false;
   $("updateOPDChargeBtn").textContent="Update OPD Charges";
   selectedOPDChargePatient=null;
+
+  // Use the same current India date/time visit schedule as EEG.
+  // This is only a default; the user can change the city manually.
+  setDefaultOPDChargeCityToToday_();
 }
 
 function showOPDChargePanel_(){
@@ -1685,7 +1712,7 @@ function showOPD(){
   $("bookingForm").hidden=false;
   $("eegPanel").hidden=true;
   $("bookingCard").querySelector("h2").textContent="Appointment details";
-  /* City must be selected manually. */
+  /* City remains editable; no automatic selection is required for normal OPD booking. */
 }
 
 function showEEG(){
@@ -1719,7 +1746,6 @@ function resetEEG(){
   eegCityManuallySelected=false;
   setEEGRetrievalDateToday();
   $("eegWhatsapp").value="";
-  $("eegCharges").value="1600";
   $("eegLookupStatus").textContent="";
   $("eegChargeStatus").textContent="";
   $("eegPatientCard").classList.remove("show");
@@ -1729,6 +1755,12 @@ function resetEEG(){
   $("bookEEGBtn").disabled=false;
   $("bookEEGBtn").textContent="Book EEG Test";
   $("eegCharges").disabled=false;
+
+  // Default EEG charge follows the same city/visit logic used for
+  // automatic EEG city selection. The field remains fully editable.
+  setDefaultEEGCityToToday();
+  const city=$("eegCity").value;
+  $("eegCharges").value = city === "Latur" ? "1100" : "1600";
 }
 
 function eegBookingIsToday(patient){
@@ -2190,7 +2222,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     // Default EEG charges are city-specific, but always editable.
     // Existing EEG bookings are handled separately by updateEEGActionState().
     if(!selectedEEGPatient){
-      $("eegCharges").value = city === "Latur" ? "1000" : "1600";
+      $("eegCharges").value = city === "Latur" ? "1100" : "1600";
     }
 
     updateEEGActionState();
@@ -3257,7 +3289,8 @@ function syncEEGCityWithSelectedLocation(){
 
   /*
    * EEG city is automatically selected from the doctor's ACTUAL India
-   * date/time visit schedule. OPD city selection remains fully manual.
+   * date/time visit schedule. OPD booking city remains manual; the
+   * separate OPD-charge update panel uses the same schedule for its default.
    */
   setDefaultEEGCityToToday();
 
