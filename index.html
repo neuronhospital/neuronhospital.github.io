@@ -536,6 +536,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 .opd-charge-entry-btn:hover{background:#faf8ff}
 .opd-charge-panel{margin-top:4px}
 .opd-charge-panel[hidden]{display:none}
+/* OPD charge retrieval and confirmation remain completely hidden until the Update OPD Charges button is clicked. */
+#opdChargeSuccessCard{display:none}
+#opdChargeSuccessCard.show{display:block}
 .opd-charge-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:#f0eafe;color:#5b21b6;font-size:12px;font-weight:850;margin-bottom:9px}
 .opd-charge-city-select{width:100%;min-height:48px;border:1px solid #d0d5dd;border-radius:12px;padding:0 12px;background:#fff;font:inherit}
 .opd-charge-status{font-size:13px;color:#667085;margin-top:9px;min-height:18px}
@@ -776,7 +779,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 }
 
 </style>
-<meta name="application-version" content="2026-08-17-opd-eeg-fast-network-v25">
+<meta name="application-version" content="2026-08-18-opd-eeg-fast-network-v27">
 </head>
 <body>
 <div class="wrap">
@@ -1023,7 +1026,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
   <h2>OPD Charges Updated</h2>
   <p>The OPD charges were updated successfully.</p>
   <div class="summary" id="opdChargeSuccessSummary"></div>
-  <button type="button" class="cta" id="newOPDChargeBtn">Update Another OPD Charge</button>
+  <div class="success-actions opd-charge-success-actions">
+    <button type="button" id="bookNewOPDFromOPDCharge" class="book-new-appointment-btn">Book New OPD</button>
+    <button type="button" id="bookNewEEGFromOPDCharge" class="book-new-appointment-btn">Book New EEG</button>
+  </div>
 </section>
 
 <div class="retrieval-entry" id="retrievalEntry">
@@ -1625,11 +1631,13 @@ function showOPDChargeSuccess_(result){
   $("bookingCard").classList.add("hidden");
   $("successCard").classList.remove("show");
   $("eegSuccessCard").classList.remove("show");
+  $("opdChargeEntry").style.display="block";
   $("opdChargeSuccessCard").classList.add("show");
   $("opdChargeSuccessCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function resetOPDCharge_(){
+  $("opdChargeEntry").style.display="block";
   setOPDChargeRetrievalDateToday();
   $("opdChargeCity").value="";
   $("opdChargeWhatsapp").value="";
@@ -1660,6 +1668,7 @@ function showOPDChargePanel_(){
   $("eegModeBtn").classList.remove("active");
   resetOPDCharge_();
   setOPDChargeRetrievalDateToday();
+  $("opdChargeEntry").style.display="none";
   $("opdChargeCity").focus();
 }
 
@@ -2735,6 +2744,27 @@ function syncEEGCityWithSelectedLocation(){
     resetOPD();
   });
 
+  $("bookNewOPDFromOPDCharge").addEventListener("click",()=>{
+    document.body.classList.remove("confirmation-view");
+    $("opdChargeSuccessCard").classList.remove("show");
+    $("opdChargePanel").hidden=true;
+    $("opdChargeEntry").style.display="block";
+    $("bookingCard").classList.remove("hidden");
+    resetOPD();
+    $("bookingCard").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+
+  $("bookNewEEGFromOPDCharge").addEventListener("click",()=>{
+    document.body.classList.remove("confirmation-view");
+    $("opdChargeSuccessCard").classList.remove("show");
+    $("opdChargePanel").hidden=true;
+    $("opdChargeEntry").style.display="block";
+    $("bookingCard").classList.remove("hidden");
+    showEEG();
+    resetEEG();
+    $("bookingCard").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+
   $("bookNewEEGFromSuccess").addEventListener("click",()=>{
     $("successCard").classList.remove("show");
     $("bookingCard").classList.remove("hidden");
@@ -2946,7 +2976,15 @@ function syncEEGCityWithSelectedLocation(){
   });
 
   $("updateOPDChargeBtn").addEventListener("click",async()=>{
-    const phone=$("opdChargeWhatsapp").value.trim();
+    const enteredPhone=$("opdChargeWhatsapp").value.trim();
+    const patientPhone=selectedOPDChargePatient && selectedOPDChargePatient.whatsapp
+      ? String(selectedOPDChargePatient.whatsapp).replace(/\D/g, "").slice(-10)
+      : "";
+    // The patient record returned by the successful retrieval is the
+    // authoritative number for the selected appointment. Use it for the
+    // update so formatting/prefix differences cannot invalidate the number
+    // after retrieval. Fall back to the entered number only if necessary.
+    const phone=patientPhone || enteredPhone.replace(/\D/g, "").slice(-10);
     const city=$("opdChargeCity").value.trim();
     const amountRaw=$("opdChargeAmount").value.trim();
 
@@ -2954,6 +2992,7 @@ function syncEEGCityWithSelectedLocation(){
     if(!/^[6-9]\d{9}$/.test(phone)) return popup("Invalid WhatsApp number","Enter a valid 10-digit Indian mobile number.",$("opdChargeWhatsapp"));
     if(!$("opdChargePatientCard").classList.contains("show")) return popup("Retrieve patient first","Click Retrieve to load today's registered patients.",$("opdChargeLookupBtn"));
     if(!selectedOPDChargePatient) return popup("Select patient","Select the patient whose OPD charges were approved for adjustment.",$("opdChargePatientList"));
+    if(!/^[6-9]\d{9}$/.test(phone)) return popup("Invalid WhatsApp number","The selected patient record does not contain a valid 10-digit WhatsApp number.",$("opdChargeWhatsapp"));
     if(!opdChargeBookingIsToday_(selectedOPDChargePatient)) return popup("OPD Charges Finalized","Charges can only be changed on the booking date.",$("updateOPDChargeBtn"));
     if(amountRaw==="" || !Number.isFinite(Number(amountRaw)) || Number(amountRaw)<0) return popup("Incorrect OPD Charges","Please provide a valid OPD charge of ₹0 or more.",$("opdChargeAmount"));
 
@@ -3026,13 +3065,6 @@ function syncEEGCityWithSelectedLocation(){
       btn.disabled=false;
       updateOPDChargeActionState_();
     }
-  });
-
-  $("newOPDChargeBtn").addEventListener("click",()=>{
-    $("opdChargeSuccessCard").classList.remove("show");
-    $("bookingCard").classList.remove("hidden");
-    showOPDChargePanel_();
-    $("opdChargePanel").scrollIntoView({behavior:"smooth",block:"start"});
   });
 
   $("openRetrievalBtn").addEventListener("click",()=>{
