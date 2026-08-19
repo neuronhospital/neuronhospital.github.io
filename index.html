@@ -1330,6 +1330,40 @@ function sleep(ms){
   return new Promise(resolve=>setTimeout(resolve,ms));
 }
 
+/*
+ * EEG RETRIEVAL ONLY — safe read-only recovery.
+ *
+ * This helper deliberately does NOT modify the global api() function because
+ * all other booking/update/retrieval workflows must remain unchanged.
+ * EEG retrieval is read-only, so a transient timeout, network failure, or
+ * non-JSON HTTP response can safely be retried with the same request.
+ */
+async function retrieveEEGPatientWithRecovery_(payload){
+  const maxAttempts=3;
+  let lastError=null;
+
+  for(let attempt=1; attempt<=maxAttempts; attempt++){
+    try{
+      return await api(
+        "retrieveEEGPatientFresh",
+        payload,
+        15000
+      );
+    }catch(err){
+      lastError=err;
+
+      if(!isTransientNetworkError(err) || attempt===maxAttempts){
+        throw err;
+      }
+
+      // Short bounded backoff: 700ms, then 1400ms.
+      await sleep(700 * attempt);
+    }
+  }
+
+  throw lastError || new Error("EEG retrieval failed.");
+}
+
 function popup(title,text,target){
   if(typeof window.__oldPopup==="function") return window.__oldPopup(title,text,target);
   alert(title + "\n\n" + text);
@@ -2722,16 +2756,12 @@ function syncEEGCityWithSelectedLocation(){
      */
 
     try{
-      // EEG retrieval is read-only. Give the Apps Script backend enough
-      // time to respond on slower/cold-start connections.
-      const result=await api(
-        "retrieveEEGPatientFresh",
-        {
-          whatsapp:phone,
-          city:city
-        },
-        60000
-      );
+      // EEG retrieval is read-only. Use a bounded retry only for transient
+      // network/server responses. No booking/update request is retried.
+      const result=await retrieveEEGPatientWithRecovery_({
+        whatsapp:phone,
+        city:city
+      });
 
       const patients=Array.isArray(result.patients)
         ? result.patients
@@ -3859,6 +3889,6 @@ function syncEEGCityWithSelectedLocation(){
 })();
 </script>
 
-<div id="site-version-footer" style="text-align:center;padding:10px 8px 14px;font-size:10px;line-height:1.3;color:#98a2b3;opacity:.75;">19082026-10:13:59-html70+code69</div>
+<div id="site-version-footer" style="text-align:center;padding:10px 8px 14px;font-size:10px;line-height:1.3;color:#98a2b3;opacity:.75;">19082026-10:34:10-html72+code71</div>
 </body>
 </html>
