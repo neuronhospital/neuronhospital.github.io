@@ -1123,7 +1123,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 <div class="error-popup" id="errorPopup"><button id="closeError">Close</button><strong id="errorTitle">Please correct the highlighted field.</strong><div id="errorText" style="margin-top:6px;color:#667085;font-size:13px"></div></div>
 
 <script>
-// FAST-NETWORK V24: normal requests use short timeouts; recovery always reuses the same request ID.
+// FAST-NETWORK V69: fast retrieval path, shorter transient retry, and safe same-ID recovery.
 // IMPORTANT: after deploying the NEW Code.gs as a Web App,
 // paste the NEW /exec URL between the quotation marks below.
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaNoN0IEcvt9CEaVDkaUhS89WJldf9sl9aJMpQWWfIXMnJKAJoqfPO6SRXLNCFptOf/exec";
@@ -1243,7 +1243,7 @@ function displayDate(ddmmyyyy){
   return `${d.slice(0,2)}/${d.slice(2,4)}/${d.slice(4)}`;
 }
 
-async function api(action,payload,timeoutMs=10000){
+async function api(action,payload,timeoutMs=12000){
   if(!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR_NEW_WEB_APP_EXEC_URL_HERE")){
     throw new Error("The new Web App /exec URL has not been entered in index.html.");
   }
@@ -1276,7 +1276,7 @@ async function api(action,payload,timeoutMs=10000){
 
     if(!res.ok){
       const err=new Error(data.error || `Server returned HTTP ${res.status}.`);
-      err.transient = res.status >= 500;
+      err.transient = res.status === 408 || res.status === 429 || res.status >= 500;
       throw err;
     }
 
@@ -2302,8 +2302,8 @@ document.addEventListener("DOMContentLoaded",()=>{
      * browser loses the response. Give the authoritative status check more
      * time than the original 3.5 seconds and never generate a new request ID.
      */
-    const STATUS_TIMEOUT=10000;
-    const BOOK_TIMEOUT=12000;
+    const STATUS_TIMEOUT=12000;
+    const BOOK_TIMEOUT=20000;
 
     try{
       try{
@@ -2915,8 +2915,8 @@ function syncEEGCityWithSelectedLocation(){
       eegOnlinePaid:eegPayment.onlinePaid
     };
 
-    const BOOK_TIMEOUT=12000;
-    const STATUS_TIMEOUT=10000;
+    const BOOK_TIMEOUT=20000;
+    const STATUS_TIMEOUT=12000;
 
     try{
       try{
@@ -3289,12 +3289,12 @@ function syncEEGCityWithSelectedLocation(){
       let result=null;
       for(let attempt=0;attempt<2;attempt++){
         try{
-          result=await api("getOPDChargeStatus",{whatsapp:phone,city},9000);
+          result=await api("getOPDChargeStatus",{whatsapp:phone,city},12000);
           break;
         }catch(err){
           if(!isTransientNetworkError(err) || attempt===1) throw err;
           btn.textContent="Reconnecting…";
-          await sleep(700);
+          await sleep(500);
         }
       }
 
@@ -3397,8 +3397,8 @@ function syncEEGCityWithSelectedLocation(){
       opdOnlinePaid:payment.onlinePaid
     };
 
-    const WRITE_TIMEOUT=9000;
-    const STATUS_TIMEOUT=3500;
+    const WRITE_TIMEOUT=18000;
+    const STATUS_TIMEOUT=8000;
 
     const showSuccess=(result)=>{
       selectedOPDChargePatient.opdCharges=result.opdCharges;
