@@ -843,6 +843,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
         </div>
       </div>
 
+      <div class="field full">
+        <label for="patientAddress">Patient Address <span class="required">*</span></label>
+        <input id="patientAddress" type="text" autocomplete="street-address" placeholder="Enter patient's full address">
+      </div>
+
       <div class="field">
         <label>Patient type <span class="required">*</span></label>
         <div class="toggle">
@@ -1570,6 +1575,7 @@ $("opdCharges").value="500";
   $("referredBy").value="";
   $("childName").value="";
   $("ageValue").value="";
+  $("patientAddress").value="";
   $("nextFollowupCity").value="Latur";
 
   patientType="Follow-up";
@@ -2285,6 +2291,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const name=$("childName").value.trim();
     const age=$("ageValue").value.trim();
     const ageUnit=$("ageUnit").value;
+    const address=$("patientAddress").value.trim();
     const phone=$("whatsapp").value.trim();
     const opdCharges=$("opdCharges").value.trim();
     const referredBy=$("referredBy").value.trim();
@@ -2292,6 +2299,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     if(!name) return popup("Child's name is required","Please enter the child's full name.",$("childName"));
     if(age==="" || !Number.isFinite(Number(age)) || Number(age)<0) return popup("Age is required","Please enter a valid age.",$("ageValue"));
+    if(!address) return popup("Patient Address is required","Please enter the patient's full address.",$("patientAddress"));
     if(Number(age)>100 && ageUnit==="years") return popup("Enter correct age","Age cannot be more than 100 years.",$("ageValue"));
     if(!/^[6-9]\d{9}$/.test(phone)) return popup("Invalid WhatsApp number","Enter a valid 10-digit Indian mobile number.",$("whatsapp"));
     if(!requireWhatsappVerification()) return;
@@ -2329,6 +2337,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       childName:name,
       age:Number(age),
       ageUnit,
+      address,
       whatsapp:phone,
       patientType,
       city:selectedLocation,
@@ -3907,7 +3916,7 @@ function syncEEGCityWithSelectedLocation(){
   document.getElementById('versionFooter').textContent =
     parts.day + parts.month + parts.year + '-' +
     parts.hour + ':' + parts.minute + ':' + parts.second +
-    '-html73+code71';
+    '-html74+code72';
 })();
 </script></div>
 </body>
