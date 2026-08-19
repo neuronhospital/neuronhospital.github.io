@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>
+(function () {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./service-worker.js', { scope: './' })
+        .catch(function (err) {
+          console.warn('Service Worker registration failed:', err);
+        });
+    });
+  }
+})();
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- SEO + social link preview metadata -->
@@ -830,7 +842,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 #eegPaymentSection[hidden]{display:none!important;}
 .field-help{font-size:11px;color:#98a2b3;margin-top:5px}
 </style>
-<meta name="application-version" content="2026-08-19-opd-charge-password-v86">
+<meta name="application-version" content="2026-08-19-offline-tolerant-v87">
 </head>
 <body>
 <div class="wrap">
@@ -2443,6 +2455,19 @@ document.addEventListener("DOMContentLoaded",()=>{
       nextFollowupCity: selectedLocation === "Latur" ? nextFollowupCity : ""
     };
 
+    // Persist the complete transaction BEFORE the first server write.
+    // If IndexedDB is unavailable, the existing live-session recovery path
+    // continues unchanged; this journal is an additive reliability layer.
+    await NEURON_TX.saveSafe({
+      id: bookingRequestId,
+      type: "OPD_BOOKING",
+      requestId: bookingRequestId,
+      status: "pending",
+      payload: requestPayload,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
     /*
      * Normal booking should be fast. A 9-second response window is enough
      * for the optimized backend while preventing a poor connection from
@@ -2461,8 +2486,10 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     try{
       try{
+        await NEURON_TX.markSafe(bookingRequestId,"sending");
         const result=await api("bookAppointment",requestPayload,BOOK_TIMEOUT);
         showOPDSuccess(result);
+        await NEURON_TX.completeSafe(bookingRequestId);
         return;
       }catch(firstError){
         if(!isTransientNetworkError(firstError)) throw firstError;
@@ -2480,6 +2507,7 @@ document.addEventListener("DOMContentLoaded",()=>{
             );
             if(existing.found){
               showOPDSuccess(existing);
+              await NEURON_TX.completeSafe(bookingRequestId);
               return;
             }
           }catch(checkError){
@@ -2493,6 +2521,7 @@ document.addEventListener("DOMContentLoaded",()=>{
         try{
           const retryResult=await api("bookAppointment",requestPayload,BOOK_TIMEOUT);
           showOPDSuccess(retryResult);
+          await NEURON_TX.completeSafe(bookingRequestId);
           return;
         }catch(retryError){
           if(!isTransientNetworkError(retryError)) throw retryError;
@@ -2509,6 +2538,7 @@ document.addEventListener("DOMContentLoaded",()=>{
             );
             if(finalStatus.found){
               showOPDSuccess(finalStatus);
+              await NEURON_TX.completeSafe(bookingRequestId);
               return;
             }
           }catch(finalError){
@@ -2523,6 +2553,9 @@ document.addEventListener("DOMContentLoaded",()=>{
         );
       }
     }catch(err){
+      if(!isTransientNetworkError(err)){
+        await NEURON_TX.markSafe(bookingRequestId,"failed");
+      }
       popup(
         "OPD booking could not be confirmed",
         err && err.message
@@ -3065,18 +3098,35 @@ function syncEEGCityWithSelectedLocation(){
       eegOnlinePaid:eegPayment.onlinePaid
     };
 
+    // Persist EEG booking/update before the first server write.
+    // The existing backend request ID remains the authoritative transaction key.
+    await NEURON_TX.saveSafe({
+      id: eegBookingRequestId,
+      type: isUpdate ? "EEG_UPDATE" : "EEG_BOOKING",
+      requestId: eegBookingRequestId,
+      status: "pending",
+      payload: requestPayload,
+      meta: {
+        patientName: selectedEEGPatient?.name || "",
+        isUpdate: isUpdate
+      },
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
     const BOOK_TIMEOUT=20000;
     const STATUS_TIMEOUT=12000;
 
     try{
       try{
+        await NEURON_TX.markSafe(eegBookingRequestId,"sending");
         const result=await api("bookEEG",requestPayload,BOOK_TIMEOUT);
-
         selectedEEGPatient.eegCharges=result.eegCharges;
         selectedEEGPatient.eegCashPaid=result.eegCashPaid ?? eegPayment.cashPaid;
         selectedEEGPatient.eegOnlinePaid=result.eegOnlinePaid ?? eegPayment.onlinePaid;
         selectedEEGPatient.eegTotalPaid=result.eegTotalPaid ?? eegPayment.totalPaid;
         showEEGSuccess(result);
+        await NEURON_TX.completeSafe(eegBookingRequestId);
         return;
 
       }catch(err){
@@ -3094,16 +3144,15 @@ function syncEEGCityWithSelectedLocation(){
         for(let attempt=0;attempt<2;attempt++){
           try{
             const status=await api(
-              "getEEGStatus",
+              "checkEEGBookingRequest",
               {
-                whatsapp:phone,
-                appointmentId,
+                eegBookingRequestId,
                 city
               },
               STATUS_TIMEOUT
             );
 
-            if(status.found && status.eegBooked){
+            if(status.found){
               const actualCharges=Number(status.eegCharges);
               selectedEEGPatient.eegCharges=status.eegCharges;
 
@@ -3117,6 +3166,7 @@ function syncEEGCityWithSelectedLocation(){
                   eegCharges:status.eegCharges,
                   city:status.city
                 });
+                await NEURON_TX.completeSafe(eegBookingRequestId);
                 return;
               }
 
@@ -3160,6 +3210,7 @@ function syncEEGCityWithSelectedLocation(){
           selectedEEGPatient.eegOnlinePaid=retryResult.eegOnlinePaid ?? eegPayment.onlinePaid;
           selectedEEGPatient.eegTotalPaid=retryResult.eegTotalPaid ?? eegPayment.totalPaid;
           showEEGSuccess(retryResult);
+          await NEURON_TX.completeSafe(eegBookingRequestId);
           return;
 
         }catch(retryError){
@@ -3176,16 +3227,15 @@ function syncEEGCityWithSelectedLocation(){
           for(let attempt=0;attempt<2;attempt++){
             try{
               const finalStatus=await api(
-                "getEEGStatus",
+                "checkEEGBookingRequest",
                 {
-                  whatsapp:phone,
-                  appointmentId,
+                  eegBookingRequestId,
                   city
                 },
                 STATUS_TIMEOUT
               );
 
-              if(finalStatus.found && finalStatus.eegBooked){
+              if(finalStatus.found){
                 const actualCharges=Number(finalStatus.eegCharges);
                 selectedEEGPatient.eegCharges=finalStatus.eegCharges;
 
@@ -3199,6 +3249,7 @@ function syncEEGCityWithSelectedLocation(){
                     eegCharges:finalStatus.eegCharges,
                     city:finalStatus.city
                   });
+                  await NEURON_TX.completeSafe(eegBookingRequestId);
                   return;
                 }
 
@@ -3231,6 +3282,9 @@ function syncEEGCityWithSelectedLocation(){
       }
 
     }catch(err){
+      if(!isTransientNetworkError(err)){
+        await NEURON_TX.markSafe(eegBookingRequestId,"failed");
+      }
       popup(
         isUpdate ? "EEG charge update failed" : "EEG booking failed",
         err && err.message
@@ -4084,6 +4138,195 @@ function syncEEGCityWithSelectedLocation(){
 })();
 </script>
 
+<script>
+/* ============================================================================
+ * NEURON PERSISTENT TRANSACTION JOURNAL — additive reliability layer
+ *
+ * Persists only active OPD/EEG write transactions. Patient retrieval data is
+ * deliberately NOT cached in IndexedDB.
+ * ========================================================================== */
+(function(){
+  const DB_NAME="NEURON_TransactionJournal";
+  const DB_VERSION=1;
+  const STORE="transactions";
+  let dbPromise=null;
+  let recoveryRunning=false;
+
+  function openDB(){
+    if(dbPromise) return dbPromise;
+    dbPromise=new Promise((resolve,reject)=>{
+      if(!window.indexedDB){ reject(new Error("IndexedDB unavailable.")); return; }
+      const req=indexedDB.open(DB_NAME,DB_VERSION);
+      req.onupgradeneeded=()=>{
+        const db=req.result;
+        if(!db.objectStoreNames.contains(STORE)){
+          const store=db.createObjectStore(STORE,{keyPath:"id"});
+          store.createIndex("status","status",{unique:false});
+          store.createIndex("type","type",{unique:false});
+          store.createIndex("updatedAt","updatedAt",{unique:false});
+        }
+      };
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error("IndexedDB open failed."));
+    });
+    return dbPromise;
+  }
+
+  async function put(record){
+    const db=await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).put(record);
+      tx.oncomplete=()=>resolve(true);
+      tx.onerror=()=>reject(tx.error||new Error("IndexedDB write failed."));
+      tx.onabort=()=>reject(tx.error||new Error("IndexedDB transaction aborted."));
+    });
+  }
+
+  async function get(id){
+    const db=await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,"readonly");
+      const req=tx.objectStore(STORE).get(id);
+      req.onsuccess=()=>resolve(req.result||null);
+      req.onerror=()=>reject(req.error||new Error("IndexedDB read failed."));
+    });
+  }
+
+  async function remove(id){
+    const db=await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete=()=>resolve(true);
+      tx.onerror=()=>reject(tx.error||new Error("IndexedDB delete failed."));
+      tx.onabort=()=>reject(tx.error||new Error("IndexedDB delete aborted."));
+    });
+  }
+
+  async function pending(){
+    const db=await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,"readonly");
+      const req=tx.objectStore(STORE).getAll();
+      req.onsuccess=()=>{
+        const rows=(req.result||[]).filter(x=>x && ["pending","sending","uncertain"].includes(String(x.status||"")));
+        rows.sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0));
+        resolve(rows);
+      };
+      req.onerror=()=>reject(req.error||new Error("IndexedDB scan failed."));
+    });
+  }
+
+  async function update(id,changes){
+    const current=await get(id);
+    if(!current) return false;
+    return put(Object.assign({},current,changes,{updatedAt:Date.now()}));
+  }
+
+  window.NEURON_TX={
+    saveSafe:async record=>{try{return await put(record);}catch(e){console.warn("NEURON journal unavailable:",e);return false;}},
+    markSafe:async(id,status)=>{try{return await update(id,{status});}catch(e){console.warn("NEURON journal update failed:",e);return false;}},
+    completeSafe:async id=>{try{return await remove(id);}catch(e){console.warn("NEURON journal cleanup failed:",e);return false;}},
+    getPending:pending
+  };
+
+  async function recoverOne(tx){
+    const payload=tx.payload||{};
+    const type=String(tx.type||"");
+    const isOPD=type==="OPD_BOOKING";
+    const isEEG=type==="EEG_BOOKING" || type==="EEG_UPDATE";
+    if(!isOPD && !isEEG) return;
+
+    const requestId=String(tx.requestId||tx.id||"");
+    if(!requestId) return;
+    await window.NEURON_TX.markSafe(requestId,"uncertain");
+
+    try{
+      const status=isOPD
+        ? await api("checkBookingRequest",{bookingRequestId:requestId,city:payload.city||""},12000)
+        : await api("checkEEGBookingRequest",{eegBookingRequestId:requestId,city:payload.city||""},12000);
+
+      if(status && status.found){
+        if(isOPD){
+          showOPDSuccess(status);
+        }else{
+          selectedEEGPatient={
+            name:status.patientName||tx.meta?.patientName||"",
+            appointmentId:status.appointmentId||payload.appointmentId||"",
+            eegCharges:status.eegCharges,
+            eegCashPaid:status.eegCashPaid ?? payload.eegCashPaid ?? 0,
+            eegOnlinePaid:status.eegOnlinePaid ?? payload.eegOnlinePaid ?? 0,
+            eegTotalPaid:status.eegTotalPaid ?? payload.eegTotalPaid ?? status.eegCharges
+          };
+          showEEGSuccess({
+            ok:true,
+            updated:type==="EEG_UPDATE" || !!status.updated,
+            alreadyRecorded:true,
+            patientName:status.patientName,
+            appointmentId:status.appointmentId,
+            previousEEGCharges:status.previousEEGCharges,
+            eegCharges:status.eegCharges,
+            eegCashPaid:status.eegCashPaid ?? payload.eegCashPaid ?? 0,
+            eegOnlinePaid:status.eegOnlinePaid ?? payload.eegOnlinePaid ?? 0,
+            eegTotalPaid:status.eegTotalPaid ?? payload.eegTotalPaid ?? status.eegCharges,
+            city:status.city
+          });
+        }
+        await window.NEURON_TX.completeSafe(requestId);
+        return;
+      }
+    }catch(e){
+      if(isTransientNetworkError(e)) return;
+      await window.NEURON_TX.markSafe(requestId,"failed");
+      return;
+    }
+
+    try{
+      await window.NEURON_TX.markSafe(requestId,"sending");
+      const result=isOPD
+        ? await api("bookAppointment",payload,20000)
+        : await api("bookEEG",payload,20000);
+      if(isOPD){
+        showOPDSuccess(result);
+      }else{
+        selectedEEGPatient={
+          name:result.patientName||tx.meta?.patientName||"",
+          appointmentId:result.appointmentId||payload.appointmentId||"",
+          eegCharges:result.eegCharges,
+          eegCashPaid:result.eegCashPaid ?? payload.eegCashPaid ?? 0,
+          eegOnlinePaid:result.eegOnlinePaid ?? payload.eegOnlinePaid ?? 0,
+          eegTotalPaid:result.eegTotalPaid ?? payload.eegTotalPaid ?? result.eegCharges
+        };
+        showEEGSuccess(Object.assign({},result,{updated:type==="EEG_UPDATE" || !!result.updated}));
+      }
+      await window.NEURON_TX.completeSafe(requestId);
+    }catch(e){
+      await window.NEURON_TX.markSafe(requestId,isTransientNetworkError(e)?"uncertain":"failed");
+    }
+  }
+
+  async function recoverAll(){
+    if(recoveryRunning || !navigator.onLine) return;
+    recoveryRunning=true;
+    try{
+      const rows=await window.NEURON_TX.getPending();
+      for(const tx of rows) await recoverOne(tx);
+    }catch(e){
+      console.warn("NEURON transaction recovery skipped:",e);
+    }finally{
+      recoveryRunning=false;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded",()=>setTimeout(recoverAll,300));
+  window.addEventListener("online",()=>setTimeout(recoverAll,250));
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState==="visible") setTimeout(recoverAll,250);
+  });
+})();
+</script>
+
 <div id="site-version-footer" style="text-align:center;padding:10px 8px 14px;font-size:10px;line-height:1.3;color:#98a2b3;opacity:.75;"><span id="versionFooter"></span>
 <script>
 (function () {
@@ -4101,7 +4344,7 @@ function syncEEGCityWithSelectedLocation(){
   document.getElementById('versionFooter').textContent =
     parts.day + parts.month + parts.year + '-' +
     parts.hour + ':' + parts.minute + ':' + parts.second +
-    '-HTML79-CODE74';
+    '-HTML81-CODE75';
 })();
 </script></div>
 </body>
