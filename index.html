@@ -1015,7 +1015,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
     <div class="opd-charge-patient-list" id="opdChargePatientList"></div>
   </div>
 
-  <div class="field full payment-box" id="opdChargePaymentSection" hidden><label for="opdChargePaymentMode">Payment Mode</label><select id="opdChargePaymentMode"><option value="Cash" selected>Cash</option><option value="Online">Online</option><option value="Cash + Online">Both</option></select><div class="payment-grid" id="opdChargePaymentFields"><div class="field" id="opdChargeCashField"><label for="opdChargeCashPaid">Cash Paid</label><div class="input-prefix-wrap"><span class="input-prefix">₹</span><input id="opdChargeCashPaid" type="number" min="0" step="1"></div></div><div class="field" id="opdChargeOnlineField"><label for="opdChargeOnlinePaid">Online Paid</label><div class="input-prefix-wrap"><span class="input-prefix">₹</span><input id="opdChargeOnlinePaid" type="number" min="0" step="1"></div></div></div><div class="payment-status" id="opdChargePaymentStatus"></div></div>
+  <div class="field full payment-box" id="opdChargePaymentSection" hidden style="display:none !important;"><label for="opdChargePaymentMode">Payment Mode</label><select id="opdChargePaymentMode"><option value="Cash" selected>Cash</option><option value="Online">Online</option><option value="Cash + Online">Both</option></select><div class="payment-grid" id="opdChargePaymentFields"><div class="field" id="opdChargeCashField"><label for="opdChargeCashPaid">Cash Paid</label><div class="input-prefix-wrap"><span class="input-prefix">₹</span><input id="opdChargeCashPaid" type="number" min="0" step="1"></div></div><div class="field" id="opdChargeOnlineField"><label for="opdChargeOnlinePaid">Online Paid</label><div class="input-prefix-wrap"><span class="input-prefix">₹</span><input id="opdChargeOnlinePaid" type="number" min="0" step="1"></div></div></div><div class="payment-status" id="opdChargePaymentStatus"></div></div>
 
   <div class="field full appointment-action-area">
     <button type="button" class="cta" id="updateOPDChargeBtn">Update OPD Charges</button>
@@ -1637,7 +1637,10 @@ function updateOPDChargeActionState_(){
 
   if(!selectedOPDChargePatient){
     btn.textContent="Update OPD Charges";
-    if(paymentSection) paymentSection.hidden=true;
+    if(paymentSection){
+      paymentSection.hidden=true;
+      paymentSection.style.display="none";
+    }
     return;
   }
 
@@ -1646,12 +1649,18 @@ function updateOPDChargeActionState_(){
 
   if(!opdChargeBookingIsToday_(selectedOPDChargePatient)){
     btn.textContent="OPD Charges Finalized";
-    if(paymentSection) paymentSection.hidden=false;
+    if(paymentSection){
+      paymentSection.hidden=false;
+      paymentSection.style.display="";
+    }
     if($("opdChargePaymentMode")){ $("opdChargePaymentMode").value="Cash"; setupPaymentUI_("opdCharge",Number(existing)||0); }
     return;
   }
 
-  if(paymentSection) paymentSection.hidden=false;
+  if(paymentSection){
+    paymentSection.hidden=false;
+    paymentSection.style.display="";
+  }
   if($("opdChargePaymentMode")){ $("opdChargePaymentMode").value="Cash"; setupPaymentUI_("opdCharge",Number(existing)||0); }
   btn.textContent="Update OPD Charges";
 }
@@ -1785,6 +1794,8 @@ function showOPDChargePanel_(){
 
   // Reset patient/search state first.
   resetOPDCharge_();
+  $("opdChargePaymentSection").hidden=true;
+  $("opdChargePaymentSection").style.display="none";
   $("opdChargeCity").dataset.manual="false";
 
   // Now the panel is visible: apply the same current doctor visit city
@@ -3249,6 +3260,8 @@ function syncEEGCityWithSelectedLocation(){
   $("opdChargeCity").addEventListener("change",()=>{
     $("opdChargeCity").dataset.manual="true";
     selectedOPDChargePatient=null;
+    $("opdChargePaymentSection").hidden=true;
+    $("opdChargePaymentSection").style.display="none";
     $("opdChargePatientCard").classList.remove("show");
     $("opdChargePatientList").innerHTML="";
     $("opdChargeLookupStatus").textContent="";
@@ -3262,6 +3275,8 @@ function syncEEGCityWithSelectedLocation(){
   $("opdChargeWhatsapp").addEventListener("input",e=>{
     e.target.value=e.target.value.replace(/\D/g,"").slice(0,10);
     selectedOPDChargePatient=null;
+    $("opdChargePaymentSection").hidden=true;
+    $("opdChargePaymentSection").style.display="none";
     $("opdChargePatientCard").classList.remove("show");
     $("opdChargePatientList").innerHTML="";
     $("opdChargeLookupStatus").textContent="";
@@ -3283,6 +3298,8 @@ function syncEEGCityWithSelectedLocation(){
     $("opdChargePatientCard").classList.remove("show");
     $("opdChargePatientList").innerHTML="";
     selectedOPDChargePatient=null;
+    $("opdChargePaymentSection").hidden=true;
+    $("opdChargePaymentSection").style.display="none";
     updateOPDChargeActionState_();
 
     try{
@@ -3327,16 +3344,14 @@ function syncEEGCityWithSelectedLocation(){
       });
 
       if(patients.length===1){
-        selectedOPDChargePatient=patients[0];
-        const only=$("opdChargePatientList").querySelector(".opd-charge-patient-option");
-        only.classList.add("selected");
-        only.querySelector(".opd-charge-patient-select").textContent="Selected for OPD charge update";
-        $("opdChargeLookupStatus").textContent=`Patient found in ${city} and selected.`;
-        updateOPDChargeActionState_();
+        $("opdChargeLookupStatus").textContent=`Patient found in ${city}. Select the patient to continue.`;
       }else{
         $("opdChargeLookupStatus").textContent=`Multiple patients found in ${city}. Select the correct patient before updating charges.`;
       }
 
+      $("opdChargePaymentSection").hidden=true;
+      $("opdChargePaymentSection").style.display="none";
+      updateOPDChargeActionState_();
       $("opdChargePatientCard").classList.add("show");
     }catch(err){
       $("opdChargePatientCard").classList.remove("show");
@@ -3844,5 +3859,6 @@ function syncEEGCityWithSelectedLocation(){
 })();
 </script>
 
+<div id="site-version-footer" style="text-align:center;padding:10px 8px 14px;font-size:10px;line-height:1.3;color:#98a2b3;opacity:.75;">19082026-10:13:59-html70+code69</div>
 </body>
 </html>
