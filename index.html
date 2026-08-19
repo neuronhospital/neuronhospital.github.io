@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- SEO + social link preview metadata -->
-<title>NEURON Hospital | EEG Payment Only v94</title>
+<title>NEURON Hospital | OPD + EEG v63</title>
 <meta name="description" content="NEURON Hospital, Latur — Pediatric Neurology and Epilepsy care by Dr Ankush Maindad. Specialist care for seizures, epilepsy, developmental delay, autism and other childhood neurological disorders.">
 <link rel="canonical" href="https://neuronhospital.github.io/">
 
@@ -1586,17 +1586,49 @@ function setOPDChargeRetrievalDateToday(){
 
 function opdChargeBookingIsToday_(patient){
   if(!patient || !patient.date) return false;
+
   const raw=String(patient.date).trim();
   const digits=raw.replace(/\D/g,"");
-  if(digits.length===8) return digits===getTodayDDMMYYYYClient_();
+  const today=getTodayDDMMYYYYClient_();
+
+  /*
+   * The backend may return an 8-digit date in either:
+   *   DDMMYYYY  -> 19082026
+   *   YYYYMMDD  -> 20260819
+   *
+   * The previous implementation treated every 8-digit value as DDMMYYYY,
+   * which incorrectly rejected today's 20260819 records.
+   */
+  if(/^\d{8}$/.test(digits)){
+    /*
+     * Distinguish YYYYMMDD from DDMMYYYY by validating the calendar
+     * positions. 19082026 is DDMMYYYY; 20260819 is YYYYMMDD.
+     */
+    const firstYear=Number(digits.substring(0,4));
+    const firstMonth=Number(digits.substring(4,6));
+    const firstDay=Number(digits.substring(6,8));
+
+    if(
+      firstYear>=1900 && firstYear<=2100 &&
+      firstMonth>=1 && firstMonth<=12 &&
+      firstDay>=1 && firstDay<=31
+    ){
+      return digits.substring(6,8)+digits.substring(4,6)+digits.substring(0,4)===today;
+    }
+
+    return digits===today;
+  }
+
   const parsed=new Date(patient.date);
   if(Number.isNaN(parsed.getTime())) return false;
+
   const parts=new Intl.DateTimeFormat("en-GB",{
     timeZone:"Asia/Kolkata",day:"2-digit",month:"2-digit",year:"numeric"
   }).formatToParts(parsed);
+
   return (parts.find(p=>p.type==="day")?.value||"")+
          (parts.find(p=>p.type==="month")?.value||"")+
-         (parts.find(p=>p.type==="year")?.value||"")===getTodayDDMMYYYYClient_();
+         (parts.find(p=>p.type==="year")?.value||"")===today;
 }
 
 function updateOPDChargeActionState_(){
@@ -3257,7 +3289,7 @@ function syncEEGCityWithSelectedLocation(){
       let result=null;
       for(let attempt=0;attempt<2;attempt++){
         try{
-          result=await api("getPatientByWhatsApp",{whatsapp:phone,city,date:retrievalDate},9000);
+          result=await api("getOPDChargeStatus",{whatsapp:phone,city},9000);
           break;
         }catch(err){
           if(!isTransientNetworkError(err) || attempt===1) throw err;
@@ -3266,10 +3298,9 @@ function syncEEGCityWithSelectedLocation(){
         }
       }
 
-      const retrieved=Array.isArray(result.patients)
+      const patients=Array.isArray(result.patients)
         ? result.patients
         : (result.patient ? [result.patient] : []);
-      const patients=retrieved.filter(opdChargeBookingIsToday_);
 
       if(!patients.length){
         throw new Error(`No OPD booking found for this WhatsApp number in ${city} for today's date.`);
@@ -3320,121 +3351,198 @@ function syncEEGCityWithSelectedLocation(){
   $("updateOPDChargeBtn").addEventListener("click",async()=>{
     const enteredPhone=$("opdChargeWhatsapp").value.trim();
     const patientPhone=selectedOPDChargePatient && selectedOPDChargePatient.whatsapp
-      ? String(selectedOPDChargePatient.whatsapp).replace(/\D/g, "").slice(-10)
+      ? String(selectedOPDChargePatient.whatsapp).replace(/\D/g,"").slice(-10)
       : "";
-    // The patient record returned by the successful retrieval is the
-    // authoritative number for the selected appointment. Use it for the
-    // update so formatting/prefix differences cannot invalidate the number
-    // after retrieval. Fall back to the entered number only if necessary.
-    const phone=patientPhone || enteredPhone.replace(/\D/g, "").slice(-10);
+    const phone=patientPhone || enteredPhone.replace(/\D/g,"").slice(-10);
     const city=$("opdChargeCity").value.trim();
+
     if(!city) return popup("Select city","Select the city where the OPD booking is recorded.",$("opdChargeCity"));
     if(!/^[6-9]\d{9}$/.test(phone)) return popup("Invalid WhatsApp number","Enter a valid 10-digit Indian mobile number.",$("opdChargeWhatsapp"));
     if(!$("opdChargePatientCard").classList.contains("show")) return popup("Retrieve patient first","Click Retrieve to load today's registered patients.",$("opdChargeLookupBtn"));
     if(!selectedOPDChargePatient) return popup("Select patient","Select the patient whose OPD charges were approved for adjustment.",$("opdChargePatientList"));
-    if(!/^[6-9]\d{9}$/.test(phone)) return popup("Invalid WhatsApp number","The selected patient record does not contain a valid 10-digit WhatsApp number.",$("opdChargeWhatsapp"));
-    if(!opdChargeBookingIsToday_(selectedOPDChargePatient)) return popup("OPD Charges Finalized","Charges can only be changed on the booking date.",$("updateOPDChargeBtn"));
-    let opdChargePayment;
-    try{opdChargePayment=readPaymentUI_("opdCharge",0);}catch(err){return popup("Payment mismatch",err.message,$("opdChargePaymentMode"));}
 
-    const requestedCharges=Number(opdChargePayment.totalPaid);
+    if(!opdChargeBookingIsToday_(selectedOPDChargePatient)){
+      return popup("OPD Charges Finalized","Charges can only be changed on the booking date.",$("updateOPDChargeBtn"));
+    }
+
+    let payment;
+    try{
+      payment=readPaymentUI_("opdCharge",0);
+    }catch(err){
+      return popup("Payment mismatch",err.message,$("opdChargePaymentMode"));
+    }
+
+    const requestedCharges=Number(payment.totalPaid);
     if(!Number.isFinite(requestedCharges) || requestedCharges<0 || requestedCharges>1500){
       return popup("Incorrect OPD Charges","Please provide a valid OPD charge between ₹0 and ₹1500.",$("opdChargePaymentMode"));
     }
-    const currentCharges=Number(selectedOPDChargePatient.opdCharges);
-    const previousOPDChargesForConfirmation=selectedOPDChargePatient.opdCharges;
 
+    const previousOPDCharges=selectedOPDChargePatient.opdCharges;
     const btn=$("updateOPDChargeBtn");
     btn.disabled=true;
     btn.textContent="Updating…";
 
-    const requestId=window.crypto&&crypto.randomUUID?crypto.randomUUID():("opd-charge-"+Date.now()+"-"+Math.random().toString(36).slice(2));
-    const payload={opdChargeUpdateRequestId:requestId,whatsapp:phone,appointmentId:String(selectedOPDChargePatient.appointmentId||""),city,opdCharges:requestedCharges,opdPaymentMode:opdChargePayment.mode,opdCashPaid:opdChargePayment.cashPaid,opdOnlinePaid:opdChargePayment.onlinePaid};
+    const requestId=window.crypto&&crypto.randomUUID
+      ? crypto.randomUUID()
+      : ("opd-charge-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+
+    const payload={
+      opdChargeUpdateRequestId:requestId,
+      whatsapp:phone,
+      appointmentId:String(selectedOPDChargePatient.appointmentId||""),
+      city:city,
+      opdCharges:requestedCharges,
+      opdPaymentMode:payment.mode,
+      opdCashPaid:payment.cashPaid,
+      opdOnlinePaid:payment.onlinePaid
+    };
+
     const WRITE_TIMEOUT=9000;
     const STATUS_TIMEOUT=3500;
 
+    const showSuccess=(result)=>{
+      selectedOPDChargePatient.opdCharges=result.opdCharges;
+      showOPDChargeSuccess_({
+        ...result,
+        previousOPDCharges:previousOPDCharges,
+        opdPaymentMode:payment.mode,
+        opdCashPaid:Number(result.opdCashPaid ?? payment.cashPaid),
+        opdOnlinePaid:Number(result.opdOnlinePaid ?? payment.onlinePaid),
+        opdTotalPaid:Number(result.opdTotalPaid ?? payment.totalPaid)
+      });
+    };
+
+    const matchesRequested=(status)=>{
+      return !!status &&
+        status.found===true &&
+        Number(status.opdCharges)===requestedCharges &&
+        Number(status.opdCashPaid)===payment.cashPaid &&
+        Number(status.opdOnlinePaid)===payment.onlinePaid &&
+        Number(status.opdTotalPaid)===payment.totalPaid;
+    };
+
     try{
+      /*
+       * Normal path: one OPD update request.
+       * The backend itself performs spreadsheet write + flush + read-back
+       * verification and returns verified:true only after success.
+       */
       try{
         const result=await api("updateOPDCharges",payload,WRITE_TIMEOUT);
-        selectedOPDChargePatient.opdCharges=result.opdCharges;
-        showOPDChargeSuccess_({
-          ...result,
-          previousOPDCharges:previousOPDChargesForConfirmation,
-          opdPaymentMode:opdChargePayment.mode,
-          opdCashPaid:opdChargePayment.cashPaid,
-          opdOnlinePaid:opdChargePayment.onlinePaid,
-          opdTotalPaid:opdChargePayment.totalPaid
-        });
-        return;
+
+        if(result && result.verified===true){
+          showSuccess(result);
+          return;
+        }
+
+        /*
+         * A non-verified response is never treated as success. Check the
+         * authoritative spreadsheet status once before declaring failure.
+         */
+        const status=await api("getOPDChargeStatus",{
+          whatsapp:phone,
+          appointmentId:String(selectedOPDChargePatient.appointmentId||""),
+          city:city
+        },STATUS_TIMEOUT);
+
+        if(matchesRequested(status)){
+          showSuccess({
+            ok:true,
+            found:true,
+            updated:true,
+            alreadyRecorded:true,
+            verified:true,
+            patientName:status.patientName,
+            appointmentId:status.appointmentId,
+            opdCharges:status.opdCharges,
+            opdCashPaid:status.opdCashPaid,
+            opdOnlinePaid:status.opdOnlinePaid,
+            opdTotalPaid:status.opdTotalPaid,
+            city:status.city
+          });
+          return;
+        }
+
+        throw new Error("The OPD charge update was not confirmed by the spreadsheet.");
       }catch(firstError){
         if(!isTransientNetworkError(firstError)) throw firstError;
+
+        /*
+         * Network recovery: first check whether the original request actually
+         * reached the spreadsheet.
+         */
         btn.textContent="Confirming…";
+
         for(let attempt=0;attempt<2;attempt++){
           try{
-            const status=await api("getOPDChargeStatus",{whatsapp:phone,appointmentId:String(selectedOPDChargePatient.appointmentId||""),city},STATUS_TIMEOUT);
-            if(status.found && Number(status.opdCharges)===requestedCharges){
-              selectedOPDChargePatient.opdCharges=status.opdCharges;
-              showOPDChargeSuccess_({
-              ok:true,updated:true,alreadyRecorded:true,
-              patientName:status.patientName,
-              appointmentId:status.appointmentId,
-              previousOPDCharges:previousOPDChargesForConfirmation,
-              opdCharges:status.opdCharges,
-              city:status.city,
-              opdPaymentMode:opdChargePayment.mode,
-              opdCashPaid:opdChargePayment.cashPaid,
-              opdOnlinePaid:opdChargePayment.onlinePaid,
-              opdTotalPaid:opdChargePayment.totalPaid
-            });
+            const status=await api("getOPDChargeStatus",{
+              whatsapp:phone,
+              appointmentId:String(selectedOPDChargePatient.appointmentId||""),
+              city:city
+            },STATUS_TIMEOUT);
+
+            if(matchesRequested(status)){
+              showSuccess({
+                ok:true,
+                found:true,
+                updated:true,
+                alreadyRecorded:true,
+                verified:true,
+                patientName:status.patientName,
+                appointmentId:status.appointmentId,
+                opdCharges:status.opdCharges,
+                opdCashPaid:status.opdCashPaid,
+                opdOnlinePaid:status.opdOnlinePaid,
+                opdTotalPaid:status.opdTotalPaid,
+                city:status.city
+              });
               return;
             }
           }catch(statusError){
             if(!isTransientNetworkError(statusError) && attempt===1) throw statusError;
           }
-          if(attempt<2) await sleep(networkRetryDelay_(attempt));
+
+          if(attempt<1) await sleep(networkRetryDelay_(attempt));
         }
+
+        /*
+         * Safe retry with the SAME request payload/request ID.
+         * If the first request actually committed, the backend will return
+         * alreadyPaid+verified instead of writing a second different record.
+         */
         btn.textContent="Retrying securely…";
-        try{
-          const retryResult=await api("updateOPDCharges",payload,WRITE_TIMEOUT);
-          selectedOPDChargePatient.opdCharges=retryResult.opdCharges;
-          showOPDChargeSuccess_({
-            ...retryResult,
-            previousOPDCharges:previousOPDChargesForConfirmation,
-            opdPaymentMode:opdChargePayment.mode,
-            opdCashPaid:opdChargePayment.cashPaid,
-            opdOnlinePaid:opdChargePayment.onlinePaid,
-            opdTotalPaid:opdChargePayment.totalPaid
+        const retryResult=await api("updateOPDCharges",payload,WRITE_TIMEOUT);
+
+        if(retryResult && retryResult.verified===true){
+          showSuccess(retryResult);
+          return;
+        }
+
+        const retryStatus=await api("getOPDChargeStatus",{
+          whatsapp:phone,
+          appointmentId:String(selectedOPDChargePatient.appointmentId||""),
+          city:city
+        },STATUS_TIMEOUT);
+
+        if(matchesRequested(retryStatus)){
+          showSuccess({
+            ok:true,
+            found:true,
+            updated:true,
+            alreadyRecorded:true,
+            verified:true,
+            patientName:retryStatus.patientName,
+            appointmentId:retryStatus.appointmentId,
+            opdCharges:retryStatus.opdCharges,
+            opdCashPaid:retryStatus.opdCashPaid,
+            opdOnlinePaid:retryStatus.opdOnlinePaid,
+            opdTotalPaid:retryStatus.opdTotalPaid,
+            city:retryStatus.city
           });
           return;
-        }catch(retryError){
-          if(!isTransientNetworkError(retryError)) throw retryError;
-          btn.textContent="Final confirmation…";
-          for(let attempt=0;attempt<2;attempt++){
-            try{
-              const finalStatus=await api("getOPDChargeStatus",{whatsapp:phone,appointmentId:String(selectedOPDChargePatient.appointmentId||""),city},STATUS_TIMEOUT);
-              if(finalStatus.found && Number(finalStatus.opdCharges)===requestedCharges){
-                selectedOPDChargePatient.opdCharges=finalStatus.opdCharges;
-                showOPDChargeSuccess_({
-                  ok:true,updated:true,alreadyRecorded:true,
-                  patientName:finalStatus.patientName,
-                  appointmentId:finalStatus.appointmentId,
-                  previousOPDCharges:previousOPDChargesForConfirmation,
-                  opdCharges:finalStatus.opdCharges,
-                  city:finalStatus.city,
-                  opdPaymentMode:opdChargePayment.mode,
-                  opdCashPaid:opdChargePayment.cashPaid,
-                  opdOnlinePaid:opdChargePayment.onlinePaid,
-                  opdTotalPaid:opdChargePayment.totalPaid
-                });
-                return;
-              }
-            }catch(finalError){
-              if(!isTransientNetworkError(finalError) && attempt===1) throw finalError;
-            }
-            if(attempt<2) await sleep(networkRetryDelay_(attempt));
-          }
-          throw new Error("OPD charge update could not be confirmed because the internet connection is unstable. Please keep this page open and try again.");
         }
+
+        throw new Error("The OPD charge update could not be confirmed in the spreadsheet.");
       }
     }catch(err){
       popup("OPD charge update failed",err&&err.message?err.message:"Please try again.",btn);
