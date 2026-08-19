@@ -1137,7 +1137,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 // FAST-NETWORK V69: fast retrieval path, shorter transient retry, and safe same-ID recovery.
 // IMPORTANT: after deploying the NEW Code.gs as a Web App,
 // paste the NEW /exec URL between the quotation marks below.
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaNoN0IEcvt9CEaVDkaUhS89WJldf9sl9aJMpQWWfIXMnJKAJoqfPO6SRXLNCFptOf/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJc56wE1FuP5HhODF8BNfG_pEAvl3jNMi0bJiKc1v7mzH8wWg4buVzHVyDg___jZUV/exec";
 
 const LOCATIONS = {
   "Latur": {
@@ -1255,7 +1255,7 @@ function displayDate(ddmmyyyy){
 }
 
 async function api(action,payload,timeoutMs=12000){
-  if(!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR_NEW_WEB_APP_EXEC_URL_HERE")){
+  if(!SCRIPT_URL || SCRIPT_URL.includes("PASTE_NEW_WEB_APP_EXEC_URL_HERE")){
     throw new Error("The new Web App /exec URL has not been entered in index.html.");
   }
 
@@ -3934,7 +3934,7 @@ function syncEEGCityWithSelectedLocation(){
   document.getElementById('versionFooter').textContent =
     parts.day + parts.month + parts.year + '-' +
     parts.hour + ':' + parts.minute + ':' + parts.second +
-    '-html75+code72';
+    '-HTML76-CODE73';
 })();
 </script></div>
 </body>
