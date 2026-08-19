@@ -1969,15 +1969,33 @@ function paymentText_(cash,online,total){return online>0&&cash>0?`Cash ₹${Numb
 
 function showOPDSuccess(result){
   document.body.classList.add("confirmation-view");
+
+  /*
+   * Confirmation UX:
+   * - Latur OPD shows the Next Followup City selected during booking.
+   * - Other-city OPD bookings do not show that row at all.
+   * - Address is read from the server result when available, with the
+   *   current booking field as a safe frontend fallback for recovery/status
+   *   confirmations.
+   */
+  const bookingCity=String(result.city||selectedLocation||"").trim();
+  const address=String(
+    result.address ?? $("patientAddress")?.value ?? ""
+  ).trim();
+  const followupCity=String(
+    result.nextFollowupCity ?? $("nextFollowupCity")?.value ?? ""
+  ).trim();
+
   $("summary").innerHTML=`
     <div><span>Appointment ID</span><b>${esc(result.appointmentId)}</b></div>
     <div><span>Patient Name</span><b>${esc(result.patientName)}</b></div>
     <div><span>Age</span><b>${esc(result.age)} ${esc(result.ageUnit)}</b></div>
-    <div><span>Address</span><b>${esc(result.address || "")}</b></div>
+    <div><span>Address</span><b>${esc(address)}</b></div>
     <div><span>Date</span><b>${esc(displayDate(result.date))}</b></div>
-    ${result.city === "Latur" ? `<div><span>Followup City</span><b>${esc(result.nextFollowupCity || "")}</b></div>`}
+    ${bookingCity === "Latur" && followupCity ? `<div><span>Next Followup City</span><b>${esc(followupCity)}</b></div>` : ""}
     <div><span>OPD Charges</span><b>₹${esc(result.opdCharges)}</b></div>
     <div><span>Payment</span><b>${esc(paymentText_(result.opdCashPaid??result.opdCharges,result.opdOnlinePaid??0,result.opdTotalPaid??result.opdCharges))}</b></div>`;
+
   $("bookingCard").classList.add("hidden");
   $("successCard").classList.add("show");
   $("successCard").scrollIntoView({behavior:"smooth",block:"start"});
@@ -3916,7 +3934,7 @@ function syncEEGCityWithSelectedLocation(){
   document.getElementById('versionFooter').textContent =
     parts.day + parts.month + parts.year + '-' +
     parts.hour + ':' + parts.minute + ':' + parts.second +
-    '-html77+code72';
+    '-html75+code72';
 })();
 </script></div>
 </body>
