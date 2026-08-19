@@ -490,6 +490,45 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 }
 
 
+
+/* Password visibility toggle — UI only. */
+.password-input-wrap{
+  position:relative;
+  width:100%;
+}
+.password-input-wrap > input{
+  width:100%;
+  box-sizing:border-box;
+  padding-right:52px !important;
+}
+.password-toggle-btn{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translateY(-50%);
+  width:38px;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#b15cff;
+  font-size:20px;
+  line-height:1;
+  padding:0;
+  cursor:pointer;
+  z-index:2;
+}
+.password-toggle-btn:active{
+  transform:translateY(-50%) scale(.94);
+}
+.password-toggle-btn:focus-visible{
+  outline:2px solid #b15cff;
+  outline-offset:2px;
+}
+
 /* Compact input prefixes for booking fields */
 .input-prefix-wrap{
   display:flex;
@@ -535,7 +574,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 .opd-charge-entry-btn{width:100%;border:1px solid #d9c9ff;background:#fff;color:#4c1d95;border-radius:14px;padding:12px 15px;font-weight:850;box-shadow:0 4px 14px rgba(52,16,95,.06);cursor:pointer}
 .opd-charge-entry-btn:hover{background:#faf8ff}
 .opd-charge-panel{margin-top:4px}
-.opd-charge-panel[hidden]{display:none}
+ .opd-charge-panel[hidden]{display:none}
+.opd-charge-lock{margin-top:14px}
+.opd-charge-lock[hidden]{display:none!important}
+.opd-charge-workspace[hidden]{display:none!important}
+.opd-charge-lock .retrieval-status{min-height:18px}
 /* OPD charge retrieval and confirmation remain completely hidden until the Update OPD Charges button is clicked. */
 #opdChargeSuccessCard{display:none}
 #opdChargeSuccessCard.show{display:block}
@@ -787,7 +830,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
 #eegPaymentSection[hidden]{display:none!important;}
 .field-help{font-size:11px;color:#98a2b3;margin-top:5px}
 </style>
-<meta name="application-version" content="2026-08-18-opd-eeg-payment-reliability-v85">
+<meta name="application-version" content="2026-08-19-opd-charge-password-v86">
 </head>
 <body>
 <div class="wrap">
@@ -980,6 +1023,21 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
   <h2>Update OPD Charges</h2>
   <p class="sub">Use this only when the doctor has approved a concession or refund after consultation.</p>
 
+  <div id="opdChargeLoginPanel" class="retrieval-lock opd-charge-lock">
+    <div class="field full">
+      <label for="opdChargePassword">Password <span class="required">*</span></label>
+      <div class="password-input-wrap">
+        <input id="opdChargePassword" type="password" autocomplete="off" maxlength="32" placeholder="Enter password">
+        <button type="button" class="password-toggle-btn" id="opdChargePasswordToggle" aria-label="Show password" title="Show password">
+          <span aria-hidden="true">👁</span>
+        </button>
+      </div>
+      <div class="retrieval-status" id="opdChargeLoginStatus"></div>
+    </div>
+    <button type="button" class="retrieval-primary" id="opdChargeLoginBtn">Access OPD Charges</button>
+  </div>
+
+  <div id="opdChargeWorkspace" class="opd-charge-workspace" hidden>
   <div class="field full">
     <label for="opdChargeCity">OPD Booking City <span class="required">*</span></label>
     <select id="opdChargeCity" class="opd-charge-city-select">
@@ -1025,6 +1083,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
   <div class="field full appointment-action-area">
     <button type="button" class="cta" id="updateOPDChargeBtn">Update OPD Charges</button>
   </div>
+  </div>
 </section>
 
 <section class="card success-card" id="opdChargeSuccessCard">
@@ -1050,7 +1109,12 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(
   <div id="retrievalLoginPanel" class="retrieval-lock">
     <div class="field full">
       <label for="retrievalPassword">Password <span class="required">*</span></label>
-      <input id="retrievalPassword" type="password" autocomplete="off" inputmode="numeric" maxlength="32" placeholder="Enter password">
+      <div class="password-input-wrap">
+        <input id="retrievalPassword" type="password" autocomplete="off" inputmode="numeric" maxlength="32" placeholder="Enter password">
+        <button type="button" class="password-toggle-btn" id="retrievalPasswordToggle" aria-label="Show password" title="Show password">
+          <span aria-hidden="true">👁</span>
+        </button>
+      </div>
       <div class="retrieval-status" id="retrievalLoginStatus"></div>
     </div>
     <button type="button" class="retrieval-primary" id="retrievalLoginBtn">Access Records</button>
@@ -1808,6 +1872,16 @@ function setDefaultOPDChargeCityToToday_(){
 }
 
 function resetOPDCharge_(){
+  opdChargeSessionToken="";
+  if($("opdChargePassword")) $("opdChargePassword").value="";
+  if($("opdChargeLoginStatus")) $("opdChargeLoginStatus").textContent="";
+  if($("opdChargeLoginBtn")){
+    $("opdChargeLoginBtn").disabled=false;
+    $("opdChargeLoginBtn").textContent="Access OPD Charges";
+  }
+  if($("opdChargeLoginPanel")) $("opdChargeLoginPanel").hidden=false;
+  if($("opdChargeWorkspace")) $("opdChargeWorkspace").hidden=true;
+
   $("opdChargeEntry").style.display="block";
   setOPDChargeRetrievalDateToday();
   $("opdChargeCity").value="";
@@ -1851,7 +1925,9 @@ function showOPDChargePanel_(){
   $("opdChargeEntry").style.display="none";
   setOPDChargeRetrievalDateToday();
 
-  $("opdChargeCity").focus();
+  $("opdChargeLoginPanel").hidden=false;
+  $("opdChargeWorkspace").hidden=true;
+  setTimeout(()=>$("opdChargePassword").focus(),250);
 }
 
 function showOPD(){
@@ -3252,6 +3328,7 @@ function syncEEGCityWithSelectedLocation(){
      This is completely separate from OPD/EEG booking handlers above.
      ======================================================================== */
   let retrievalSessionToken = "";
+  let opdChargeSessionToken = "";
 
   function retrievalPeriodLabel_(value){
     if(value === "today") return "Today";
@@ -3316,8 +3393,59 @@ function syncEEGCityWithSelectedLocation(){
   }
 
   $("openOPDChargeBtn").addEventListener("click",()=>{
+    $("retrievalCard").classList.remove("show");
+    $("retrievalEntry").style.display="block";
     showOPDChargePanel_();
     $("opdChargePanel").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+
+  function setupPasswordToggle_(inputId,toggleId){
+    const input=$(inputId);
+    const toggle=$(toggleId);
+    if(!input || !toggle) return;
+
+    toggle.addEventListener("click",()=>{
+      const showing=input.type==="text";
+      input.type=showing ? "password" : "text";
+      toggle.setAttribute("aria-label",showing ? "Show password" : "Hide password");
+      toggle.setAttribute("title",showing ? "Show password" : "Hide password");
+    });
+  }
+
+  setupPasswordToggle_("opdChargePassword","opdChargePasswordToggle");
+  setupPasswordToggle_("retrievalPassword","retrievalPasswordToggle");
+
+  $("opdChargePassword").addEventListener("keydown",e=>{
+    if(e.key==="Enter") $("opdChargeLoginBtn").click();
+  });
+
+  $("opdChargeLoginBtn").addEventListener("click",async()=>{
+    const password=$("opdChargePassword").value;
+    if(!password){
+      $("opdChargeLoginStatus").textContent="Enter the password.";
+      $("opdChargePassword").focus();
+      return;
+    }
+
+    const btn=$("opdChargeLoginBtn");
+    btn.disabled=true;
+    btn.textContent="Verifying…";
+    $("opdChargeLoginStatus").textContent="";
+
+    try{
+      const result=await api("opdChargeLogin",{password},8000);
+      opdChargeSessionToken=result.token;
+      $("opdChargeLoginPanel").hidden=true;
+      $("opdChargeWorkspace").hidden=false;
+      $("opdChargeLoginStatus").textContent="";
+      $("opdChargePassword").value="";
+      $("opdChargeCity").focus();
+    }catch(err){
+      $("opdChargeLoginStatus").textContent=err.message||"Incorrect password.";
+    }finally{
+      btn.disabled=false;
+      btn.textContent="Access OPD Charges";
+    }
   });
 
   $("opdChargeCity").addEventListener("change",()=>{
@@ -3347,6 +3475,13 @@ function syncEEGCityWithSelectedLocation(){
   });
 
   $("opdChargeLookupBtn").addEventListener("click",async()=>{
+    if(!opdChargeSessionToken){
+      showOPDChargePanel_();
+      $("opdChargeLoginStatus").textContent="Enter the password to access OPD charge updates.";
+      setTimeout(()=>$("opdChargePassword").focus(),50);
+      return;
+    }
+
     const phone=$("opdChargeWhatsapp").value.trim();
     const city=$("opdChargeCity").value.trim();
     const retrievalDate=getTodayDDMMYYYYClient_();
@@ -3369,7 +3504,7 @@ function syncEEGCityWithSelectedLocation(){
       let result=null;
       for(let attempt=0;attempt<2;attempt++){
         try{
-          result=await api("getOPDChargeStatus",{whatsapp:phone,city},12000);
+          result=await api("getOPDChargeStatus",{whatsapp:phone,city,opdChargeToken:opdChargeSessionToken},12000);
           break;
         }catch(err){
           if(!isTransientNetworkError(err) || attempt===1) throw err;
@@ -3417,6 +3552,16 @@ function syncEEGCityWithSelectedLocation(){
       updateOPDChargeActionState_();
       $("opdChargePatientCard").classList.add("show");
     }catch(err){
+      const msg=String(err&&err.message||"");
+      if(/OPD charge session expired|password again/i.test(msg)){
+        opdChargeSessionToken="";
+        $("opdChargeWorkspace").hidden=true;
+        $("opdChargeLoginPanel").hidden=false;
+        $("opdChargeLoginStatus").textContent=msg;
+        $("opdChargePassword").value="";
+        setTimeout(()=>$("opdChargePassword").focus(),50);
+        return;
+      }
       $("opdChargePatientCard").classList.remove("show");
       $("opdChargeLookupStatus").textContent="";
       popup("Patient not found",err.message||`No registered patient was found with this WhatsApp number in ${city}.`,$("opdChargeWhatsapp"));
@@ -3427,6 +3572,13 @@ function syncEEGCityWithSelectedLocation(){
   });
 
   $("updateOPDChargeBtn").addEventListener("click",async()=>{
+    if(!opdChargeSessionToken){
+      showOPDChargePanel_();
+      $("opdChargeLoginStatus").textContent="Enter the password to access OPD charge updates.";
+      setTimeout(()=>$("opdChargePassword").focus(),50);
+      return;
+    }
+
     const enteredPhone=$("opdChargeWhatsapp").value.trim();
     const patientPhone=selectedOPDChargePatient && selectedOPDChargePatient.whatsapp
       ? String(selectedOPDChargePatient.whatsapp).replace(/\D/g,"").slice(-10)
@@ -3506,7 +3658,7 @@ function syncEEGCityWithSelectedLocation(){
        * verification and returns verified:true only after success.
        */
       try{
-        const result=await api("updateOPDCharges",payload,WRITE_TIMEOUT);
+        const result=await api("updateOPDCharges",{...payload,opdChargeToken:opdChargeSessionToken},WRITE_TIMEOUT);
 
         if(result && result.verified===true){
           showSuccess(result);
@@ -3520,7 +3672,8 @@ function syncEEGCityWithSelectedLocation(){
         const status=await api("getOPDChargeStatus",{
           whatsapp:phone,
           appointmentId:String(selectedOPDChargePatient.appointmentId||""),
-          city:city
+          city:city,
+          opdChargeToken:opdChargeSessionToken
         },STATUS_TIMEOUT);
 
         if(matchesRequested(status)){
@@ -3556,7 +3709,8 @@ function syncEEGCityWithSelectedLocation(){
             const status=await api("getOPDChargeStatus",{
               whatsapp:phone,
               appointmentId:String(selectedOPDChargePatient.appointmentId||""),
-              city:city
+              city:city,
+              opdChargeToken:opdChargeSessionToken
             },STATUS_TIMEOUT);
 
             if(matchesRequested(status)){
@@ -3589,7 +3743,7 @@ function syncEEGCityWithSelectedLocation(){
          * alreadyPaid+verified instead of writing a second different record.
          */
         btn.textContent="Retrying securely…";
-        const retryResult=await api("updateOPDCharges",payload,WRITE_TIMEOUT);
+        const retryResult=await api("updateOPDCharges",{...payload,opdChargeToken:opdChargeSessionToken},WRITE_TIMEOUT);
 
         if(retryResult && retryResult.verified===true){
           showSuccess(retryResult);
@@ -3599,7 +3753,8 @@ function syncEEGCityWithSelectedLocation(){
         const retryStatus=await api("getOPDChargeStatus",{
           whatsapp:phone,
           appointmentId:String(selectedOPDChargePatient.appointmentId||""),
-          city:city
+          city:city,
+          opdChargeToken:opdChargeSessionToken
         },STATUS_TIMEOUT);
 
         if(matchesRequested(retryStatus)){
@@ -3623,7 +3778,17 @@ function syncEEGCityWithSelectedLocation(){
         throw new Error("The OPD charge update could not be confirmed in the spreadsheet.");
       }
     }catch(err){
-      popup("OPD charge update failed",err&&err.message?err.message:"Please try again.",btn);
+      const msg=err&&err.message?err.message:"Please try again.";
+      if(/OPD charge session expired|password again/i.test(msg)){
+        opdChargeSessionToken="";
+        $("opdChargeWorkspace").hidden=true;
+        $("opdChargeLoginPanel").hidden=false;
+        $("opdChargeLoginStatus").textContent=msg;
+        $("opdChargePassword").value="";
+        setTimeout(()=>$("opdChargePassword").focus(),50);
+        return;
+      }
+      popup("OPD charge update failed",msg,btn);
     }finally{
       btn.disabled=false;
       updateOPDChargeActionState_();
@@ -3631,6 +3796,8 @@ function syncEEGCityWithSelectedLocation(){
   });
 
   $("openRetrievalBtn").addEventListener("click",()=>{
+    $("opdChargePanel").hidden=true;
+    $("opdChargeEntry").style.display="block";
     buildRetrievalPeriodOptions_();
     retrievalSessionToken="";
     $("retrievalPassword").value="";
@@ -3934,7 +4101,7 @@ function syncEEGCityWithSelectedLocation(){
   document.getElementById('versionFooter').textContent =
     parts.day + parts.month + parts.year + '-' +
     parts.hour + ':' + parts.minute + ':' + parts.second +
-    '-HTML76-CODE73';
+    '-HTML79-CODE74';
 })();
 </script></div>
 </body>
