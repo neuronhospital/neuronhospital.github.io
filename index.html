@@ -1975,7 +1975,7 @@ function showOPDSuccess(result){
     <div><span>Age</span><b>${esc(result.age)} ${esc(result.ageUnit)}</b></div>
     <div><span>Address</span><b>${esc(result.address || "")}</b></div>
     <div><span>Date</span><b>${esc(displayDate(result.date))}</b></div>
-    ${result.city === "Latur" ? `<div><span>Followup City</span><b>${esc(result.city)}</b></div>` : ""}
+    ${result.city === "Latur" ? `<div><span>Followup City</span><b>${esc(result.nextFollowupCity || "")}</b></div>`}
     <div><span>OPD Charges</span><b>₹${esc(result.opdCharges)}</b></div>
     <div><span>Payment</span><b>${esc(paymentText_(result.opdCashPaid??result.opdCharges,result.opdOnlinePaid??0,result.opdTotalPaid??result.opdCharges))}</b></div>`;
   $("bookingCard").classList.add("hidden");
@@ -3916,7 +3916,7 @@ function syncEEGCityWithSelectedLocation(){
   document.getElementById('versionFooter').textContent =
     parts.day + parts.month + parts.year + '-' +
     parts.hour + ':' + parts.minute + ':' + parts.second +
-    '-html76+code72';
+    '-html77+code72';
 })();
 </script></div>
 </body>
