@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  }
 
  function bothTable(rows){
-   let html=`<div class="table-wrap"><table id="reportTable" class="combined-report"><thead>
+   let html=`<div class="table-wrap combined-table-wrap"><table id="reportTable" class="combined-report"><thead>
      <tr><th rowspan="2">Sr. No.</th><th rowspan="2">Patient Name</th><th colspan="3">OPD Collection</th><th colspan="3">EEG Collection</th><th rowspan="2">Mobile Number</th></tr>
      <tr><th>Cash</th><th>Online</th><th>Total</th><th>Cash</th><th>Online</th><th>Total</th></tr>
    </thead><tbody>`;
