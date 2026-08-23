@@ -270,19 +270,31 @@ document.addEventListener("DOMContentLoaded",()=>{
   $("date").onclick=()=>renderCalendar();
 
   $("load").onclick=async()=>{
-    // Starting a new patient retrieval must collapse any previous booking confirmation.
+    // Starting a new patient retrieval must clear every previous booking stage.
+    selected=null; verified=false;
+    $("patients").innerHTML="";
+    $("bookingFields").hidden=true;
+    $("bookingFields").setAttribute("hidden","");
     $("confirmation").hidden=true;
     $("confirmation").innerHTML="";
+    $("submitStatus").textContent="";
+    $("followStatus").textContent="";
+    $("followStatus").style.color="";
+    $("city").disabled=true; $("date").disabled=true; $("next").disabled=true; $("book").disabled=true;
     const p=U.phone($("followWa").value);
-    $("followStatus").textContent=""; $("patients").innerHTML="";
     if(!U.validPhone(p)){
       $("followStatus").textContent="Enter a valid 10-digit WhatsApp number.";
       $("followStatus").style.color="#b42318";
+      $("load").disabled=false;
+      $("load").textContent="Load";
+      $("load").className="btn btn-secondary";
       return;
     }
-    $("followStatus").textContent="Searching patient records…";
-    $("followStatus").style.color="#7b1fa2";
     $("load").disabled=true;
+    $("load").textContent="Loading...";
+    $("load").className="btn btn-primary";
+    $("followStatus").textContent="Wait We are Loading Patient details...";
+    $("followStatus").style.color="#7b1fa2";
     try{
       const r=await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p});
       $("patients").innerHTML="";
@@ -290,6 +302,10 @@ document.addEventListener("DOMContentLoaded",()=>{
         const b=document.createElement("button"); b.type="button"; b.className="patient-option";
         b.innerHTML=`<b>${U.esc(x.name)}</b><small>${U.esc(x.age)} ${U.esc(x.ageUnit)} • ${U.esc(x.city)} • ${U.date(x.date)}</small>`;
         b.onclick=()=>{
+          // Selecting another patient must remove any confirmation belonging to a previous patient.
+          $("confirmation").hidden=true;
+          $("confirmation").innerHTML="";
+          $("submitStatus").textContent="";
           selected=x; document.querySelectorAll(".patient-option").forEach(z=>z.classList.remove("selected")); b.classList.add("selected");
           $("name").value=U.title(x.name);
           const followupAge=currentFollowupAge(x.age,x.ageUnit,x.date);
@@ -298,17 +314,12 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("address").value=U.title(x.address||""); $("ref").value=U.title(x.referredBy||"");
           $("city").value=x.city; $("next").value=x.nextFollowupCity||x.city;
           // Explicitly reveal the complete Follow-up editing/booking stage.
-          // Use both hidden-property and attribute removal so the staged UI
-          // cannot remain collapsed after patient selection.
           $("bookingFields").hidden=false;
           $("bookingFields").removeAttribute("hidden");
           $("newFields").hidden=false;
           $("newFields").removeAttribute("hidden");
           enableAfterWhatsApp();
           const now=U.parts();calendarYear=now.y;calendarMonth=now.m;
-          // Follow-up date defaults to the first available visit date for
-          // the selected visiting city. The calendar stays collapsed until
-          // the receptionist clicks the date field.
           setFollowupDefaultDate(x.city);
         };
         $("patients").appendChild(b);
@@ -325,15 +336,19 @@ document.addEventListener("DOMContentLoaded",()=>{
       $("followStatus").textContent="Unable to retrieve patient details: "+(e.message||"Network/server error.");
       $("followStatus").style.color="#b42318";
     }
-    finally{$("load").disabled=false;}
+    finally{
+      $("load").disabled=false;
+      $("load").textContent="Load";
+      $("load").className="btn btn-secondary";
+    }
   };
 
   $("book").onclick=async()=>{
     if($("book").disabled)return;
     $("book").disabled=true;
-    $("book").textContent="Booking OPD Appointment";
+    $("book").textContent="Confirming Appointment...";
     $("book").className="btn btn-primary";
-    $("submitStatus").textContent="Booking OPD appointment…";
+    $("submitStatus").textContent="Wait We are Confirming your OPD Appointment...";
     $("submitStatus").style.color="#7b1fa2";
 
     const payMode=$("payMode").value;
@@ -342,13 +357,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     else if(payMode==="Online"){total=Number($("amount").value)||0;o=total;}
     else{c=Number($("cash").value)||0;o=Number($("online").value)||0;total=c+o;}
 
-    if(total>2000){$("submitStatus").textContent="OPD total cannot exceed ₹2000.";$("submitStatus").style.color="#b42318";$("book").disabled=false;return;}
-    if(total<0){$("submitStatus").textContent="Enter a valid OPD amount.";$("submitStatus").style.color="#b42318";$("book").disabled=false;return;}
+    if(total>2000){$("submitStatus").textContent="OPD total cannot exceed ₹2000.";$("submitStatus").style.color="#b42318";$("book").disabled=false;$("book").textContent="Book OPD Appointment";$("book").className="cta";return;}
+    if(total<0){$("submitStatus").textContent="Enter a valid OPD amount.";$("submitStatus").style.color="#b42318";$("book").disabled=false;$("book").textContent="Book OPD Appointment";$("book").className="cta";return;}
     if(!String($("address").value||"").trim()){
       $("submitStatus").textContent="Please enter the patient's address.";
       $("submitStatus").style.color="#b42318";
       $("address").focus();
       $("book").disabled=false;
+      $("book").textContent="Book OPD Appointment";
+      $("book").className="cta";
       return;
     }
 
