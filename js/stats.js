@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded",()=>{
     <option value="last12">Last 12 Months</option>
     <option value="currentyear">${q.y}</option>
     <option value="lastyear">${q.y-1}</option>`;
- $("show").value="both";
 
  let lastReport=null;
 
@@ -22,7 +21,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    lastReport=null;
    $("results").innerHTML="";
  }
- [$("city"),$("period"),$("show")].forEach(el=>el.addEventListener("change",clearResults));
+ [$("city"),$("period")].forEach(el=>el.addEventListener("change",clearResults));
 
 
  $("get").onclick=async()=>{
@@ -40,7 +39,7 @@ document.addEventListener("DOMContentLoaded",()=>{
        token:tok,
        city:$("city").value,
        period:$("period").value,
-       showMode:$("show").value
+       showMode:"both"
      },25000);
      lastReport=r;
      render(r,"CURRENT");
@@ -62,7 +61,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
  function render(r,state){
    const t=r.totals||{};
-   const mode=r.showMode||$("show").value;
+   const mode="both";
    const rows=rowsFor(mode,r.rows||[]);
    let html=`<div class="report-head"><b>${esc(r.city)}</b> • ${esc(r.periodLabel||"")}`;
    html+=` <span class="data-state ${state==="CURRENT"?"data-current":"data-cached"}">${state==="CURRENT"?"Current":"Cached"}</span></div>`;
