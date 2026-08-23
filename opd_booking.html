@@ -24,7 +24,7 @@
     <div class="grid" style="margin-top:14px">
       <div class="field"><label class="required-field">Patient's Name</label><input id="name" autocomplete="name"></div>
       <div class="field"><label class="required-field">Age</label><div class="input-row"><input id="age" type="number" step=".1" min="0.01"><select id="unit"><option value="years">Years</option><option value="months">Months</option><option value="days">Days</option></select></div></div>
-      <div class="field full"><label>Patient Address</label><textarea id="address" autocomplete="street-address"></textarea></div>
+      <div class="field full"><label class="required-field">Patient Address</label><input id="address" autocomplete="street-address"></div>
       <div class="field full"><label>Referred By Dr./Hospital</label><input id="ref"></div>
 
       <div id="newWhatsAppField" class="field full">
@@ -56,7 +56,7 @@
       <div id="splitTotal" class="payment-total">Total: ₹0</div>
     </div>
 
-    <div class="field"><label class="required-field">Visit Location</label><select id="city" disabled></select></div>
+    <div class="field"><label class="required-field">Visit Location</label><select id="city"></select></div>
     <div class="field"><label class="required-field">Date of Appointment</label><input id="date" readonly disabled placeholder="Tap to select date"><div id="dateLoading" class="status" aria-live="polite" hidden></div><div id="cal" class="calendar" hidden></div></div>
     <div class="field"><label class="required-field">Next Follow-up City</label><select id="next" disabled></select></div>
 
