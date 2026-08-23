@@ -9,10 +9,12 @@
 <div class="field full" id="singlePayment"><label id="singlePaymentLabel">EEG Charges Paid in Cash</label><input id="amount" type="number" min="0" max="3000"></div>
 <div class="field full" id="splitPayment" hidden><label>EEG Charges Paid in Split</label><div class="split-payment"><div><label>Paid in Cash</label><input id="cash" type="number" min="0" max="3000"></div><div><label>Paid Online</label><input id="online" type="number" min="0" max="3000"></div></div><div id="total" class="payment-total">Total Amount Paid: ₹0</div></div>
 <div class="field full"><button id="save" class="cta" style="width:100%">Update EEG Details</button><div id="updateMessage" class="status" hidden>Wait we are updating EEG details to system...</div></div></div></section><section id="confirmation" hidden></section></section></div></main><div id="footer"></div>
-<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/utils.js"></script><script src="js/idb.js"></script><script src="js/common.js"></script><script src="js/secure.js"></script><script>document.body.dataset.mode="eeg";</script>
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/utils.js"></script><script src="js/idb.js"></script><script src="js/common.js"></script><script src="js/secure.js"></script><script src="js/schedule.js"></script><script>document.body.dataset.mode="eeg";</script>
 <script>
 document.addEventListener("DOMContentLoaded",()=>{const $=U.$;let selected=null;let originalPayment={cash:0,online:0};
 $('city').innerHTML=NEURON_CONFIG.cities.map(x=>`<option>${U.esc(x)}</option>`).join('');
+const scheduledCity=window.Schedule?.cityAtNow?.(NEURON_CONFIG.cities)||'Latur';
+if(NEURON_CONFIG.cities.includes(scheduledCity))$('city').value=scheduledCity;
 $('city').addEventListener('change',()=>{clearState();});
 function clearState(){selected=null;$('patients').innerHTML='';$('edit').hidden=true;$('confirmation').hidden=true;$('confirmation').innerHTML='';$('status').textContent='';$('amount').value='';$('cash').value='';$('online').value='';$('total').textContent='Total Amount Paid: ₹0';$('updateMessage').hidden=true}
 function setLoading(on){$('load').disabled=on;$('load').textContent=on?'Loading...':'Load';$('load').className=on?'btn btn-primary loading-state':'btn btn-secondary';$('loadMessage').hidden=!on}
