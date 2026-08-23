@@ -49,10 +49,17 @@ document.addEventListener("DOMContentLoaded",()=>{
     return{value:days,unit:"days"};
   };
 
+  const getScheduledCityForToday=()=>{
+    const p=U.parts();
+    const matches=cities.filter(city=>Schedule.dates(city,p.y,p.m).includes(String(p.d).padStart(2,"0")+String(p.m).padStart(2,"0")+p.y));
+    return matches[0]||"Latur";
+  };
+
   const fillCities=()=>{
     $("city").innerHTML=cities.map(x=>`<option value="${x}">${x}</option>`).join("");
     $("next").innerHTML=cities.map(x=>`<option value="${x}">${x}</option>`).join("");
-    $("city").value="Latur"; $("next").value="Latur";
+    const todayCity=getScheduledCityForToday();
+    $("city").value=todayCity; $("next").value=todayCity;
   };
 
   const resetFields=(mode)=>{
@@ -71,8 +78,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("date").value="";
     delete $("date").dataset.key;
     $("unit").value="years";
-    $("city").value="Latur"; $("next").value="Latur";
-    $("city").disabled=true; $("date").disabled=true; $("next").disabled=true; $("book").disabled=true;
+    const todayCity=getScheduledCityForToday();
+    $("city").value=todayCity; $("next").value=todayCity;
+    $("city").disabled=false; $("date").disabled=true; $("next").disabled=true; $("book").disabled=true;
     $("waStatus").textContent=""; $("waStatus").style.color="";
     $("followStatus").textContent=""; $("patients").innerHTML="";
     $("submitStatus").textContent="";
@@ -340,6 +348,13 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     if(total>2000){$("submitStatus").textContent="OPD total cannot exceed ₹2000.";$("submitStatus").style.color="#b42318";$("book").disabled=false;return;}
     if(total<0){$("submitStatus").textContent="Enter a valid OPD amount.";$("submitStatus").style.color="#b42318";$("book").disabled=false;return;}
+    if(!String($("address").value||"").trim()){
+      $("submitStatus").textContent="Please enter the patient's address.";
+      $("submitStatus").style.color="#b42318";
+      $("address").focus();
+      $("book").disabled=false;
+      return;
+    }
 
     const id=U.uuid("opd");
     const payload={
