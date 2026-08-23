@@ -49,11 +49,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     return{value:days,unit:"days"};
   };
 
-  const getScheduledCityForToday=()=>{
-    const p=U.parts();
-    const matches=cities.filter(city=>Schedule.dates(city,p.y,p.m).includes(String(p.d).padStart(2,"0")+String(p.m).padStart(2,"0")+p.y));
-    return matches[0]||"Latur";
-  };
+  const getScheduledCityForToday=()=>Schedule.cityAtNow(cities);
 
   const fillCities=()=>{
     $("city").innerHTML=cities.map(x=>`<option value="${x}">${x}</option>`).join("");
