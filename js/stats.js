@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded",()=>{
  const $=U.$;
- const cities=NEURON_CONFIG.cities||[];
- const scheduledCity=window.Schedule?.cityAtNow?Schedule.cityAtNow(cities):"Latur";
- $("city").innerHTML=cities.map(x=>`<option value="${U.esc(x)}">${U.esc(x)}</option>`).join("");
- if(cities.includes(scheduledCity)) $("city").value=scheduledCity;
-
+ $("city").innerHTML=NEURON_CONFIG.cities.map(x=>`<option>${x}</option>`).join("");
+ if(window.Schedule&&typeof Schedule.cityAtNow==="function"){
+   const scheduledCity=Schedule.cityAtNow(NEURON_CONFIG.cities);
+   if(NEURON_CONFIG.cities.includes(scheduledCity)) $("city").value=scheduledCity;
+ }
  const q=U.parts(),cur=`${q.y}-${String(q.m).padStart(2,"0")}`;
  $("period").innerHTML=
    `<option value="today">Today</option>
@@ -22,7 +22,8 @@ document.addEventListener("DOMContentLoaded",()=>{
    lastReport=null;
    $("results").innerHTML="";
  }
- [$('city'),$('period'),$('show')].forEach(el=>el.addEventListener("change",clearResults));
+ [$("city"),$("period"),$("show")].forEach(el=>el.addEventListener("change",clearResults));
+
 
  $("get").onclick=async()=>{
    const btn=$("get");
@@ -58,13 +59,6 @@ document.addEventListener("DOMContentLoaded",()=>{
    if(mode==="eeg")return rows.filter(x=>x.eegCharges!==null);
    return rows;
  }
- function collectionTotal(x,key){
-   return (Number(x[`${key}CashPaid`])||0)+(Number(x[`${key}OnlinePaid`])||0);
- }
- function safeTotal(x,key){
-   const value=Number(x[`${key}TotalPaid`]);
-   return Number.isFinite(value)?value:collectionTotal(x,key);
- }
 
  function render(r,state){
    const t=r.totals||{};
@@ -99,22 +93,21 @@ document.addEventListener("DOMContentLoaded",()=>{
      const freeEEG=eegRows.filter(x=>Number(x.eegCharges)===0).length;
      const totalCash=(Number(t.opdCash)||0)+(Number(t.eegCash)||0);
      const totalOnline=(Number(t.opdOnline)||0)+(Number(t.eegOnline)||0);
-     const totalCollection=(Number(t.opdTotal)||0)+(Number(t.eegTotal)||0);
-     html+=bothSummary({
-       opdTotal:r.rows.length,
-       opdFree:freeOPD,
-       eegTotal:t.eegCount||eegRows.length,
-       eegFree:freeEEG,
-       opdCash:t.opdCash,
-       opdOnline:t.opdOnline,
-       opdCollection:t.opdTotal,
-       eegCash:t.eegCash,
-       eegOnline:t.eegOnline,
-       eegCollection:t.eegTotal,
-       combinedCash:totalCash,
-       combinedOnline:totalOnline,
-       combinedCollection:totalCollection
-     });
+     const totalCollection=(Number(t.opdPaid)||0)+(Number(t.eegPaid)||0);
+     html+=`<div class="summary-grid service-summary">
+       <div class="stat service-stat"><small></small><strong>OPD</strong></div>
+       <div class="stat service-stat"><small></small><strong>EEG</strong></div>
+       <div class="stat service-stat"><small>Total</small><strong>${r.rows.length}</strong></div>
+       <div class="stat service-stat"><small>Total</small><strong>${t.eegCount||eegRows.length}</strong></div>
+       <div class="stat service-stat"><small>Free</small><strong>${freeOPD}</strong></div>
+       <div class="stat service-stat"><small>Free</small><strong>${freeEEG}</strong></div>
+     </div>
+     <div class="collection-card">
+       <div class="collection-grid collection-head"><div></div><div>OPD</div><div>EEG</div><div>OPD+EEG</div></div>
+       <div class="collection-grid"><div class="collection-label">Cash</div><div>${money(t.opdCash)}</div><div>${money(t.eegCash)}</div><div>${money(totalCash)}</div></div>
+       <div class="collection-grid"><div class="collection-label">Online</div><div>${money(t.opdOnline)}</div><div>${money(t.eegOnline)}</div><div>${money(totalOnline)}</div></div>
+       <div class="collection-grid collection-total"><div class="collection-label">Total</div><div>${money(t.opdPaid)}</div><div>${money(t.eegPaid)}</div><div>${money(totalCollection)}</div></div>
+     </div>`;
      html+=bothTable(rows);
    }
    if(!rows.length){
@@ -133,72 +126,46 @@ document.addEventListener("DOMContentLoaded",()=>{
    $("downloadMobile").onclick=()=>downloadMobileNumbers(r,mode);
  }
 
- function bothSummary(s){
-   return `<div class="table-wrap"><table>
-     <thead><tr><th></th><th>OPD</th><th>EEG</th></tr></thead>
-     <tbody>
-       <tr><th>Total</th><td>${s.opdTotal}</td><td>${s.eegTotal}</td></tr>
-       <tr><th>Free</th><td>${s.opdFree}</td><td>${s.eegFree}</td></tr>
-     </tbody>
-   </table></div>
-   <div class="table-wrap" style="margin-top:12px"><table>
-     <thead><tr><th></th><th>OPD</th><th>EEG</th><th>OPD+EEG</th></tr></thead>
-     <tbody>
-       <tr><th>Cash</th><td>${money(s.opdCash)}</td><td>${money(s.eegCash)}</td><td>${money(s.combinedCash)}</td></tr>
-       <tr><th>Online</th><td>${money(s.opdOnline)}</td><td>${money(s.eegOnline)}</td><td>${money(s.combinedOnline)}</td></tr>
-       <tr class="total-row"><th>Total</th><td>${money(s.opdCollection)}</td><td>${money(s.eegCollection)}</td><td>${money(s.combinedCollection)}</td></tr>
-     </tbody>
-   </table></div>`;
- }
-
  function patientTable(rows){
-   let html=`<div class="table-wrap"><table id="reportTable" style="table-layout:fixed;min-width:640px"><colgroup><col style="width:60px"><col style="width:180px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:120px"></colgroup><thead>
-     <tr><th>Cash</th><th>Online</th><th>Total</th></tr>
-   </thead><tbody>`;
-   rows.forEach((x,i)=>{
-     const opdTotal=safeTotal(x,"opd");
-     html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${money(x.opdCashPaid)}</td><td>${money(x.opdOnlinePaid)}</td><td>${money(opdTotal)}</td><td>${esc(x.mobileNumber)}</td></tr>`;
-   });
+   let html=`<div class="table-wrap"><table id="reportTable"><thead><tr>
+     <th>Sr No.</th><th>Patient Name</th><th>OPD Charges</th><th>Cash</th><th>Online</th><th>Mobile Number</th>
+   </tr></thead><tbody>`;
+   rows.forEach((x,i)=>html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${money(x.opdCharges)}</td><td>${money(x.opdCashPaid)}</td><td>${money(x.opdOnlinePaid)}</td><td>${esc(x.mobileNumber)}</td></tr>`);
+   const total=rows.reduce((a,x)=>a+(Number(x.opdCharges)||0),0);
    const cash=rows.reduce((a,x)=>a+(Number(x.opdCashPaid)||0),0);
    const online=rows.reduce((a,x)=>a+(Number(x.opdOnlinePaid)||0),0);
-   const total=rows.reduce((a,x)=>a+safeTotal(x,"opd"),0);
-   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(cash)}</th><th>${money(online)}</th><th>${money(total)}</th><th>—</th></tr></tfoot></table></div>`;
+   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(total)}</th><th>${money(cash)}</th><th>${money(online)}</th><th>—</th></tr></tfoot></table></div>`;
    return html;
  }
 
  function eegTable(rows){
-   let html=`<div class="table-wrap"><table id="reportTable" style="table-layout:fixed;min-width:640px"><colgroup><col style="width:60px"><col style="width:180px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:120px"></colgroup><thead>
-     <tr><th>Cash</th><th>Online</th><th>Total</th></tr>
-   </thead><tbody>`;
-   rows.forEach((x,i)=>{
-     const eegTotal=safeTotal(x,"eeg");
-     html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${money(x.eegCashPaid)}</td><td>${money(x.eegOnlinePaid)}</td><td>${money(eegTotal)}</td><td>${esc(x.mobileNumber)}</td></tr>`;
-   });
+   let html=`<div class="table-wrap"><table id="reportTable"><thead><tr>
+     <th>Sr No.</th><th>Patient Name</th><th>EEG Charges</th><th>Cash</th><th>Online</th><th>Mobile Number</th>
+   </tr></thead><tbody>`;
+   rows.forEach((x,i)=>html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${money(x.eegCharges)}</td><td>${money(x.eegCashPaid)}</td><td>${money(x.eegOnlinePaid)}</td><td>${esc(x.mobileNumber)}</td></tr>`);
+   const total=rows.reduce((a,x)=>a+(Number(x.eegCharges)||0),0);
    const cash=rows.reduce((a,x)=>a+(Number(x.eegCashPaid)||0),0);
    const online=rows.reduce((a,x)=>a+(Number(x.eegOnlinePaid)||0),0);
-   const total=rows.reduce((a,x)=>a+safeTotal(x,"eeg"),0);
-   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(cash)}</th><th>${money(online)}</th><th>${money(total)}</th><th>—</th></tr></tfoot></table></div>`;
+   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(total)}</th><th>${money(cash)}</th><th>${money(online)}</th><th>—</th></tr></tfoot></table></div>`;
    return html;
  }
 
  function bothTable(rows){
-   let html=`<div class="table-wrap"><table id="reportTable" style="table-layout:fixed;min-width:910px"><colgroup><col style="width:60px"><col style="width:180px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:120px"></colgroup><thead>
+   let html=`<div class="table-wrap"><table id="reportTable" class="combined-report"><thead>
+     <tr><th rowspan="2">Sr. No.</th><th rowspan="2">Patient Name</th><th colspan="3">OPD Collection</th><th colspan="3">EEG Collection</th><th rowspan="2">Mobile Number</th></tr>
      <tr><th>Cash</th><th>Online</th><th>Total</th><th>Cash</th><th>Online</th><th>Total</th></tr>
    </thead><tbody>`;
-   rows.forEach((x,i)=>{
-     const opdTotal=safeTotal(x,"opd");
-     const eegTotal=x.eegCharges===null?null:safeTotal(x,"eeg");
-     html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${money(x.opdCashPaid)}</td><td>${money(x.opdOnlinePaid)}</td><td>${money(opdTotal)}</td><td>${x.eegCharges===null?"—":money(x.eegCashPaid)}</td><td>${x.eegCharges===null?"—":money(x.eegOnlinePaid)}</td><td>${eegTotal===null?"—":money(eegTotal)}</td><td>${esc(x.mobileNumber)}</td></tr>`;
-   });
+   rows.forEach((x,i)=>html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${paidOrDash(x.opdCashPaid)}</td><td>${paidOrDash(x.opdOnlinePaid)}</td><td>${money(x.opdCharges)}</td><td>${x.eegCharges===null?"-":paidOrDash(x.eegCashPaid)}</td><td>${x.eegCharges===null?"-":paidOrDash(x.eegOnlinePaid)}</td><td>${x.eegCharges===null?"—":money(x.eegCharges)}</td><td>${esc(x.mobileNumber)}</td></tr>`);
+   const opd=rows.reduce((a,x)=>a+(Number(x.opdTotalPaid)||0),0);
    const opdCash=rows.reduce((a,x)=>a+(Number(x.opdCashPaid)||0),0);
    const opdOnline=rows.reduce((a,x)=>a+(Number(x.opdOnlinePaid)||0),0);
-   const opdTotal=rows.reduce((a,x)=>a+safeTotal(x,"opd"),0);
-   const eegCash=rows.reduce((a,x)=>a+(x.eegCharges===null?0:Number(x.eegCashPaid)||0),0);
-   const eegOnline=rows.reduce((a,x)=>a+(x.eegCharges===null?0:Number(x.eegOnlinePaid)||0),0);
-   const eegTotal=rows.reduce((a,x)=>a+(x.eegCharges===null?0:safeTotal(x,"eeg")),0);
-   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(opdCash)}</th><th>${money(opdOnline)}</th><th>${money(opdTotal)}</th><th>${money(eegCash)}</th><th>${money(eegOnline)}</th><th>${money(eegTotal)}</th><th>—</th></tr></tfoot></table></div>`;
+   const eeg=rows.reduce((a,x)=>a+(Number(x.eegTotalPaid)||0),0);
+   const eegCash=rows.reduce((a,x)=>a+(Number(x.eegCashPaid)||0),0);
+   const eegOnline=rows.reduce((a,x)=>a+(Number(x.eegOnlinePaid)||0),0);
+   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(opdCash)}</th><th>${money(opdOnline)}</th><th>${money(opd)}</th><th>${money(eegCash)}</th><th>${money(eegOnline)}</th><th>${money(eeg)}</th><th>—</th></tr></tfoot></table></div>`;
    return html;
  }
+ function paidOrDash(n){return Number(n)?money(n):"-";}
 
  function csvCell(v){
    const s=String(v==null?"":v);
@@ -224,14 +191,14 @@ document.addEventListener("DOMContentLoaded",()=>{
        rows.reduce((a,x)=>a+(Number(x.eegOnlinePaid)||0),0),""]);
    }else{
      out.push(["Sr No.","Patient Name","OPD Cash","OPD Online","OPD Total","EEG Cash","EEG Online","EEG Total","Mobile Number"]);
-     rows.forEach((x,i)=>out.push([i+1,x.patientName,x.opdCashPaid,x.opdOnlinePaid,safeTotal(x,"opd"),x.eegCharges===null?"":x.eegCashPaid,x.eegCharges===null?"":x.eegOnlinePaid,x.eegCharges===null?"":safeTotal(x,"eeg"),x.mobileNumber]));
+     rows.forEach((x,i)=>out.push([i+1,x.patientName,x.opdCashPaid,x.opdOnlinePaid,x.opdTotalPaid,x.eegCharges===null?"":x.eegCashPaid,x.eegCharges===null?"":x.eegOnlinePaid,x.eegCharges===null?"":x.eegTotalPaid,x.mobileNumber]));
      out.push(["","TOTAL",
        rows.reduce((a,x)=>a+(Number(x.opdCashPaid)||0),0),
        rows.reduce((a,x)=>a+(Number(x.opdOnlinePaid)||0),0),
-       rows.reduce((a,x)=>a+safeTotal(x,"opd"),0),
-       rows.reduce((a,x)=>a+(x.eegCharges===null?0:Number(x.eegCashPaid)||0),0),
-       rows.reduce((a,x)=>a+(x.eegCharges===null?0:Number(x.eegOnlinePaid)||0),0),
-       rows.reduce((a,x)=>a+(x.eegCharges===null?0:safeTotal(x,"eeg")),0),""]);
+       rows.reduce((a,x)=>a+(Number(x.opdTotalPaid)||0),0),
+       rows.reduce((a,x)=>a+(Number(x.eegCashPaid)||0),0),
+       rows.reduce((a,x)=>a+(Number(x.eegOnlinePaid)||0),0),
+       rows.reduce((a,x)=>a+(Number(x.eegTotalPaid)||0),0),""]);
    }
    const csv="\uFEFF"+out.map(row=>row.map(csvCell).join(",")).join("\r\n");
    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
