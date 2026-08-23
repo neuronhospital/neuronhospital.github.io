@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   let sel=null;
 
   $('city').innerHTML=cities.map(x=>`<option>${x}</option>`).join('');
+  $('city').value=window.Schedule?.cityAtNow?Schedule.cityAtNow(cities):'Latur';
 
   function def(){return $('city').value==='Latur'?1100:1600}
 
