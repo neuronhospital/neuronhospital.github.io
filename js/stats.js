@@ -42,9 +42,11 @@ document.addEventListener("DOMContentLoaded",()=>{
        showMode:"both"
      },25000);
      lastReport=r;
+     window.NeuronSecureSession?.renew();
      render(r,"CURRENT");
    }catch(e){
      const msg=String(e.message||e);
+     if(msg.toLowerCase().includes("session expired") || msg.toLowerCase().includes("session is missing")) window.NeuronSecureSession?.expire();
      $("results").innerHTML=`<div class="status">${U.esc(msg)}</div>`;
    }finally{
      btn.disabled=false;

@@ -68,7 +68,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("load").className="btn btn-primary";
     $("loadMessage").hidden=false;
     try{
-      const r=await NeuronAPI.call("getEEGPatientsByWhatsApp",{whatsapp:U.phone($("wa").value),city:$("city").value});
+      const r=await NeuronAPI.call("getSecureUpdatePatients",{token:localStorage.getItem("neuron_retrieval_token")||"",whatsapp:U.phone($("wa").value),city:$("city").value});
+      window.NeuronSecureSession?.renew();
       r.patients.forEach(x=>{
         const b=document.createElement("button");
         b.className="patient-option";
@@ -92,7 +93,8 @@ document.addEventListener("DOMContentLoaded",()=>{
         if(r.patients.length===1)b.click();
       });
     }catch(e){
-      $("status").textContent=e.message;
+      if(String(e.message||e).toLowerCase().includes("session expired")){window.NeuronSecureSession?.expire();}
+      else $("status").textContent=e.message;
     }finally{
       $("load").disabled=false;
       $("load").textContent="Load";
@@ -114,6 +116,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }else if(mode==="Online") online=Number($("charge").value)||0;
     else cash=Number($("charge").value)||0;
     const p={
+      token:localStorage.getItem("neuron_retrieval_token")||"",
       updateRequestId:id,
       appointmentId:selected.appointmentId,
       city:selected.city,
@@ -137,10 +140,12 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("updateMessage").hidden=false;
     try{
       const r=await NeuronAPI.call("updateOPDDetails",p,25000);
+      window.NeuronSecureSession?.renew();
       await IDB.put("tx",{id,type:"OPD_UPDATE",status:"complete",payload:p,result:r});
       $("confirmation").hidden=false;
       $("confirmation").innerHTML=`<div class="success"><div class="success-icon">✓</div><h2>OPD Details Updated</h2><p>Appointment ID: <b>${U.esc(r.appointmentId)}</b></p><h3>Changed and Updated Values</h3>${renderChangedValues(r.before,r.after)}</div>`;
     }catch(e){
+      if(String(e.message||e).toLowerCase().includes("session expired")){window.NeuronSecureSession?.expire();return;}
       await IDB.put("tx",{id,type:"OPD_UPDATE",status:"uncertain",payload:p});
       alert("Update status is uncertain. Do not repeat it until the original request is checked.");
     }finally{
