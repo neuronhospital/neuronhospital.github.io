@@ -1,4 +1,4 @@
-const C="neuron-static-v3";
+const C="neuron-static-v2";
 const A=["./","./index.html","./opd_booking.html","./eeg_booking.html","./opd_update.html","./eeg_update.html","./statistics.html","./css/base.css","./js/config.js","./js/api.js","./js/utils.js","./js/idb.js","./js/common.js","./js/schedule.js","./js/opd.js","./js/eeg.js","./js/secure.js","./js/update.js","./js/stats.js","./js/recovery.js","./manifest.webmanifest"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(C).then(c=>c.addAll(A)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(a=>Promise.all(a.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
