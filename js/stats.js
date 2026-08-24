@@ -17,6 +17,20 @@ document.addEventListener("DOMContentLoaded",()=>{
 
  let lastReport=null;
 
+ function retrievalPeriodLabel(period){
+   const now=new Date();
+   const base=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+   let offset=null, prefix="";
+   if(period==="today"){offset=0;prefix="Today";}
+   else if(period==="yesterday"){offset=1;prefix="Yesterday";}
+   else if(period==="daybefore"){offset=2;prefix="Day before Yesterday";}
+   if(offset===null)return null;
+   const d=new Date(base);
+   d.setDate(d.getDate()-offset);
+   const dateText=new Intl.DateTimeFormat("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(d);
+   return `${prefix} (${dateText})`;
+ }
+
  function clearResults(){
    lastReport=null;
    $("results").innerHTML="";
@@ -26,16 +40,23 @@ document.addEventListener("DOMContentLoaded",()=>{
 
  $("get").onclick=async()=>{
    const btn=$("get");
+   const citySelect=$("city");
+   const periodSelect=$("period");
    const old=btn.textContent;
+   const selectedPeriod=periodSelect.value;
    btn.disabled=true;
+   citySelect.disabled=true;
+   periodSelect.disabled=true;
    btn.textContent="Retrieving Records…";
    $("results").innerHTML=`<div class="status">Retrieving records from Google Sheets…</div>`;
    try{
      const r=await NeuronAPI.call("retrieveRecords",{
-       city:$("city").value,
-       period:$("period").value,
+       city:citySelect.value,
+       period:selectedPeriod,
        showMode:"both"
      },25000);
+     const relativeLabel=retrievalPeriodLabel(selectedPeriod);
+     if(relativeLabel) r.periodLabel=relativeLabel;
      lastReport=r;
      render(r,"CURRENT");
    }catch(e){
@@ -43,6 +64,8 @@ document.addEventListener("DOMContentLoaded",()=>{
      $("results").innerHTML=`<div class="status">${U.esc(msg)}</div>`;
    }finally{
      btn.disabled=false;
+     citySelect.disabled=false;
+     periodSelect.disabled=false;
      btn.textContent=old;
    }
  };
