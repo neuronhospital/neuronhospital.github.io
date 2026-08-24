@@ -143,6 +143,54 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   const getScheduledCityForToday=()=>Schedule.cityAtNow(cities);
 
+  // Follow-up records must be displayed in the same deterministic order as
+  // the backend: latest Booking Timestamp first. Google Apps Script may
+  // serialize a Sheets Date as ISO text, while older rows may contain
+  // DD/MM/YYYY HH:MM:SS text, so both forms are parsed explicitly here.
+  const followupTimestampMs=(value)=>{
+    if(value===null||value===undefined||value==="")return null;
+    if(typeof value==="number"&&Number.isFinite(value))return value;
+    const s=String(value).trim();
+    if(!s)return null;
+    const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?$/);
+    if(m){
+      const day=Number(m[1]),month=Number(m[2]),year=Number(m[3]);
+      const hour=Number(m[4]||0),minute=Number(m[5]||0),second=Number(m[6]||0);
+      if(day>=1&&day<=31&&month>=1&&month<=12&&hour>=0&&hour<=23&&minute>=0&&minute<=59&&second>=0&&second<=59){
+        return Date.UTC(year,month-1,day,hour,minute,second);
+      }
+    }
+    const d=new Date(s);
+    return Number.isFinite(d.getTime())?d.getTime():null;
+  };
+
+  const followupDateScore=(value)=>{
+    const s=String(value||"").replace(/\D/g,"");
+    if(s.length!==8)return 0;
+    return Number(s.slice(4)+s.slice(2,4)+s.slice(0,2));
+  };
+
+  const sortFollowupPatients=(patients)=>{
+    patients.forEach((x,i)=>{x.__followupOriginalIndex=i;});
+    patients.sort((a,b)=>{
+      const at=followupTimestampMs(a.bookingTimestamp);
+      const bt=followupTimestampMs(b.bookingTimestamp);
+      if(at!==null||bt!==null){
+        if(at===null)return 1;
+        if(bt===null)return -1;
+        if(bt!==at)return bt-at;
+      }
+
+      const ad=followupDateScore(a.date);
+      const bd=followupDateScore(b.date);
+      if(bd!==ad)return bd-ad;
+
+      return a.__followupOriginalIndex-b.__followupOriginalIndex;
+    });
+    patients.forEach(x=>{delete x.__followupOriginalIndex;});
+    return patients;
+  };
+
   const fillCities=()=>{
     $("city").innerHTML=cities.map(x=>`<option value="${x}">${x}</option>`).join("");
     $("next").innerHTML=cities.map(x=>`<option value="${x}">${x}</option>`).join("");
@@ -394,8 +442,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("followStatus").style.color="#7b1fa2";
     try{
       const r=await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p});
+      const patients=sortFollowupPatients(Array.isArray(r.patients)?r.patients.slice():[]);
       $("patients").innerHTML="";
-      r.patients.forEach((x)=>{
+      patients.forEach((x)=>{
         const b=document.createElement("button"); b.type="button"; b.className="patient-option";
         b.innerHTML=`<b>${U.esc(x.name)}</b><small>${U.esc(x.age)} ${U.esc(x.ageUnit)} • ${U.esc(x.city)} • ${U.date(x.date)}</small>`;
         b.onclick=()=>{
@@ -428,13 +477,13 @@ document.addEventListener("DOMContentLoaded",()=>{
           });
         };
         $("patients").appendChild(b);
-        if(r.patients.length===1)b.click();
+        if(patients.length===1)b.click();
       });
-      if(!r.patients || !r.patients.length){
+      if(!patients.length){
         $("followStatus").textContent="No patient found for this WhatsApp number.";
         $("followStatus").style.color="#b42318";
       }else{
-        $("followStatus").textContent=`${r.patients.length} patient(s) found.`;
+        $("followStatus").textContent=`${patients.length} patient(s) found.`;
         $("followStatus").style.color="#168a4a";
       }
     }catch(e){
