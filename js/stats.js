@@ -31,12 +31,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    btn.textContent="Retrieving Records…";
    $("results").innerHTML=`<div class="status">Retrieving records from Google Sheets…</div>`;
    try{
-     let tok=localStorage.getItem("neuron_retrieval_token")||"";
-     if(!tok){
-       throw Error("Statistics access session is missing. Please return to Statistics and enter the password again.");
-     }
      const r=await NeuronAPI.call("retrieveRecords",{
-       token:tok,
        city:$("city").value,
        period:$("period").value,
        showMode:"both"
