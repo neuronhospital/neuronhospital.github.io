@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded",()=>{
  const $=U.$;
- $("city").innerHTML=NEURON_CONFIG.cities.map(x=>`<option>${x}</option>`).join("");
+ $("city").innerHTML=
+   `<option value="all">All City Combined</option>`+
+   NEURON_CONFIG.cities.map(x=>`<option value="${U.esc(x)}">${U.esc(x)}</option>`).join("");
  if(window.Schedule&&typeof Schedule.cityAtNow==="function"){
    const scheduledCity=Schedule.cityAtNow(NEURON_CONFIG.cities);
    if(NEURON_CONFIG.cities.includes(scheduledCity)) $("city").value=scheduledCity;
@@ -55,6 +57,7 @@ document.addEventListener("DOMContentLoaded",()=>{
        period:selectedPeriod,
        showMode:"both"
      },25000);
+     if(citySelect.value==="all") r.city="All City Combined";
      const relativeLabel=retrievalPeriodLabel(selectedPeriod);
      if(relativeLabel) r.periodLabel=relativeLabel;
      lastReport=r;
