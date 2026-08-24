@@ -548,8 +548,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
 
     try{
-      // The local journal must never prevent an online booking from being sent.
-      try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"pending",payload});}catch(_){ }
+      // Local recovery journaling is best-effort only. It must NEVER block
+      // the actual online booking request or leave the UI stuck on Confirming.
+      try{await Promise.race([
+        IDB.put("tx",{id,type:"OPD_BOOKING",status:"pending",payload}),
+        new Promise(resolve=>setTimeout(resolve,1500))
+      ]);}catch(_){ }
+
       const r=await NeuronAPI.call("bookAppointment",payload,25000);
       try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"complete",payload,result:r});}catch(_){ }
       $("submitStatus").textContent="✓ Appointment submitted successfully.";
