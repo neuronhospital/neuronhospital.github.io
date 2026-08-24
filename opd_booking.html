@@ -396,7 +396,6 @@ document.addEventListener("DOMContentLoaded",()=>{
           setFollowupDefaultDate(x.city);
           requestAnimationFrame(()=>{
             $("bookingFields").scrollIntoView({behavior:"smooth",block:"start"});
-            setTimeout(()=>$("name").focus({preventScroll:true}),250);
           });
         };
         $("patients").appendChild(b);
