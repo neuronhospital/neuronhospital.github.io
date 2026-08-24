@@ -143,27 +143,10 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   const getScheduledCityForToday=()=>Schedule.cityAtNow(cities);
 
-  // Follow-up records must be displayed in the same deterministic order as
-  // the backend: latest Booking Timestamp first. Google Apps Script may
-  // serialize a Sheets Date as ISO text, while older rows may contain
-  // DD/MM/YYYY HH:MM:SS text, so both forms are parsed explicitly here.
-  const followupTimestampMs=(value)=>{
-    if(value===null||value===undefined||value==="")return null;
-    if(typeof value==="number"&&Number.isFinite(value))return value;
-    const s=String(value).trim();
-    if(!s)return null;
-    const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?$/);
-    if(m){
-      const day=Number(m[1]),month=Number(m[2]),year=Number(m[3]);
-      const hour=Number(m[4]||0),minute=Number(m[5]||0),second=Number(m[6]||0);
-      if(day>=1&&day<=31&&month>=1&&month<=12&&hour>=0&&hour<=23&&minute>=0&&minute<=59&&second>=0&&second<=59){
-        return Date.UTC(year,month-1,day,hour,minute,second);
-      }
-    }
-    const d=new Date(s);
-    return Number.isFinite(d.getTime())?d.getTime():null;
-  };
-
+  // Follow-up ordering uses the numeric timestamp calculated by the backend.
+  // This avoids re-parsing Google Sheets Date/ISO/DD-MM-YYYY values in the
+  // browser and guarantees that the same timestamp used for server-side
+  // sorting is also used for display ordering.
   const followupDateScore=(value)=>{
     const s=String(value||"").replace(/\D/g,"");
     if(s.length!==8)return 0;
@@ -173,18 +156,22 @@ document.addEventListener("DOMContentLoaded",()=>{
   const sortFollowupPatients=(patients)=>{
     patients.forEach((x,i)=>{x.__followupOriginalIndex=i;});
     patients.sort((a,b)=>{
-      const at=followupTimestampMs(a.bookingTimestamp);
-      const bt=followupTimestampMs(b.bookingTimestamp);
+      const at=Number.isFinite(Number(a.bookingTimestampMs))?Number(a.bookingTimestampMs):null;
+      const bt=Number.isFinite(Number(b.bookingTimestampMs))?Number(b.bookingTimestampMs):null;
+
+      // Primary rule: latest Booking Timestamp first, globally across cities.
       if(at!==null||bt!==null){
         if(at===null)return 1;
         if(bt===null)return -1;
         if(bt!==at)return bt-at;
       }
 
+      // Legacy/invalid timestamp fallback: latest appointment date first.
       const ad=followupDateScore(a.date);
       const bd=followupDateScore(b.date);
       if(bd!==ad)return bd-ad;
 
+      // Final deterministic tie-breaker: original backend order.
       return a.__followupOriginalIndex-b.__followupOriginalIndex;
     });
     patients.forEach(x=>{delete x.__followupOriginalIndex;});
