@@ -405,6 +405,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     // Starting a new patient retrieval must clear every previous booking stage.
     selected=null; verified=false;
     $("patients").innerHTML="";
+    // A new Load operation starts a fresh patient-selection cycle.
+    // Hide and clear the previously selected-patient summary immediately.
+    $("selectedPatientCard").hidden=true;
+    $("selectedPatientName").textContent="—";
+    $("selectedPatientAge").textContent="—";
+    $("selectedPatientCity").textContent="—";
+    $("selectedPatientBookingDate").textContent="—";
     $("bookingFields").hidden=true;
     $("bookingFields").setAttribute("hidden","");
     $("confirmation").hidden=true;
