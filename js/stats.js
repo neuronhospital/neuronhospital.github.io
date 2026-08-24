@@ -84,8 +84,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    const t=r.totals||{};
    const mode="both";
    const rows=rowsFor(mode,r.rows||[]);
-   let html=`<div class="report-head"><b>${esc(r.city)}</b> • ${esc(r.periodLabel||"")}`;
-   html+=` <span class="data-state ${state==="CURRENT"?"data-current":"data-cached"}">${state==="CURRENT"?"Current":"Cached"}</span></div>`;
+   let html=`<div class="report-head"><b>${esc(r.city)}</b> • ${esc(r.periodLabel||"")}</div>`;
 
    if(mode==="patient"){
      const free=(r.rows||[]).filter(x=>Number(x.opdCharges)===0).length;
