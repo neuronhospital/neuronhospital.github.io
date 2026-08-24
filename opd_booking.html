@@ -457,7 +457,8 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("age").value=followupAge.value;
           $("unit").value=followupAge.unit;
           $("address").value=U.title(x.address||""); $("ref").value=U.title(x.referredBy||"");
-          $("city").value=x.city; $("next").value=x.nextFollowupCity||x.city;
+          const scheduleAwareCity=getScheduledCityForToday();
+          $("city").value=scheduleAwareCity; $("next").value=x.nextFollowupCity||x.city;
           // Explicitly reveal the complete Follow-up editing/booking stage.
           $("bookingFields").hidden=false;
           $("bookingFields").removeAttribute("hidden");
@@ -465,7 +466,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("newFields").removeAttribute("hidden");
           enableAfterWhatsApp();
           const now=U.parts();calendarYear=now.y;calendarMonth=now.m;
-          setFollowupDefaultDate(x.city);
+          setFollowupDefaultDate(scheduleAwareCity);
           requestAnimationFrame(()=>{
             $("bookingFields").scrollIntoView({behavior:"smooth",block:"start"});
           });
