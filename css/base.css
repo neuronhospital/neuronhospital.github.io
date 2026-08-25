@@ -101,3 +101,6 @@
 .portal-text span{
   text-align:left;
 }
+
+.date-icon{display:inline-flex;align-items:center;margin-right:8px;font-size:18px}
+.date-field{display:flex;align-items:center}
