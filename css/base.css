@@ -103,3 +103,17 @@
 }
 
 .city-confirm{color:#333;text-align:center;margin:0 0 14px}.city-confirm b{color:#1b9a55;font-weight:800}
+
+
+/* Header logo update */
+.brand-logo{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    object-fit:cover;
+}
+.header-home img{
+    width:28px;
+    height:28px;
+    display:block;
+}
