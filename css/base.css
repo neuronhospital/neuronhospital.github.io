@@ -71,3 +71,33 @@
   font-size:13px;
   text-align:left;
 }
+
+/* Home portal horizontal cards */
+.portal-btn{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  text-align:left;
+  gap:12px;
+}
+
+.portal-icon{
+  width:42px;
+  height:42px;
+  flex-shrink:0;
+}
+
+.portal-text{
+  display:flex;
+  flex-direction:column;
+  text-align:left;
+}
+
+.portal-text strong{
+  font-weight:700;
+  text-align:left;
+}
+
+.portal-text span{
+  text-align:left;
+}
