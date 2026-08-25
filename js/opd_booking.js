@@ -352,9 +352,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("followStatus").style.color="#7b1fa2";
     try{
       const r=await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p});
-      const patients=sortFollowupPatients(Array.isArray(r.patients)?r.patients.slice():[]);
+      const groups=Array.isArray(r.groups)?r.groups:[];
+      const patients=Array.isArray(r.patients)?r.patients.slice():[];
       $("patients").innerHTML="";
-      patients.forEach((x)=>{
+
+      // Display one clearly separated section per city. Scheduled city/cities
+      // are returned first by the backend; records within each city are newest first.
+      const renderPatient=(x)=>{
         const b=document.createElement("button"); b.type="button"; b.className="patient-option";
         b.innerHTML=`<b>${U.esc(x.name)}</b><small>${U.esc(x.age)} ${U.esc(x.ageUnit)} • ${U.esc(x.city)} • ${U.date(x.date)}</small>`;
         b.onclick=()=>{
@@ -392,9 +396,30 @@ document.addEventListener("DOMContentLoaded",()=>{
             $("bookingFields").scrollIntoView({behavior:"smooth",block:"start"});
           });
         };
-        $("patients").appendChild(b);
-        if(patients.length===1)b.click();
-      });
+        return b;
+      };
+
+      if(groups.length){
+        groups.forEach((group)=>{
+          const section=document.createElement("div");
+          section.className="followup-city-section";
+
+          const heading=document.createElement("div");
+          heading.className="followup-city-heading";
+          heading.textContent=group.city+(group.scheduledToday?" — Today":"");
+          section.appendChild(heading);
+
+          group.patients.forEach((x)=>{
+            section.appendChild(renderPatient(x));
+          });
+          $("patients").appendChild(section);
+        });
+      }else{
+        patients.forEach((x)=>$("patients").appendChild(renderPatient(x)));
+      }
+
+      if(patients.length===1) $("patients").querySelector(".patient-option").click();
+
       if(!patients.length){
         $("followStatus").textContent="No patient found for this WhatsApp number.";
         $("followStatus").style.color="#b42318";
