@@ -464,9 +464,19 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
   };
 
+
+  const lockBookingFields=(locked)=>{
+    if(locked){
+      document.querySelectorAll("#bookingFields input, #bookingFields select, #bookingFields textarea").forEach(el=>{
+        el.disabled=true;
+      });
+    }
+  };
+
   $("book").onclick=async()=>{
     if($("book").disabled || bookingInProgress)return;
     bookingInProgress=true;
+    lockBookingFields(true);
     $("book").disabled=true;
     $("book").textContent="Confirming Appointment...";
     $("book").className="btn btn-primary";
