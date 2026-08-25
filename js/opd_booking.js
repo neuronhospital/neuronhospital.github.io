@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   let cityChangeToken=0;
   let bookingInProgress=false;
   let calendarYear=U.parts().y, calendarMonth=U.parts().m;
+  const calendarCache={};
 
   // Show today's India-local date in the appointment field by default.
   // The field remains disabled until WhatsApp verification, and the calendar
@@ -225,8 +226,11 @@ document.addEventListener("DOMContentLoaded",()=>{
       h+=`<button type="button" class="${cls}" ${isAvailable?`data-k="${key}"`:"disabled"}>${d}${isToday?'<small class="today-mark">Today</small>':""}</button>`;
     }
     h+=`</div><div class="legend">🟣 Available &nbsp; ⚫ Not Available &nbsp; 🟢 Selected</div>`;
-    $("cal").innerHTML=h; $("cal").hidden=false;
-    $("calPrev").onclick=async()=>{calendarMonth--;if(calendarMonth<1){calendarMonth=12;calendarYear--;}await renderCalendar();};
+    $("cal").innerHTML=h;
+    const now=U.parts();
+    if(calendarYear===now.y&&calendarMonth===now.m){$("calPrev").disabled=true;}
+    $("cal").hidden=false;
+    $("calPrev").onclick=async()=>{const now=U.parts();if(calendarYear===now.y&&calendarMonth===now.m)return;calendarMonth--;if(calendarMonth<1){calendarMonth=12;calendarYear--;}await renderCalendar();};
     $("calNext").onclick=async()=>{calendarMonth++;if(calendarMonth>12){calendarMonth=1;calendarYear++;}await renderCalendar();};
     $("cal").querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{
       $("date").value=U.date(b.dataset.k); $("date").dataset.key=b.dataset.k; $("cal").hidden=true;
