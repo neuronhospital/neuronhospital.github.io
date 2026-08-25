@@ -1,1 +1,6 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Refund Portal</title><link rel="stylesheet" href="css/base.css"></head><body><div class="container"><h2>NEURON Hospital</h2><h3>Refund / Return Portal</h3><input id="whatsapp" placeholder="Enter WhatsApp Number"><button id="loadBtn" onclick="loadRefund()">Load</button><p id="status"></p><div id="patients"></div><div id="form"></div></div><script src="js/refund.js"></script></body></html>
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Refund Portal</title><link rel="stylesheet" href="css/base.css"></head><body data-title="Refund / Return Portal"><div id="header"></div><main><div class="container">
+<section class="page-title"><h1>Refund / Return Portal</h1><p>Secure same-day refund processing</p></section>
+<section id="gate" class="card secure-wrap"><h2>🔐 Secure Access</h2><input id="password" type="password" inputmode="numeric" maxlength="6" placeholder="Password"><button id="enter" class="cta" style="width:100%;margin-top:10px">Access Portal</button></section>
+<section id="portal" hidden><div class="container"><h2>NEURON Hospital</h2><h3>Refund / Return Portal</h3><input id="whatsapp" placeholder="Enter WhatsApp Number"><button id="loadBtn" onclick="loadRefund()">Load</button><p id="status"></p><div id="patients"></div><div id="form"></div></div></section>
+</main>
+<script src="js/common.js"></script><script src="js/secure.js"></script><script src="js/refund.js"></script></body></html>
