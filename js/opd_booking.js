@@ -111,14 +111,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     // WhatsApp field must remain hidden until New mode is selected.
     $("newWhatsAppField").hidden=mode==="Follow-up";
 
-    ["followWa","name","age","address","ref","wa"].forEach(id=>{$(id).value="";});
+    ["followWa","name","age","address","ref","wa","verifyWa"].forEach(id=>{$(id).value="";});
     $("date").value="";
     delete $("date").dataset.key;
     $("unit").value="years";
     const todayCity=getScheduledCityForToday();
     $("city").value=todayCity; $("next").value=todayCity;
-    $("city").disabled=false; $("date").disabled=true; $("next").disabled=true; $("book").disabled=true;
+    setPostVerifyFieldsLocked(true);
     $("waStatus").textContent=""; $("waStatus").style.color="";
+    $("verifyTick").style.display="none";
     $("followStatus").textContent=""; $("patients").innerHTML="";
     $("selectedPatientCard").hidden=true;
     $("selectedPatientName").textContent="—";
@@ -133,9 +134,33 @@ document.addEventListener("DOMContentLoaded",()=>{
     calendarYear=U.parts().y; calendarMonth=U.parts().m;
   };
 
+  const setPostVerifyFieldsLocked=(locked)=>{
+    ["payMode","amount","cash","online","city","date","next"].forEach(id=>{
+      if($(id)) $(id).disabled=locked;
+    });
+    if($("book")) $("book").disabled=locked;
+  };
+
   const enableAfterWhatsApp=()=>{
     verified=true;
-    $("city").disabled=false; $("date").disabled=false; $("next").disabled=false; $("book").disabled=false;
+    setPostVerifyFieldsLocked(false);
+  };
+
+  const checkWhatsAppMatch=()=>{
+    const a=U.phone($("wa").value), b=U.phone($("verifyWa").value);
+    if(a && b && a===b && U.validPhone(a)){
+      $("waStatus").textContent="";
+      $("waStatus").style.color="#168a4a";
+      $("verifyTick").style.display="inline";
+      $("verifyWa").style.borderColor="#168a4a";
+      enableAfterWhatsApp();
+    }else{
+      $("waStatus").textContent="";
+      $("verifyTick").style.display="none";
+      $("verifyWa").style.borderColor="";
+      verified=false;
+      setPostVerifyFieldsLocked(true);
+    }
   };
 
   /*
@@ -183,17 +208,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   $("follow").onclick=async()=>{resetFields("Follow-up"); await setNextAvailableDate($("city").value); $("cal").hidden=true;};
   $("new").onclick=async()=>{resetFields("New"); await setNextAvailableDate($("city").value); $("cal").hidden=true;};
 
-  $("wa").oninput=e=>e.target.value=U.phone(e.target.value);
+  $("wa").oninput=e=>{e.target.value=U.phone(e.target.value);checkWhatsAppMatch();};
+  $("verifyWa").oninput=e=>{e.target.value=U.phone(e.target.value);checkWhatsAppMatch();};
+  ["wa","verifyWa"].forEach(id=>{
+    $(id).addEventListener("copy",e=>e.preventDefault());
+    $(id).addEventListener("cut",e=>e.preventDefault());
+    $(id).addEventListener("paste",e=>e.preventDefault());
+  });
   $("followWa").oninput=e=>e.target.value=U.phone(e.target.value);
-
-  $("waBtn").onclick=()=>{
-    const p=U.phone($("wa").value);
-    if(!U.validPhone(p)){ $("waStatus").textContent="Enter a valid 10-digit number."; return; }
-    window.open("https://wa.me/91"+p,"_blank");
-    $("waStatus").textContent="✓ WhatsApp number confirmed";
-    $("waStatus").style.color="#168a4a";
-    enableAfterWhatsApp();
-  };
 
   async function getCalendarDates(year,month,city){
     try{
