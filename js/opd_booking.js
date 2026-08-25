@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   let nextFollowupCityManuallyEdited=false;
   let cityChangeToken=0;
   let bookingInProgress=false;
-  const calendarCache=new Map();
   let calendarYear=U.parts().y, calendarMonth=U.parts().m;
 
   // Show today's India-local date in the appointment field by default.
@@ -197,17 +196,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   };
 
   async function getCalendarDates(year,month,city){
-    const key=city+"-"+year+"-"+month;
-    if(calendarCache.has(key)) return calendarCache.get(key);
-    let dates=[];
+    try{
+      const local=Schedule.dates(city,year,month);
+      if(local&&local.length)return local;
+    }catch(_){}
     try{
       const r=await NeuronAPI.call("getAvailableDates",{city,year,month},12000);
-      dates=r.dates||[];
-    }catch(_){
-      dates=Schedule.dates(city,year,month);
-    }
-    calendarCache.set(key,dates);
-    return dates;
+      return r.dates||[];
+    }catch(_){return [];}
   }
 
   async function renderCalendar(){
@@ -217,7 +213,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const first=new Date(Date.UTC(calendarYear,calendarMonth-1,1)).getUTCDay()||7;
     const last=new Date(Date.UTC(calendarYear,calendarMonth,0)).getUTCDate();
     const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(calendarYear,calendarMonth-1,1)));
-    let h=`<div class="calendar-head"><button type="button" id="calPrev" class="calendar-nav" aria-label="Previous month">‹</button><strong>${monthName}</strong><button type="button" id="calNext" class="calendar-nav" aria-label="Next month">›</button></div>`;
+    let h=`<div class="calendar-head"><strong>${monthName}</strong><button type="button" id="calNext" class="calendar-nav" aria-label="Next month">›</button></div>`;
     h+=`<div class="calendar-grid">`;
     ["M","T","W","T","F","S","S"].forEach(x=>h+=`<div class="calendar-weekday">${x}</div>`);
     for(let i=1;i<first;i++)h+="<span></span>";
@@ -232,7 +228,6 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
     h+=`</div><div class="legend">🟣 Available &nbsp; ⚫ Not Available &nbsp; 🟢 Selected</div>`;
     $("cal").innerHTML=h; $("cal").hidden=false;
-    $("calPrev").onclick=async()=>{calendarMonth--;if(calendarMonth<1){calendarMonth=12;calendarYear--;}await renderCalendar();};
     $("calNext").onclick=async()=>{calendarMonth++;if(calendarMonth>12){calendarMonth=1;calendarYear++;}await renderCalendar();};
     $("cal").querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{
       $("date").value=U.date(b.dataset.k); $("date").dataset.key=b.dataset.k; $("cal").hidden=true;
@@ -337,8 +332,13 @@ document.addEventListener("DOMContentLoaded",()=>{
       }
     }
   };
-  $("date").onclick=()=>renderCalendar();
-  $("dateIcon").onclick=()=>renderCalendar();
+  const openDateCalendar=()=>{
+    const t=U.parts();
+    if(calendarYear<t.y || (calendarYear===t.y && calendarMonth<t.m)){calendarYear=t.y;calendarMonth=t.m;}
+    renderCalendar();
+  };
+  $("date").onclick=openDateCalendar;
+  $("dateIcon").onclick=openDateCalendar;
 
   $("load").onclick=async()=>{
     // Starting a new patient retrieval must clear every previous booking stage.
