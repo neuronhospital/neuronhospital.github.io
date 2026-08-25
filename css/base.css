@@ -39,3 +39,35 @@
   text-align:left;
   display:block;
 }
+
+/* Home portal horizontal card layout */
+.portal-btn{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  text-align:left;
+  gap:14px;
+}
+
+.portal-icon{
+  width:42px;
+  height:42px;
+  flex-shrink:0;
+}
+
+.portal-text{
+  display:flex;
+  flex-direction:column;
+  text-align:left;
+}
+
+.portal-text strong{
+  font-size:16px;
+  font-weight:700;
+  text-align:left;
+}
+
+.portal-text span{
+  font-size:13px;
+  text-align:left;
+}
