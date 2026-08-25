@@ -7,7 +7,7 @@
 .selected-patient-card-grid span{display:block;font-size:12px;color:#667085;margin-bottom:2px}
 .selected-patient-card-grid strong{display:block;font-size:14px;overflow-wrap:anywhere}
 @media(max-width:600px){.selected-patient-card-grid{grid-template-columns:1fr}}
-.followup-city-section{margin:12px 0 18px}.followup-city-heading{font-weight:700;font-size:15px;padding:9px 11px;margin-bottom:7px;border-radius:8px;background:#f3eef8;color:#5a1a78;border-left:4px solid #7b1fa2}.followup-city-section .patient-option{margin-bottom:6px}</style></head>
+.date-input-wrap{position:relative}.date-input-wrap input{padding-right:42px}.date-calendar-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:20px;opacity:.8}.followup-city-section{margin:12px 0 18px}.followup-city-heading{font-weight:700;font-size:15px;padding:9px 11px;margin-bottom:7px;border-radius:8px;background:#f3eef8;color:#5a1a78;border-left:4px solid #7b1fa2}.followup-city-section .patient-option{margin-bottom:6px}</style></head>
 <body data-title="OPD Booking"><div id="header"></div><main><div class="container">
 <section class="page-title"><h1>OPD Booking Portal</h1><p>Book a new or follow-up appointment</p></section>
 
@@ -76,7 +76,7 @@
     </div>
 
     <div class="field"><label class="required-field">Visit Location</label><select id="city"></select></div>
-    <div class="field"><label class="required-field">Date of Appointment</label><span class="date-icon">📅</span><input id="date" readonly disabled placeholder="Tap to select date"><div id="dateLoading" class="status" aria-live="polite" hidden></div><div id="cal" class="calendar" hidden></div></div>
+    <div class="field"><label class="required-field">Date of Appointment</label><div class="date-input-wrap"><input id="date" readonly disabled placeholder="Tap to select date"><span id="dateIcon" class="date-calendar-icon" role="button" aria-label="Open calendar" title="Open calendar">📅</span></div><div id="dateLoading" class="status" aria-live="polite" hidden></div><div id="cal" class="calendar" hidden></div></div>
     <div class="field"><label class="required-field">Next Follow-up City</label><select id="next" disabled></select></div>
 
     <div class="field full">
