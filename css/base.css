@@ -11,3 +11,31 @@
 .service-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.service-stat{text-align:center;padding:10px}.service-stat small{min-height:18px}.service-stat strong{font-size:18px}.collection-card{margin-top:10px;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.collection-grid{display:grid;grid-template-columns:1.05fr 1fr 1fr 1.15fr;align-items:center}.collection-grid>div{padding:9px 7px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center;font-size:12px;white-space:nowrap}.collection-grid>div:last-child{border-right:0}.collection-grid:last-child>div{border-bottom:0}.collection-head{font-weight:900;background:#f7f7fb}.collection-label{text-align:left!important;font-weight:800}.collection-total{font-weight:900;background:#f3f0f7}.combined-table-wrap{position:relative;overflow-x:auto;overflow-y:hidden;margin-top:18px;border-radius:10px;isolation:isolate}.combined-report{width:max-content;min-width:100%;table-layout:auto}.combined-report th,.combined-report td{padding:7px clamp(12px,1.6vw,20px);text-align:center}.combined-report th:nth-child(2),.combined-report td:nth-child(2){text-align:left}.combined-report th:nth-child(n+3):nth-child(-n+8),.combined-report td:nth-child(n+3):nth-child(-n+8){padding-left:clamp(14px,1.8vw,22px);padding-right:clamp(14px,1.8vw,22px)}.combined-report th,.combined-report td{min-width:max-content}.combined-report thead th{z-index:1}.combined-report tfoot th{background:#f3f0f7}@media(max-width:699px){.combined-report{width:max-content;min-width:100%}.combined-report th,.combined-report td{font-size:11px;padding:7px 10px}.combined-report th:nth-child(n+3):nth-child(-n+8),.combined-report td:nth-child(n+3):nth-child(-n+8){padding-left:12px;padding-right:12px}.collection-grid>div{padding:8px 5px;font-size:11px}}
 .nav-icon{width:22px;height:22px;display:block;margin:0 auto 3px;}
 .footer-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;}
+
+
+/* Home portal cards */
+.portal-btn{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  text-align:left;
+  gap:12px;
+}
+
+.portal-icon{
+  width:38px;
+  height:38px;
+  flex-shrink:0;
+}
+
+.portal-text{
+  display:flex;
+  flex-direction:column;
+  text-align:left;
+}
+
+.portal-btn strong,
+.portal-btn span{
+  text-align:left;
+  display:block;
+}
