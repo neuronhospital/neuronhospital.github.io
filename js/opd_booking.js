@@ -213,7 +213,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     const first=new Date(Date.UTC(calendarYear,calendarMonth-1,1)).getUTCDay()||7;
     const last=new Date(Date.UTC(calendarYear,calendarMonth,0)).getUTCDate();
     const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(calendarYear,calendarMonth-1,1)));
-    let h=`<div class="calendar-head"><strong>${monthName}</strong><button type="button" id="calNext" class="calendar-nav" aria-label="Next month">›</button></div>`;
+    const isCurrentMonth=(calendarYear===today.y && calendarMonth===today.m);
+    let h=`<div class="calendar-head"><button type="button" id="calPrev" class="calendar-nav" aria-label="Previous month" ${isCurrentMonth?"disabled":""}>‹</button><strong id="calMonthTitle" class="calendar-month-title">${monthName}</strong><button type="button" id="calNext" class="calendar-nav" aria-label="Next month">›</button></div>`;
     h+=`<div class="calendar-grid">`;
     ["M","T","W","T","F","S","S"].forEach(x=>h+=`<div class="calendar-weekday">${x}</div>`);
     for(let i=1;i<first;i++)h+="<span></span>";
@@ -228,7 +229,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
     h+=`</div><div class="legend">🟣 Available &nbsp; ⚫ Not Available &nbsp; 🟢 Selected</div>`;
     $("cal").innerHTML=h; $("cal").hidden=false;
+    $("calPrev").onclick=async()=>{if(calendarYear===today.y&&calendarMonth===today.m)return; calendarMonth--;if(calendarMonth<1){calendarMonth=12;calendarYear--;} if(calendarYear<today.y || (calendarYear===today.y&&calendarMonth<today.m)){calendarYear=today.y;calendarMonth=today.m;} await renderCalendar();};
     $("calNext").onclick=async()=>{calendarMonth++;if(calendarMonth>12){calendarMonth=1;calendarYear++;}await renderCalendar();};
+    $("calMonthTitle").onclick=async()=>{calendarYear=today.y;calendarMonth=today.m;await renderCalendar();};
     $("cal").querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{
       $("date").value=U.date(b.dataset.k); $("date").dataset.key=b.dataset.k; $("cal").hidden=true;
     });
