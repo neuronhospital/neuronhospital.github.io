@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     <option value="yesterday">Yesterday</option>
     <option value="daybefore">Day Before Yesterday</option>
     <option value="${cur}">${new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric"}).format(new Date(q.y,q.m-1,1))}</option>
+    <option value="${(()=>{const d=new Date(q.y,q.m-2,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`})()}">${new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric"}).format(new Date(q.y,q.m-2,1))}</option>
+    <option value="${(()=>{const d=new Date(q.y,q.m-3,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`})()}">${new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric"}).format(new Date(q.y,q.m-3,1))}</option>
+    <option value="${(()=>{const d=new Date(q.y,q.m-4,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`})()}">${new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric"}).format(new Date(q.y,q.m-4,1))}</option>
     <option value="last12">Last 12 Months</option>
     <option value="currentyear">${q.y}</option>
     <option value="lastyear">${q.y-1}</option>`;
