@@ -1,6 +1,5 @@
-const API_URL="";
 let selected=null;
-function api(body){return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(body)}).then(r=>r.json());}
+function api(body){return NeuronAPI.call(body.action, body);}
 function loadRefund(){
  resetRefundView();
  const b=document.getElementById('loadBtn');b.textContent='Loading...';b.style.background='#999';
