@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   const $=U.$, cities=NEURON_CONFIG.cities;
   let type="Follow-up", verified=false, selected=null;
   let nextFollowupCityManuallyEdited=false;
+  let cityChangeToken=0;
+  let bookingInProgress=false;
   let calendarYear=U.parts().y, calendarMonth=U.parts().m;
 
   // Show today's India-local date in the appointment field by default.
@@ -97,6 +99,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   const resetFields=(mode)=>{
     type=mode; verified=false; selected=null;
     nextFollowupCityManuallyEdited=false;
+    cityChangeToken++;
+    bookingInProgress=false;
     $("follow").classList.toggle("active",mode==="Follow-up");
     $("new").classList.toggle("active",mode==="New");
     $("followFields").hidden=mode!=="Follow-up";
@@ -285,7 +289,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("dateLoading").textContent=loading
       ? "Wait we are Loading Available date for "+city+" Visit"
       : "";
-    $("city").disabled=loading;
+    // Keep Visit Location editable while available dates are loading.
+    // Disabling a mobile <select> inside its change event can visually restore
+    // the previous option on some browsers.
+    $("city").disabled=false;
     $("date").disabled=loading || !verified;
     $("next").disabled=loading || !verified;
     $("book").disabled=loading || !verified;
@@ -297,22 +304,31 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   $("city").onchange=async()=>{
     const city=$("city").value;
+    const token=++cityChangeToken;
+
     // New OPD: Next Follow-up City initially follows Visit Location.
     // Once the user edits Next Follow-up City, keep it independent.
     if(type==="New" && !nextFollowupCityManuallyEdited) $("next").value=city;
+
     delete $("date").dataset.key;
     $("date").value="";
     $("cal").hidden=true;
     const now=U.parts();calendarYear=now.y;calendarMonth=now.m;
+
     if(!verified){
       setTodayDateDisplay();
       return;
     }
+
     setDateLoading(true,city);
     try{
       await setNextAvailableDate(city);
     }finally{
-      setDateLoading(false,city);
+      // Ignore completion of an older city lookup. A previous request must
+      // never overwrite the state belonging to the latest selected city.
+      if(token===cityChangeToken){
+        setDateLoading(false,city);
+      }
     }
   };
   $("date").onclick=()=>renderCalendar();
@@ -439,7 +455,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   };
 
   $("book").onclick=async()=>{
-    if($("book").disabled)return;
+    if($("book").disabled || bookingInProgress)return;
+    bookingInProgress=true;
     $("book").disabled=true;
     $("book").textContent="Confirming Appointment...";
     $("book").className="btn btn-primary";
@@ -531,6 +548,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       alert("Booking status is uncertain. Do not book again.");
     }finally{
       if($("confirmation").hidden){
+        bookingInProgress=false;
         $("book").disabled=false;
         $("book").textContent="Book OPD Appointment";
         $("book").className="cta";
@@ -541,4 +559,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   fillCities();
   resetFields("Follow-up");
   setNextAvailableDate($("city").value);
+
+  // Mobile browsers may restore a page from the back-forward cache with
+  // stale button text. If no booking is actually running, normalize it.
+  window.addEventListener("pageshow",()=>{
+    if(!bookingInProgress){
+      $("book").disabled=!verified;
+      $("book").textContent="Book OPD Appointment";
+      $("book").className=verified?"cta":"cta";
+    }
+  });
 });
