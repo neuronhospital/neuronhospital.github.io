@@ -93,6 +93,7 @@
 document.addEventListener("DOMContentLoaded",()=>{
   const $=U.$, cities=NEURON_CONFIG.cities;
   let type="Follow-up", verified=false, selected=null;
+  let nextFollowupCityManuallyEdited=false;
   let calendarYear=U.parts().y, calendarMonth=U.parts().m;
 
   // Show today's India-local date in the appointment field by default.
@@ -187,6 +188,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   const resetFields=(mode)=>{
     type=mode; verified=false; selected=null;
+    nextFollowupCityManuallyEdited=false;
     $("follow").classList.toggle("active",mode==="Follow-up");
     $("new").classList.toggle("active",mode==="New");
     $("followFields").hidden=mode!=="Follow-up";
@@ -381,9 +383,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("book").disabled=loading || !verified;
   };
 
+  $("next").onchange=()=>{
+    nextFollowupCityManuallyEdited=true;
+  };
+
   $("city").onchange=async()=>{
     const city=$("city").value;
-    $("next").value=city;
+    // New OPD: Next Follow-up City initially follows Visit Location.
+    // Once the user edits Next Follow-up City, keep it independent.
+    if(type==="New" && !nextFollowupCityManuallyEdited) $("next").value=city;
     delete $("date").dataset.key;
     $("date").value="";
     $("cal").hidden=true;
@@ -457,8 +465,13 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("age").value=followupAge.value;
           $("unit").value=followupAge.unit;
           $("address").value=U.title(x.address||""); $("ref").value=U.title(x.referredBy||"");
+          // Follow-up Visit Location is schedule-aware by default, regardless
+          // of the city used in the previous booking. It remains editable.
           const scheduleAwareCity=getScheduledCityForToday();
-          $("city").value=scheduleAwareCity; $("next").value=x.nextFollowupCity||x.city;
+          $("city").value=scheduleAwareCity;
+          // Next Follow-up City carries forward the city from the previous
+          // booking, and remains independently editable.
+          $("next").value=x.nextFollowupCity||x.city||scheduleAwareCity;
           // Explicitly reveal the complete Follow-up editing/booking stage.
           $("bookingFields").hidden=false;
           $("bookingFields").removeAttribute("hidden");
@@ -466,7 +479,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("newFields").removeAttribute("hidden");
           enableAfterWhatsApp();
           const now=U.parts();calendarYear=now.y;calendarMonth=now.m;
-          setFollowupDefaultDate(scheduleAwareCity);
+          setFollowupDefaultDate($("city").value);
           requestAnimationFrame(()=>{
             $("bookingFields").scrollIntoView({behavior:"smooth",block:"start"});
           });
