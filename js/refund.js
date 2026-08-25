@@ -27,10 +27,11 @@ function selectPatient(p,x){
  selected=p;
  document.querySelectorAll('#patients .patient-card').forEach(e=>e.style.background='');
  x.style.background='#c8f7c5';
+ x.scrollIntoView({behavior:'smooth',block:'center'});
  let f=document.getElementById('form');f.innerHTML='';
  if(p.refundAvailable.opd){f.innerHTML+='<section class="card"><label>OPD Refund</label><input id="opdRefund" type="number" placeholder="Enter OPD Refund Amount"></section>';}
  if(p.refundAvailable.eeg){f.innerHTML+='<section class="card"><label>EEG Refund</label><input id="eegRefund" type="number" placeholder="Enter EEG Refund Amount"></section>';}
- f.innerHTML+='<button id="refundBtn" class="cta" onclick="save()">Refund</button><div id="refundStatus"></div><div id="confirmation"></div>';
+ f.innerHTML+='<button id="refundBtn" class="cta" style="display:block;margin:20px auto" onclick="save()">Refund</button><div id="refundStatus"></div><div id="confirmation"></div>';
 }
 function save(){
  const btn=document.getElementById('refundBtn');
