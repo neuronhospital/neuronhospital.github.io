@@ -3,8 +3,11 @@
 <section id="gate" class="card secure-wrap"><h2>🔐 Secure Access</h2><input id="password" type="password" inputmode="numeric" maxlength="6" placeholder="Password"><button id="enter" class="cta" style="width:100%;margin-top:10px">Access Portal</button></section>
 <section id="portal" hidden>
 <section class="card">
+<label>City</label>
+<select id="refundCity"></select>
 <label>WhatsApp Number</label>
 <div class="input-row"><div class="prefix-wrap"><span class="prefix">+91</span><input id="whatsapp" maxlength="10" inputmode="numeric" placeholder="Enter WhatsApp Number"></div><button id="loadBtn" class="btn btn-secondary" onclick="loadRefund()">Load</button></div>
+<div id="whatsappError" style="color:red;font-size:14px"></div>
 <div id="status" class="status"></div>
 </section>
 <div id="patients" class="patient-list"></div>
@@ -12,4 +15,5 @@
 <section id="confirmation" hidden></section>
 </section>
 </div></main><div id="footer"></div>
-<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/utils.js"></script><script src="js/common.js"></script><script src="js/secure.js"></script><script src="js/refund.js"></script></body></html>
+<script src="js/config.js"></script>
+<script src="js/schedule.js"></script><script src="js/api.js"></script><script src="js/utils.js"></script><script src="js/common.js"></script><script src="js/secure.js"></script><script src="js/refund.js"></script></body></html>
