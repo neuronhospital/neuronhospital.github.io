@@ -127,6 +127,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("selectedPatientCity").textContent="—";
     $("selectedPatientBookingDate").textContent="—";
     $("submitStatus").textContent="";
+    // Always clear previous booking submission UI state when starting a new flow.
+    // This prevents the previous "Confirming Appointment..." state from leaking
+    // into a fresh OPD booking after confirmation.
+    if($("book")){
+      $("book").textContent="Book OPD Appointment";
+      $("book").className="cta";
+    }
     $("confirmation").hidden=true; $("confirmation").innerHTML="";
     $("cal").hidden=true; $("cal").innerHTML="";
     $("payMode").value="Cash"; $("amount").value="500"; $("cash").value=""; $("online").value="";
