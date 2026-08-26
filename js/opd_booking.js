@@ -498,11 +498,13 @@ document.addEventListener("DOMContentLoaded",()=>{
   $("book").onclick=async()=>{
     if($("book").disabled || bookingInProgress)return;
     bookingInProgress=true;
-    $("book").disabled=true;
-    $("book").textContent="Confirming Appointment...";
-    $("book").className="btn btn-primary";
-    $("submitStatus").textContent="Wait We are Confirming your OPD Appointment...";
-    $("submitStatus").style.color="#7b1fa2";
+
+    const resetAfterValidationError=()=>{
+      bookingInProgress=false;
+      $("book").disabled=false;
+      $("book").textContent="Book OPD Appointment";
+      $("book").className="cta";
+    };
 
     const payMode=$("payMode").value;
     let c=0,o=0,total=0;
@@ -510,20 +512,34 @@ document.addEventListener("DOMContentLoaded",()=>{
     else if(payMode==="Online"){total=Number($("amount").value)||0;o=total;}
     else{c=Number($("cash").value)||0;o=Number($("online").value)||0;total=c+o;}
 
-    if(total>2000){$("submitStatus").textContent="OPD total cannot exceed ₹2000.";$("submitStatus").style.color="#b42318";$("book").disabled=false;$("book").textContent="Book OPD Appointment";$("book").className="cta";return;}
-    if(total<0){$("submitStatus").textContent="Enter a valid OPD amount.";$("submitStatus").style.color="#b42318";$("book").disabled=false;$("book").textContent="Book OPD Appointment";$("book").className="cta";return;}
-    if(!String($("address").value||"").trim()){
-      $("submitStatus").textContent="Please enter the patient's address.";
-      $("submitStatus").style.color="#b42318";
-      $("address").focus();
-      $("book").disabled=false;
-      $("book").textContent="Book OPD Appointment";
-      $("book").className="cta";
-      return;
+    const requiredFields=[
+      ["name","Please enter the patient's name."],
+      ["age","Please enter the patient's age."],
+      ["address","Please enter the patient's address."],
+      ["wa","Please enter the patient's WhatsApp number."],
+      ["city","Please select the visit location."],
+      ["date","Please select an available appointment date."],
+      ["next","Please select next follow-up city."]
+    ];
+    for(const [field,message] of requiredFields){
+      if(!String($(field)?.value||$(field)?.dataset?.key||"").trim()){
+        $("submitStatus").textContent=message;
+        $("submitStatus").style.color="#b42318";
+        $(field)?.focus();
+        resetAfterValidationError();
+        return;
+      }
     }
+    if(total>2000){$("submitStatus").textContent="OPD total cannot exceed ₹2000.";$("submitStatus").style.color="#b42318";resetAfterValidationError();return;}
+    if(total<0){$("submitStatus").textContent="Enter a valid OPD amount.";$("submitStatus").style.color="#b42318";resetAfterValidationError();return;}
+
+    $("book").disabled=true;
+    $("book").textContent="Confirming Appointment...";
+    $("book").className="btn btn-primary";
+    $("submitStatus").textContent="Wait We are Confirming your OPD Appointment...";
+    $("submitStatus").style.color="#7b1fa2";
 
     // Lock fields only after all compulsory validation checks above pass.
-    // Validation failures must keep the form editable for correction.
     lockBookingFields(true);
 
     const id=U.uuid("opd");
