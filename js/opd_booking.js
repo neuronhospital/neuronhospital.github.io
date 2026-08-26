@@ -117,8 +117,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("unit").value="years";
     const todayCity=getScheduledCityForToday();
     $("city").value=todayCity; $("next").value=todayCity;
-    setPostVerifyFieldsLocked(true);
-    $("waStatus").textContent=""; $("waStatus").style.color="";
+    // After selecting New from the confirmation screen, unlock the fresh booking form.\n    // The previous booking has completed; do not carry the previous verification lock.\n    setPostVerifyFieldsLocked(mode==="Follow-up");\n    if($("book")) $("book").disabled=false;\n    $("waStatus").textContent=""; $("waStatus").style.color="";
     $("verifyTick").style.display="none";
     $("followStatus").textContent=""; $("patients").innerHTML="";
     $("selectedPatientCard").hidden=true;
