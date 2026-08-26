@@ -48,8 +48,8 @@ function selectPatient(p,x){
  x.scrollIntoView({behavior:'smooth',block:'center'});
  setTimeout(()=>{document.getElementById('form')?.scrollIntoView({behavior:'smooth',block:'start'});},300);
  let f=document.getElementById('form');f.innerHTML='';
- if(p.refundAvailable.opd){f.innerHTML+='<section class="card"><label>OPD Refund</label><input id="opdRefund" type="number" placeholder="Enter OPD Refund Amount"></section>';}
- if(p.refundAvailable.eeg){f.innerHTML+='<section class="card"><label>EEG Refund</label><input id="eegRefund" type="number" placeholder="Enter EEG Refund Amount"></section>';}
+ if(p.refundAvailable.opd){f.innerHTML+='<section class="card"><label>OPD Refund</label><input id="opdRefund" type="number" min="1" max="'+Number(p.opdTotalPaid||0)+'" placeholder="Enter OPD Refund Amount"></section>';}
+ if(p.refundAvailable.eeg){f.innerHTML+='<section class="card"><label>EEG Refund</label><input id="eegRefund" type="number" min="1" max="'+Number(p.eegTotalPaid||0)+'" placeholder="Enter EEG Refund Amount"></section>';}
  f.innerHTML+='<button id="refundBtn" class="cta" style="display:block;margin:20px auto" onclick="save()">Refund</button><div id="refundStatus"></div><div id="confirmation"></div>';
 }
 function save(){
@@ -60,6 +60,7 @@ function save(){
  const opdVal=Number((document.getElementById('opdRefund')||{}).value)||0;
  const eegVal=Number((document.getElementById('eegRefund')||{}).value)||0;
  if(opdVal<=0 && eegVal<=0){btn.disabled=false;btn.textContent='Refund';document.getElementById('refundStatus').textContent='Enter refund amount';return;}
+ if(opdVal>Number(selected.opdTotalPaid||0) || eegVal>Number(selected.eegTotalPaid||0) || opdVal<0 || eegVal<0){btn.disabled=false;btn.textContent='Refund';document.getElementById('refundStatus').textContent='Refund amount cannot exceed paid amount and must be greater than zero';return;}
  api({action:'saveRefund',appointmentId:selected.appointmentId,city:selected.city,whatsapp:selected.whatsapp,opdRefund:opdVal,eegRefund:eegVal,updateOPD:opdVal>0,updateEEG:eegVal>0}).then(x=>{
   if(!x.ok) throw Error(x.error||'Refund failed');
   const type=[]; if(opdVal>0) type.push('OPD Refund ₹'+opdVal); if(eegVal>0) type.push('EEG Refund ₹'+eegVal);
