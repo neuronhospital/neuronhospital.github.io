@@ -404,7 +404,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("followStatus").textContent="Wait We are Loading Patient details...";
     $("followStatus").style.color="#7b1fa2";
     try{
-      const r=await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p});
+      const r=await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p},60000);
       const groups=Array.isArray(r.groups)?r.groups:[];
       const patients=Array.isArray(r.patients)?r.patients.slice():[];
       $("patients").innerHTML="";
