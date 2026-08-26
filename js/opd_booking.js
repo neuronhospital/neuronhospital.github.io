@@ -616,8 +616,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       $("submitStatus").style.color="#168a4a";
     }catch(e){
       try{
-        const s=await NeuronAPI.call("checkBookingRequest",{bookingRequestId:id,city:payload.city},10000);
-        if(s.found){
+        const s=await NeuronAPI.verifyBooking("OPD",id,payload.city);
+        if(s&&s.found){
           try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"complete",payload,result:s});}catch(_){ }
           const recoveredHTML=`<div class="success"><div class="success-icon">✓</div><h2>OPD Appointment Recovered</h2><p>Appointment ID: <b>${U.esc(s.appointmentId)}</b></p><p>Original booking was already recorded. No duplicate was created.</p></div>`;
           resetFields("Follow-up");

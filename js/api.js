@@ -45,5 +45,17 @@ window.NeuronAPI={
     if(abortTimer)clearTimeout(abortTimer);
     if(timeoutTimer)clearTimeout(timeoutTimer);
   }
+ },
+ verifyBooking:async(type,id,city,retries=3)=>{
+  const action=type==="EEG"?"checkEEGBookingRequest":"checkBookingRequest";
+  const key=type==="EEG"?"eegBookingRequestId":"bookingRequestId";
+  for(let i=0;i<retries;i++){
+    try{
+      const r=await NeuronAPI.call(action,{[key]:id,city},10000);
+      if(r&&r.found)return r;
+    }catch(_){}
+    if(i<retries-1)await new Promise(resolve=>setTimeout(resolve,2000));
+  }
+  return null;
  }
 };

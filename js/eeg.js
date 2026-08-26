@@ -141,8 +141,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       $('confirmation').innerHTML=`<div class="success"><div class="success-icon">✓</div><h2>EEG Appointment Confirmed</h2><div class="confirm-row"><span>Appointment ID</span><b>${U.esc(r.appointmentId)}</b></div><div class="confirm-row"><span>Patient</span><b>${U.esc(r.patientName||sel.name)}</b></div><div class="confirm-row"><span>EEG Charges</span><b>${U.money(r.eegCharges)}</b></div></div>`;
     }catch(e){
       try{
-        const s=await NeuronAPI.call('checkEEGBookingRequest',{eegBookingRequestId:id,city:p.city},10000);
-        if(s.found){
+        const s=await NeuronAPI.verifyBooking('EEG',id,p.city);
+        if(s&&s.found){
           await IDB.put('tx',{id,type:'EEG_BOOKING',status:'complete',payload:p,result:s});
           alert('Original EEG booking recovered: '+s.appointmentId);
           return;
