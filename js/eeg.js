@@ -90,6 +90,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           document.querySelectorAll('.patient-option').forEach(z=>z.classList.remove('selected'));
           b.classList.add('selected');
           $('payment').hidden=false;
+          if($('paymentPatientName')) $('paymentPatientName').textContent=x.name||'';
           setPaymentDefaults();
           updatePayment();
           $('payment').scrollIntoView({behavior:'smooth',block:'start'});
