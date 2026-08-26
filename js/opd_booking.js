@@ -498,7 +498,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   $("book").onclick=async()=>{
     if($("book").disabled || bookingInProgress)return;
     bookingInProgress=true;
-    lockBookingFields(true);
     $("book").disabled=true;
     $("book").textContent="Confirming Appointment...";
     $("book").className="btn btn-primary";
@@ -522,6 +521,10 @@ document.addEventListener("DOMContentLoaded",()=>{
       $("book").className="cta";
       return;
     }
+
+    // Lock fields only after all compulsory validation checks above pass.
+    // Validation failures must keep the form editable for correction.
+    lockBookingFields(true);
 
     const id=U.uuid("opd");
     const payload={
