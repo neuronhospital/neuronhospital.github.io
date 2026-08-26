@@ -1,10 +1,28 @@
 let selected=null;
+document.addEventListener('DOMContentLoaded',()=>{
+ const cities=Object.keys(window.Schedule?{...window.Schedule}:{}).length?["Latur","Nilanga","Udgir","Beed","Ambajogai","Parli","Dharashiv","Omerga","Barshi"]:["Latur"];
+ const sel=document.getElementById('refundCity');
+ if(sel){cities.forEach(c=>{let o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});sel.value=window.Schedule.cityAtNow(cities);}
+ const w=document.getElementById('whatsapp');
+ if(w)w.addEventListener('input',validateWhatsapp);
+});
+function validateWhatsapp(){
+ const w=document.getElementById('whatsapp'),e=document.getElementById('whatsappError');
+ if(!w||!e)return;
+ if(/^[6-9]\d{9}$/.test(w.value)) e.textContent='';
+ else e.textContent='Enter 10 digit number given at the time of OPD Booking';
+}
+function validWhatsapp(){
+ validateWhatsapp();
+ return /^[6-9]\d{9}$/.test(document.getElementById('whatsapp').value);
+}
 function api(body){return NeuronAPI.call(body.action, body);}
 function loadRefund(){
+ if(!validWhatsapp()) return;
  resetRefundView();
  const b=document.getElementById('loadBtn');b.textContent='Loading...';b.disabled=true;
  document.getElementById('status').textContent='Wait we are retrieving patient information';
- api({action:'getRefundPatientByWhatsApp',whatsapp:document.getElementById('whatsapp').value}).then(x=>{
+ api({action:'getRefundPatientByWhatsApp',whatsapp:document.getElementById('whatsapp').value,city:document.getElementById('refundCity').value}).then(x=>{
   b.textContent='Load';b.disabled=false;
   if(!x.ok) throw Error(x.error||'Error');
   document.getElementById('status').textContent='';
