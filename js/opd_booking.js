@@ -423,7 +423,8 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("name").value=U.title(x.name);
           // Follow-up patient details remain editable after auto-fill.
           // Do not disable patient information fields after selection.
-          ["name","age","unit","address","ref"].forEach(id=>{ if($(id)) $(id).disabled=false; });
+          ["name","age","unit","address","ref","followWa"].forEach(id=>{ if($(id)) $(id).disabled=false; });
+          if($("followWa") && !$("followWa").value) $("followWa").value=U.phone(x.whatsapp||x.phone||"");
           const followupAge=currentFollowupAge(x.age,x.ageUnit,x.date);
           $("age").value=followupAge.value;
           $("unit").value=followupAge.unit;
@@ -519,7 +520,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       ["name","Please enter the patient's name."],
       ["age","Please enter the patient's age."],
       ["address","Please enter the patient's address."],
-      ["wa","Please enter the patient's WhatsApp number."],
+      [type==="Follow-up"?"followWa":"wa","Please enter the patient's WhatsApp number."],
       ["city","Please select the visit location."],
       ["date","Please select an available appointment date."],
       ["next","Please select next follow-up city."]
