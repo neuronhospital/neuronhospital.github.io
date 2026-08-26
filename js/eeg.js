@@ -93,7 +93,12 @@ document.addEventListener("DOMContentLoaded",()=>{
           if($('paymentPatientName')) $('paymentPatientName').textContent=x.name||'';
           setPaymentDefaults();
           updatePayment();
-          $('payment').scrollIntoView({behavior:'smooth',block:'start'});
+          if($('paymentPatientName')){
+            $('paymentPatientName').scrollIntoView({behavior:'smooth',block:'center'});
+            $('paymentPatientName').focus();
+          }else{
+            $('payment').scrollIntoView({behavior:'smooth',block:'start'});
+          }
         };
         $('patients').appendChild(b);
         if(r.patients.length===1)b.click();
