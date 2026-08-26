@@ -55,6 +55,20 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   $('load').onclick=async()=>{
     if($('load').disabled)return;
+    const wa=$('wa').value.trim();
+    if(!/^[6789]\d{9}$/.test(wa)){
+      let msg=document.getElementById('waError');
+      if(!msg){
+        msg=document.createElement('div');
+        msg.id='waError';
+        msg.style.color='red';
+        $('wa').closest('.input-row').parentElement.appendChild(msg);
+      }
+      msg.textContent='Enter 10 digit number given at the time of OPD Booking';
+      return;
+    }
+    let oldMsg=document.getElementById('waError');
+    if(oldMsg) oldMsg.textContent='';
     clearLoadedState();
     $('bookMessage').hidden=true;
     $('load').disabled=true;
@@ -78,6 +92,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           $('payment').hidden=false;
           setPaymentDefaults();
           updatePayment();
+          $('payment').scrollIntoView({behavior:'smooth',block:'start'});
         };
         $('patients').appendChild(b);
         if(r.patients.length===1)b.click();
