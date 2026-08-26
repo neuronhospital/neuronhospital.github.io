@@ -117,7 +117,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("unit").value="years";
     const todayCity=getScheduledCityForToday();
     $("city").value=todayCity; $("next").value=todayCity;
-    // After selecting New from the confirmation screen, unlock the fresh booking form.\n    // The previous booking has completed; do not carry the previous verification lock.\n    setPostVerifyFieldsLocked(mode==="Follow-up");\n    if($("book")) $("book").disabled=false;\n    $("waStatus").textContent=""; $("waStatus").style.color="";
+    setPostVerifyFieldsLocked(true);
+    $("waStatus").textContent=""; $("waStatus").style.color="";
     $("verifyTick").style.display="none";
     $("followStatus").textContent=""; $("patients").innerHTML="";
     $("selectedPatientCard").hidden=true;
@@ -126,13 +127,6 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("selectedPatientCity").textContent="—";
     $("selectedPatientBookingDate").textContent="—";
     $("submitStatus").textContent="";
-    // Always clear previous booking submission UI state when starting a new flow.
-    // This prevents the previous "Confirming Appointment..." state from leaking
-    // into a fresh OPD booking after confirmation.
-    if($("book")){
-      $("book").textContent="Book OPD Appointment";
-      $("book").className="cta";
-    }
     $("confirmation").hidden=true; $("confirmation").innerHTML="";
     $("cal").hidden=true; $("cal").innerHTML="";
     $("payMode").value="Cash"; $("amount").value="500"; $("cash").value=""; $("online").value="";
@@ -212,7 +206,12 @@ document.addEventListener("DOMContentLoaded",()=>{
   $("cash").oninput=updateSplitTotal; $("online").oninput=updateSplitTotal;
 
   $("follow").onclick=async()=>{resetFields("Follow-up"); await setNextAvailableDate($("city").value); $("cal").hidden=true;};
-  $("new").onclick=async()=>{resetFields("New"); await setNextAvailableDate($("city").value); $("cal").hidden=true;};
+  $("new").onclick=async()=>{
+    resetFields("New");
+    unlockBeforeWhatsApp();
+    await setNextAvailableDate($("city").value);
+    $("cal").hidden=true;
+  };
 
   $("wa").oninput=e=>{e.target.value=U.phone(e.target.value);checkWhatsAppMatch();};
   $("verifyWa").oninput=e=>{e.target.value=U.phone(e.target.value);checkWhatsAppMatch();};
@@ -502,6 +501,20 @@ document.addEventListener("DOMContentLoaded",()=>{
       document.querySelectorAll("#bookingFields input, #bookingFields select, #bookingFields textarea").forEach(el=>{
         el.disabled=true;
       });
+    }
+  };
+
+  // Restore the form to the state before WhatsApp verification when a new
+  // appointment is started from the confirmation box. Post-verification locks
+  // remain controlled by setPostVerifyFieldsLocked().
+  const unlockBeforeWhatsApp=()=>{
+    document.querySelectorAll("#bookingFields input, #bookingFields select, #bookingFields textarea").forEach(el=>{
+      el.disabled=false;
+    });
+    if($("book")){
+      $("book").disabled=false;
+      $("book").textContent="Book OPD Appointment";
+      $("book").className="cta";
     }
   };
 
