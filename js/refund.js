@@ -39,8 +39,8 @@ function render(list){
   const eegPaid = Number(p.eegTotalPaid || 0);
   const opdRefund = Number(p.opdRefund || 0);
   const eegRefund = Number(p.eegRefund || 0);
-  const opdPending = opdPaid > 0 && opdRefund < opdPaid;
-  const eegPending = eegPaid > 0 && eegRefund < eegPaid;
+  const opdPending = opdPaid > 0 && opdRefund <= 0;
+  const eegPending = eegPaid > 0 && eegRefund <= 0;
   p.refundAvailable = {opd:opdPending,eeg:eegPending};
   return opdPending || eegPending;
  });
