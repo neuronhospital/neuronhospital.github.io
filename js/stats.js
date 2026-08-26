@@ -113,9 +113,15 @@ document.addEventListener("DOMContentLoaded",()=>{
      const freeOPD=(r.rows||[]).filter(x=>Number(x.opdCharges)===0).length;
      const eegRows=(r.rows||[]).filter(x=>x.eegCharges!==null);
      const freeEEG=eegRows.filter(x=>Number(x.eegCharges)===0).length;
+     const totalRefundOPD=rows.reduce((a,x)=>a+(Number(x.opdRefund)||0),0);
+     const totalRefundEEG=rows.reduce((a,x)=>a+(Number(x.eegRefund)||0),0);
+     const totalRefund=totalRefundOPD+totalRefundEEG;
      const totalCash=(Number(t.opdCash)||0)+(Number(t.eegCash)||0);
      const totalOnline=(Number(t.opdOnline)||0)+(Number(t.eegOnline)||0);
      const totalCollection=(Number(t.opdPaid)||0)+(Number(t.eegPaid)||0);
+     const netCash=totalCash-totalRefund;
+     const netOnline=totalOnline;
+     const netTotal=netCash+netOnline;
      html+=`<div class="summary-grid service-summary">
        <div class="stat service-stat"><small></small><strong>OPD</strong></div>
        <div class="stat service-stat"><small></small><strong>EEG</strong></div>
@@ -125,10 +131,11 @@ document.addEventListener("DOMContentLoaded",()=>{
        <div class="stat service-stat"><small>Free</small><strong>${freeEEG}</strong></div>
      </div>
      <div class="collection-card">
-       <div class="collection-grid collection-head"><div></div><div>OPD</div><div>EEG</div><div>OPD+EEG</div></div>
-       <div class="collection-grid"><div class="collection-label">Cash</div><div>${money(t.opdCash)}</div><div>${money(t.eegCash)}</div><div>${money(totalCash)}</div></div>
-       <div class="collection-grid"><div class="collection-label">Online</div><div>${money(t.opdOnline)}</div><div>${money(t.eegOnline)}</div><div>${money(totalOnline)}</div></div>
-       <div class="collection-grid collection-total"><div class="collection-label">Total</div><div>${money(t.opdPaid)}</div><div>${money(t.eegPaid)}</div><div>${money(totalCollection)}</div></div>
+       <div class="collection-grid collection-head"><div></div><div>OPD</div><div>EEG</div><div>OPD+EEG</div><div>Net Total</div></div>
+       <div class="collection-grid"><div class="collection-label">Cash</div><div>${money(t.opdCash)}</div><div>${money(t.eegCash)}</div><div>${money(totalCash)}</div><div>${money(netCash)}</div></div>
+       <div class="collection-grid"><div class="collection-label">Online</div><div>${money(t.opdOnline)}</div><div>${money(t.eegOnline)}</div><div>${money(totalOnline)}</div><div>${money(netOnline)}</div></div>
+       <div class="collection-grid"><div class="collection-label">Refund</div><div>${money(totalRefundOPD)}</div><div>${money(totalRefundEEG)}</div><div>${money(totalRefund)}</div><div>${money(totalRefund)}</div></div>
+       <div class="collection-grid collection-total"><div class="collection-label">Total</div><div>${money(t.opdPaid)}</div><div>${money(t.eegPaid)}</div><div>${money(totalCollection)}</div><div>${money(netTotal)}</div></div>
      </div>`;
      html+=bothTable(rows);
    }
