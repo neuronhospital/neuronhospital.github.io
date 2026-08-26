@@ -591,6 +591,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }finally{
       if($("confirmation").hidden){
         bookingInProgress=false;
+        setPostVerifyFieldsLocked(false);
         $("book").disabled=false;
         $("book").textContent="Book OPD Appointment";
         $("book").className="cta";
