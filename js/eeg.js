@@ -53,14 +53,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     $('bookMessage').textContent='Wait we are Confirming your EEG Booking...';
   };
 
-  const waField = $('wa');
-  if(waField){
-    waField.oninput=()=>{
-      let msg=document.getElementById('waError');
-      const valid=/^[6789]\\d{9}$/.test(waField.value.trim());
-      if(valid && msg) msg.remove();
-    };
-  }
+  $('wa').addEventListener('input',()=>{
+    const wa=$('wa').value.trim();
+    const msg=document.getElementById('waError');
+    if(msg && /^[6789]\d{9}$/.test(wa)){
+      msg.textContent='';
+    }
+  });
 
   $('load').onclick=async()=>{
     if($('load').disabled)return;
@@ -102,7 +101,12 @@ document.addEventListener("DOMContentLoaded",()=>{
           if($('paymentPatientName')) $('paymentPatientName').textContent=x.name||'';
           setPaymentDefaults();
           updatePayment();
-          $('payment').scrollIntoView({behavior:'smooth',block:'start'});
+          if($('paymentPatientName')){
+            $('paymentPatientName').scrollIntoView({behavior:'smooth',block:'center'});
+            $('paymentPatientName').focus();
+          }else{
+            $('payment').scrollIntoView({behavior:'smooth',block:'start'});
+          }
         };
         $('patients').appendChild(b);
         if(r.patients.length===1)b.click();
