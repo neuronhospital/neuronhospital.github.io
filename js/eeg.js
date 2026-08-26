@@ -53,6 +53,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     $('bookMessage').textContent='Wait we are Confirming your EEG Booking...';
   };
 
+  const waField = $('wa');
+  if(waField){
+    waField.oninput=()=>{
+      let msg=document.getElementById('waError');
+      const valid=/^[6789]\\d{9}$/.test(waField.value.trim());
+      if(valid && msg) msg.remove();
+    };
+  }
+
   $('load').onclick=async()=>{
     if($('load').disabled)return;
     const wa=$('wa').value.trim();
@@ -93,12 +102,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           if($('paymentPatientName')) $('paymentPatientName').textContent=x.name||'';
           setPaymentDefaults();
           updatePayment();
-          if($('paymentPatientName')){
-            $('paymentPatientName').scrollIntoView({behavior:'smooth',block:'center'});
-            $('paymentPatientName').focus();
-          }else{
-            $('payment').scrollIntoView({behavior:'smooth',block:'start'});
-          }
+          $('payment').scrollIntoView({behavior:'smooth',block:'start'});
         };
         $('patients').appendChild(b);
         if(r.patients.length===1)b.click();
