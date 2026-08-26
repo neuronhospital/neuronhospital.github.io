@@ -181,17 +181,25 @@ document.addEventListener("DOMContentLoaded",()=>{
 
  function bothTable(rows){
    let html=`<div class="table-wrap combined-table-wrap"><table id="reportTable" class="combined-report"><thead>
-     <tr><th rowspan="2">Sr. No.</th><th rowspan="2">Patient Name</th><th colspan="3">OPD Collection</th><th colspan="3">EEG Collection</th><th rowspan="2">Mobile Number</th></tr>
-     <tr><th>Cash</th><th>Online</th><th>Total</th><th>Cash</th><th>Online</th><th>Total</th></tr>
+     <tr><th rowspan="2">Sr. No.</th><th rowspan="2">Patient Name</th><th colspan="4">OPD Collection</th><th colspan="4">EEG Collection</th><th rowspan="2">Mobile Number</th></tr>
+     <tr><th>Cash</th><th>Online</th><th>Refund</th><th>Net Total</th><th>Cash</th><th>Online</th><th>Refund</th><th>Net Total</th></tr>
    </thead><tbody>`;
-   rows.forEach((x,i)=>html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${paidOrDash(x.opdCashPaid)}</td><td>${paidOrDash(x.opdOnlinePaid)}</td><td>${money(x.opdCharges)}</td><td>${x.eegCharges===null?"-":paidOrDash(x.eegCashPaid)}</td><td>${x.eegCharges===null?"-":paidOrDash(x.eegOnlinePaid)}</td><td>${x.eegCharges===null?"—":money(x.eegCharges)}</td><td>${esc(x.mobileNumber)}</td></tr>`);
+   rows.forEach((x,i)=>{
+     const opdRefund=Number(x.opdRefund)||0;
+     const eegRefund=Number(x.eegRefund)||0;
+     const opdNet=(Number(x.opdCashPaid)||0)+(Number(x.opdOnlinePaid)||0)-opdRefund;
+     const eegNet=(Number(x.eegCashPaid)||0)+(Number(x.eegOnlinePaid)||0)-eegRefund;
+     html+=`<tr><td>${i+1}</td><td>${esc(x.patientName)}</td><td>${paidOrDash(x.opdCashPaid)}</td><td>${paidOrDash(x.opdOnlinePaid)}</td><td>${money(opdRefund)}</td><td>${money(opdNet)}</td><td>${x.eegCharges===null?"-":paidOrDash(x.eegCashPaid)}</td><td>${x.eegCharges===null?"-":paidOrDash(x.eegOnlinePaid)}</td><td>${x.eegCharges===null?"-":money(eegRefund)}</td><td>${x.eegCharges===null?"-":money(eegNet)}</td><td>${esc(x.mobileNumber)}</td></tr>`;
+   });
    const opd=rows.reduce((a,x)=>a+(Number(x.opdTotalPaid)||0),0);
    const opdCash=rows.reduce((a,x)=>a+(Number(x.opdCashPaid)||0),0);
    const opdOnline=rows.reduce((a,x)=>a+(Number(x.opdOnlinePaid)||0),0);
+   const opdRefund=rows.reduce((a,x)=>a+(Number(x.opdRefund)||0),0);
    const eeg=rows.reduce((a,x)=>a+(Number(x.eegTotalPaid)||0),0);
    const eegCash=rows.reduce((a,x)=>a+(Number(x.eegCashPaid)||0),0);
    const eegOnline=rows.reduce((a,x)=>a+(Number(x.eegOnlinePaid)||0),0);
-   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(opdCash)}</th><th>${money(opdOnline)}</th><th>${money(opd)}</th><th>${money(eegCash)}</th><th>${money(eegOnline)}</th><th>${money(eeg)}</th><th>—</th></tr></tfoot></table></div>`;
+   const eegRefund=rows.reduce((a,x)=>a+(Number(x.eegRefund)||0),0);
+   html+=`</tbody><tfoot><tr class="total-row"><th colspan="2">Total</th><th>${money(opdCash)}</th><th>${money(opdOnline)}</th><th>${money(opdRefund)}</th><th>${money(opdCash+opdOnline-opdRefund)}</th><th>${money(eegCash)}</th><th>${money(eegOnline)}</th><th>${money(eegRefund)}</th><th>${money(eegCash+eegOnline-eegRefund)}</th><th>—</th></tr></tfoot></table></div>`;
    return html;
  }
  function paidOrDash(n){return Number(n)?money(n):"-";}
