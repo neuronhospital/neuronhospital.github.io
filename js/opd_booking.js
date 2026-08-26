@@ -421,6 +421,9 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("selectedPatientBookingDate").textContent=U.date(x.date)||"—";
           $("selectedPatientCard").hidden=false;
           $("name").value=U.title(x.name);
+          // Follow-up patient details remain editable after auto-fill.
+          // Do not disable patient information fields after selection.
+          ["name","age","unit","address","ref"].forEach(id=>{ if($(id)) $(id).disabled=false; });
           const followupAge=currentFollowupAge(x.age,x.ageUnit,x.date);
           $("age").value=followupAge.value;
           $("unit").value=followupAge.unit;
