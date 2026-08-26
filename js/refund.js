@@ -31,6 +31,19 @@ function loadRefund(){
 }
 function render(list){
  const d=document.getElementById('patients');d.innerHTML='';
+ // Final client-side safety filter. Backend should already send only eligible
+ // patients, but this prevents display of fully refunded records if stale data
+ // reaches the browser.
+ list = (list || []).filter(p=>{
+  const opdPaid = Number(p.opdTotalPaid || 0);
+  const eegPaid = Number(p.eegTotalPaid || 0);
+  const opdRefund = Number(p.opdRefund || 0);
+  const eegRefund = Number(p.eegRefund || 0);
+  const opdPending = opdPaid > 0 && opdRefund < opdPaid;
+  const eegPending = eegPaid > 0 && eegRefund < eegPaid;
+  p.refundAvailable = {opd:opdPending,eeg:eegPending};
+  return opdPending || eegPending;
+ });
  list.sort((a,b)=>(Number(b.bookingTimestampMs||0)-Number(a.bookingTimestampMs||0)));
  list.forEach((p,i)=>{
   let x=document.createElement('div');
