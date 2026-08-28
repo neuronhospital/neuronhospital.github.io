@@ -21,7 +21,10 @@ document.addEventListener("DOMContentLoaded",()=>{
       const all=await IDB.all("followupCache");
       for(const c of all){
         const found=(c.rows||[]).filter(x=>U.phone(x.whatsapp||x.phone)==phone);
-        if(found.length)return {ok:true,patients:found,groups:[{city:c.city,scheduledToday:true,patients:found}]};
+        if(found.length){
+          const cleaned=cleanFollowupPatients(found);
+          return {ok:true,patients:cleaned,groups:[{city:c.city,scheduledToday:true,patients:cleaned}]};
+        }
       }
     }catch(e){}
     return null;
@@ -83,6 +86,19 @@ document.addEventListener("DOMContentLoaded",()=>{
     const s=String(value||"").replace(/\D/g,"");
     if(s.length!==8)return 0;
     return Number(s.slice(4)+s.slice(2,4)+s.slice(0,2));
+  };
+
+  const isTodayFollowupRecord=(x)=>{
+    const raw=String(x.date||x.bookingDate||x.visitDate||"").replace(/\D/g,"");
+    const p=U.parts();
+    const today=String(p.d).padStart(2,"0")+String(p.m).padStart(2,"0")+p.y;
+    return raw===today;
+  };
+
+  const cleanFollowupPatients=(patients)=>{
+    const a=(patients||[]).filter(x=>!isTodayFollowupRecord(x)).slice(0);
+    a.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
+    return a.slice(0,10);
   };
 
   const sortFollowupPatients=(patients)=>{
@@ -428,7 +444,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     try{
       const r=await (await searchFollowupCache(p)) || await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p},60000);
       const groups=Array.isArray(r.groups)?r.groups:[];
-      const patients=Array.isArray(r.patients)?r.patients.slice():[];
+      let patients=Array.isArray(r.patients)?r.patients.slice():[];
+      patients=cleanFollowupPatients(patients);
       $("patients").innerHTML="";
 
       // Display one clearly separated section per city. Scheduled city/cities
@@ -489,7 +506,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           heading.textContent=group.city+(group.scheduledToday?" — Today":"");
           section.appendChild(heading);
 
-          group.patients.forEach((x)=>{
+          cleanFollowupPatients(group.patients).forEach((x)=>{
             section.appendChild(renderPatient(x));
           });
           $("patients").appendChild(section);
