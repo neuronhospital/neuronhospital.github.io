@@ -490,7 +490,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           const now=U.parts();calendarYear=now.y;calendarMonth=now.m;
           setFollowupDefaultDate($("city").value);
           requestAnimationFrame(()=>{
-            $("bookingFields").scrollIntoView({behavior:"smooth",block:"start"});
+            $("selectedPatientCard").scrollIntoView({behavior:"smooth",block:"center"});
           });
         };
         return b;
