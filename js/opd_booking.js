@@ -4,7 +4,28 @@ document.addEventListener("DOMContentLoaded",()=>{
   let nextFollowupCityManuallyEdited=false;
   let cityChangeToken=0;
   let bookingInProgress=false;
+  let bookingSessionId=0;
   let calendarYear=U.parts().y, calendarMonth=U.parts().m;
+
+
+  const cacheCityFollowup=async()=>{
+    try{
+      const r=await NeuronAPI.call("getFollowupCityCache",{},60000);
+      if(r&&r.city&&Array.isArray(r.rows)){
+        await IDB.put("followupCache",{key:r.city,city:r.city,rows:r.rows,updatedAt:Date.now()});
+      }
+    }catch(e){}
+  };
+  const searchFollowupCache=async(phone)=>{
+    try{
+      const all=await IDB.all("followupCache");
+      for(const c of all){
+        const found=(c.rows||[]).filter(x=>U.phone(x.whatsapp||x.phone)==phone);
+        if(found.length)return {ok:true,patients:found,groups:[{city:c.city,scheduledToday:true,patients:found}]};
+      }
+    }catch(e){}
+    return null;
+  };
 
   // Show today's India-local date in the appointment field by default.
   // The field remains disabled until WhatsApp verification, and the calendar
@@ -348,6 +369,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     if(!verified){
       setTodayDateDisplay();
+  cacheCityFollowup();
       return;
     }
 
@@ -404,7 +426,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("followStatus").textContent="Wait We are Loading Patient details...";
     $("followStatus").style.color="#7b1fa2";
     try{
-      const r=await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p},60000);
+      const r=await (await searchFollowupCache(p)) || await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p},60000);
       const groups=Array.isArray(r.groups)?r.groups:[];
       const patients=Array.isArray(r.patients)?r.patients.slice():[];
       $("patients").innerHTML="";
@@ -419,6 +441,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           $("confirmation").hidden=true;
           $("confirmation").innerHTML="";
           $("submitStatus").textContent="";
+          bookingSessionId++; bookingInProgress=false;
           selected=x; document.querySelectorAll(".patient-option").forEach(z=>z.classList.remove("selected")); b.classList.add("selected");
           $("selectedPatientName").textContent=U.title(x.name||"—");
           $("selectedPatientAge").textContent=`${x.age ?? "—"} ${x.ageUnit||""}`.trim();
@@ -602,7 +625,9 @@ document.addEventListener("DOMContentLoaded",()=>{
         new Promise(resolve=>setTimeout(resolve,1500))
       ]);}catch(_){ }
 
+      const currentBookingSession=bookingSessionId;
       const r=await NeuronAPI.call("bookAppointment",payload,25000);
+      if(currentBookingSession!==bookingSessionId)return;
       try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"complete",payload,result:r});}catch(_){ }
       $("submitStatus").textContent="✓ Appointment submitted successfully.";
       $("submitStatus").style.color="#168a4a";
@@ -612,6 +637,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       // confirmation content AFTER the reset.
       $("confirmation").innerHTML=confirmationHTML;
       $("confirmation").hidden=false;
+      requestAnimationFrame(()=>$("confirmation").scrollIntoView({behavior:"smooth",block:"center"}));
       $("submitStatus").textContent="✓ Appointment submitted successfully.";
       $("submitStatus").style.color="#168a4a";
     }catch(e){
