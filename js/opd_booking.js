@@ -684,7 +684,17 @@ document.addEventListener("DOMContentLoaded",()=>{
       try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"uncertain",payload});}catch(_){ }
       $("submitStatus").textContent="Booking request was sent but confirmation was interrupted by network. Do not submit another booking. Internet recovery will check the original request automatically.";
       $("submitStatus").style.color="#b42318";
-      alert("Booking status is uncertain. Do not book again.");
+      alert("Booking status is uncertain. Do not book again.\n\nChecking whether your booking was completed...");
+      try{
+        const retry=await NeuronAPI.verifyBooking("OPD",id,payload.city);
+        if(retry&&retry.found){
+          await IDB.put("tx",{id,type:"OPD_BOOKING",status:"complete",payload,result:retry});
+          const recoveredHTML=`<div class="success"><div class="success-icon">✓</div><h2>OPD Appointment Confirmed</h2><p>Your booking was completed successfully.</p><p>Appointment ID: <b>${U.esc(retry.appointmentId)}</b></p></div>`;
+          $("confirmation").innerHTML=recoveredHTML;
+          $("confirmation").hidden=false;
+          return;
+        }
+      }catch(_){}
     }finally{
       if($("confirmation").hidden){
         bookingInProgress=false;
