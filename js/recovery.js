@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded",async()=>{
+async function recoverPendingBookings_(){
  if(!navigator.onLine)return;
  const items=await IDB.pending().catch(()=>[]);
  for(const x of items){
@@ -9,4 +9,12 @@ document.addEventListener("DOMContentLoaded",async()=>{
    if(r&&r.found)await IDB.put("tx",{...x,status:"complete",result:r,recoveredAt:Date.now()});
   }catch(_){}
  }
+});
+
+window.addEventListener("online",()=>{
+  recoverPendingBookings_().catch(()=>{});
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  recoverPendingBookings_().catch(()=>{});
 });

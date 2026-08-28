@@ -682,7 +682,7 @@ document.addEventListener("DOMContentLoaded",()=>{
         }
       }catch(_){}
       try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"uncertain",payload});}catch(_){ }
-      $("submitStatus").textContent="Booking status is uncertain. Do not submit another booking. Reopen with internet to recover the original request.";
+      $("submitStatus").textContent="Booking request was sent but confirmation was interrupted by network. Do not submit another booking. Internet recovery will check the original request automatically.";
       $("submitStatus").style.color="#b42318";
       alert("Booking status is uncertain. Do not book again.");
     }finally{
