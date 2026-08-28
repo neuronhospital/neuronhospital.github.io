@@ -5,16 +5,28 @@ document.addEventListener("DOMContentLoaded",()=>{
   let cityChangeToken=0;
   let bookingInProgress=false;
   let bookingSessionId=0;
+  let followupCacheReady=false;
   let calendarYear=U.parts().y, calendarMonth=U.parts().m;
 
 
+  const showCacheStatus=(show)=>{
+    const el=$("cacheStatus");
+    if(el) el.textContent=show?"(Cache Populating)":"";
+  };
+
   const cacheCityFollowup=async()=>{
+    followupCacheReady=false;
+    showCacheStatus(true);
     try{
       const r=await NeuronAPI.call("getFollowupCityCache",{},60000);
       if(r&&r.city&&Array.isArray(r.rows)){
         await IDB.put("followupCache",{key:r.city,city:r.city,rows:r.rows,updatedAt:Date.now()});
       }
     }catch(e){}
+    finally{
+      followupCacheReady=true;
+      showCacheStatus(false);
+    }
   };
   const searchFollowupCache=async(phone)=>{
     try{
