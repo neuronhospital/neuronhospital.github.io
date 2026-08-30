@@ -634,7 +634,6 @@ document.addEventListener("DOMContentLoaded",()=>{
       return;
     }
 
-    let bookingResponseReceived=false;
     try{
       // Local recovery journaling is best-effort only. It must NEVER block
       // the actual online booking request or leave the UI stuck on Confirming.
@@ -645,7 +644,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       const currentBookingSession=bookingSessionId;
       const r=await NeuronAPI.call("bookAppointment",payload,25000);
-      bookingResponseReceived=true;
       if(currentBookingSession!==bookingSessionId)return;
       try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"complete",payload,result:r});}catch(_){ }
       $("submitStatus").textContent="✓ Appointment submitted successfully.";
@@ -660,14 +658,6 @@ document.addEventListener("DOMContentLoaded",()=>{
       $("submitStatus").textContent="✓ Appointment submitted successfully.";
       $("submitStatus").style.color="#168a4a";
     }catch(e){
-      // A completed backend booking must not be reported as uncertain if only
-      // the confirmation UI rendering fails.
-      if(bookingResponseReceived){
-        try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"complete",payload});}catch(_){ }
-        $("submitStatus").textContent="✓ Appointment submitted successfully. Please verify booking details if required.";
-        $("submitStatus").style.color="#168a4a";
-        return;
-      }
       try{
         const s=await NeuronAPI.verifyBooking("OPD",id,payload.city);
         if(s&&s.found){
