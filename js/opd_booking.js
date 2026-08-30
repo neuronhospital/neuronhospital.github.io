@@ -496,24 +496,9 @@ document.addEventListener("DOMContentLoaded",()=>{
         return b;
       };
 
-      if(groups.length){
-        groups.forEach((group)=>{
-          const section=document.createElement("div");
-          section.className="followup-city-section";
-
-          const heading=document.createElement("div");
-          heading.className="followup-city-heading";
-          heading.textContent=group.city+(group.scheduledToday?" — Today":"");
-          section.appendChild(heading);
-
-          cleanFollowupPatients(group.patients).forEach((x)=>{
-            section.appendChild(renderPatient(x));
-          });
-          $("patients").appendChild(section);
-        });
-      }else{
-        patients.forEach((x)=>$("patients").appendChild(renderPatient(x)));
-      }
+      patients.forEach((x)=>{
+        $("patients").appendChild(renderPatient(x));
+      });
 
       if(patients.length===1) $("patients").querySelector(".patient-option").click();
 
