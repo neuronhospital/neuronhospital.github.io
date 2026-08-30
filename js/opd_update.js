@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("load").className="btn btn-primary";
     $("loadMessage").hidden=false;
     try{
-      const r=await NeuronAPI.call("getEEGPatientsByWhatsApp",{whatsapp:U.phone($("wa").value),city:$("city").value});
+      const r=await NeuronAPI.call("getFollowupPatientsByWhatsApp",{whatsapp:U.phone($("wa").value),city:$("city").value});
       r.patients.forEach(x=>{
         const b=document.createElement("button");
         b.className="patient-option";
