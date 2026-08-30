@@ -8,28 +8,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   let calendarYear=U.parts().y, calendarMonth=U.parts().m;
 
 
-  const cacheCityFollowup=async()=>{
-    try{
-      const r=await NeuronAPI.call("getFollowupCityCache",{},60000);
-      if(r&&r.city&&Array.isArray(r.rows)){
-        await IDB.put("followupCache",{key:r.city,city:r.city,rows:r.rows,updatedAt:Date.now()});
-      }
-    }catch(e){}
-  };
-  const searchFollowupCache=async(phone)=>{
-    try{
-      const all=await IDB.all("followupCache");
-      for(const c of all){
-        const found=(c.rows||[]).filter(x=>U.phone(x.whatsapp||x.phone)==phone);
-        if(found.length){
-          const cleaned=cleanFollowupPatients(found);
-          return {ok:true,patients:cleaned,groups:[{city:c.city,scheduledToday:true,patients:cleaned}]};
-        }
-      }
-    }catch(e){}
-    return null;
-  };
-
   // Show today's India-local date in the appointment field by default.
   // The field remains disabled until WhatsApp verification, and the calendar
   // remains collapsed until the user taps the date field.
@@ -442,7 +420,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $("followStatus").textContent="Wait We are Loading Patient details...";
     $("followStatus").style.color="#7b1fa2";
     try{
-      const r=await (await searchFollowupCache(p)) || await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p},60000);
+      const r=await NeuronAPI.call("getPatientHistoryByWhatsApp",{whatsapp:p},60000);
       const groups=Array.isArray(r.groups)?r.groups:[];
       let patients=Array.isArray(r.patients)?r.patients.slice():[];
       patients=cleanFollowupPatients(patients);
