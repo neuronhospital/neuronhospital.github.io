@@ -13,7 +13,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
 
   function paymentMode(x){
-    const cash=Number(x?.opdCashPaid)||0, online=Number(x?.opdOnlinePaid)||0;
+    const cash = Number(x?.cashPaid ?? x?.opdCashPaid) || 0;
+  const online = Number(x?.onlinePaid ?? x?.opdOnlinePaid) || 0;
     if(cash>0&&online>0)return "Split";
     if(online>0)return "Online";
     return "Cash";
