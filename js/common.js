@@ -11,5 +11,5 @@ document.addEventListener("DOMContentLoaded",()=>{
 <a href="opd_update.html"><img class="nav-icon" src="assets/icons/opd-update.svg" alt="">Update OPD</a>
 <a href="eeg_update.html"><img class="nav-icon" src="assets/icons/eeg-update.svg" alt="">Update EEG</a>
 <a href="statistics.html"><img class="nav-icon" src="assets/icons/statistics.svg" alt="">Statistics</a>
-</div><div class="footer-contact"><b>NEURON Hospital, Latur</b><br>Near Patil Plaza, Infront of Ashwini Hospital<br>Ausa Road, Latur. Phone : <b>02382 242581</b><br></div></div></footer>`;
+</div><div class="footer-contact"><b>NEURON Hospital, Latur</b><br>Near Patil Plaza, Infront of Ashwini Hospital<br>Ausa Road, Latur. Phone : <b><a href="tel:02382242581">02382 242581</a></b><br></div></div></footer>`;
 });
