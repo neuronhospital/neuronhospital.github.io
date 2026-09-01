@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    }
  };
 
- function money(n){return U.money(Number(n)||0)}
+ function money(n){const v=Number(n)||0; return v===0?"-":U.money(v)}
  function esc(v){return U.esc(v)}
  function rowsFor(mode,rows){
    if(mode==="eeg")return rows.filter(x=>x.eegCharges!==null);
