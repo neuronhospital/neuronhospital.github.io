@@ -27,6 +27,12 @@ document.addEventListener("DOMContentLoaded",()=>{
       $('singlePayment').hidden=false;
       $('split').hidden=true;
       $('singlePaymentLabel').textContent=m;
+
+      // Clear previous split values when switching to Cash/Online
+      $('cash').value='';
+      $('online').value='';
+      $('total').textContent='₹0';
+
       $('amount').value=def();
     }
   }
