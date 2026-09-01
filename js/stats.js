@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded",()=>{
+function statDisplayValue_(v){\n  return (v===0 || v==="0" || v===null || v===undefined || v==="") ? "-" : v;\n}\ndocument.addEventListener("DOMContentLoaded",()=>{
  const $=U.$;
  $("city").innerHTML=
    `<option value="all">All City Combined</option>`+
@@ -214,21 +214,21 @@ document.addEventListener("DOMContentLoaded",()=>{
    out.push([`${r.city} - ${r.periodLabel||r.period||""}`]);
    if(mode==="patient"){
      out.push(["Sr No.","Patient Name","OPD Charges","Cash","Online","Mobile Number"]);
-     rows.forEach((x,i)=>out.push([i+1,x.patientName,x.opdCharges,x.opdCashPaid,x.opdOnlinePaid,x.mobileNumber]));
+     rows.forEach((x,i)=>out.push([i+1,x.patientName,x.opdCharges,statDisplayValue_(x.opdCashPaid),statDisplayValue_(x.opdOnlinePaid),x.mobileNumber]));
      out.push(["","TOTAL",
        rows.reduce((a,x)=>a+(Number(x.opdCharges)||0),0),
        rows.reduce((a,x)=>a+(Number(x.opdCashPaid)||0),0),
        rows.reduce((a,x)=>a+(Number(x.opdOnlinePaid)||0),0),""]);
    }else if(mode==="eeg"){
      out.push(["Sr No.","Patient Name","EEG Charges","Cash","Online","Mobile Number"]);
-     rows.forEach((x,i)=>out.push([i+1,x.patientName,x.eegCharges,x.eegCashPaid,x.eegOnlinePaid,x.mobileNumber]));
+     rows.forEach((x,i)=>out.push([i+1,x.patientName,x.eegCharges,statDisplayValue_(x.eegCashPaid),statDisplayValue_(x.eegOnlinePaid),x.mobileNumber]));
      out.push(["","TOTAL",
        rows.reduce((a,x)=>a+(Number(x.eegCharges)||0),0),
        rows.reduce((a,x)=>a+(Number(x.eegCashPaid)||0),0),
        rows.reduce((a,x)=>a+(Number(x.eegOnlinePaid)||0),0),""]);
    }else{
      out.push(["Sr No.","Patient Name","OPD Cash","OPD Online","OPD Total","EEG Cash","EEG Online","EEG Total","Mobile Number"]);
-     rows.forEach((x,i)=>out.push([i+1,x.patientName,x.opdCashPaid,x.opdOnlinePaid,x.opdTotalPaid,x.eegCharges===null?"":x.eegCashPaid,x.eegCharges===null?"":x.eegOnlinePaid,x.eegCharges===null?"":x.eegTotalPaid,x.mobileNumber]));
+     rows.forEach((x,i)=>out.push([i+1,x.patientName,statDisplayValue_(x.opdCashPaid),statDisplayValue_(x.opdOnlinePaid),statDisplayValue_(x.opdTotalPaid),x.eegCharges===null?"":statDisplayValue_(x.eegCashPaid),x.eegCharges===null?"":statDisplayValue_(x.eegOnlinePaid),x.eegCharges===null?"":statDisplayValue_(x.eegTotalPaid),x.mobileNumber]));
      out.push(["","TOTAL",
        rows.reduce((a,x)=>a+(Number(x.opdCashPaid)||0),0),
        rows.reduce((a,x)=>a+(Number(x.opdOnlinePaid)||0),0),
