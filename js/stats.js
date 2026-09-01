@@ -1,7 +1,4 @@
-function statDisplayValue_(v){
-  return (v===0 || v==="0" || v===null || v===undefined || v==="") ? "-" : v;
-}
-document.addEventListener("DOMContentLoaded",()=>{
+function statDisplayValue_(v){\n  return (v===0 || v==="0" || v===null || v===undefined || v==="") ? "-" : v;\n}\ndocument.addEventListener("DOMContentLoaded",()=>{
  const $=U.$;
  $("city").innerHTML=
    `<option value="all">All City Combined</option>`+
@@ -240,8 +237,7 @@ document.addEventListener("DOMContentLoaded",()=>{
        rows.reduce((a,x)=>a+(Number(x.eegOnlinePaid)||0),0),
        rows.reduce((a,x)=>a+(Number(x.eegTotalPaid)||0),0),""]);
    }
-   const csv="\uFEFF"+out.map(row=>row.map(csvCell).join(",")).join("\r
-");
+   const csv="\uFEFF"+out.map(row=>row.map(csvCell).join(",")).join("\r\n");
    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
    const url=URL.createObjectURL(blob);
    const a=document.createElement("a");
@@ -254,8 +250,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    const rows=rowsFor(mode,r.rows||[]);
    const out=[["Mobile Number"]];
    rows.forEach(x=>out.push([x.mobileNumber]));
-   const csv="\uFEFF"+out.map(row=>row.map(csvCell).join(",")).join("\r
-");
+   const csv="\uFEFF"+out.map(row=>row.map(csvCell).join(",")).join("\r\n");
    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
    const url=URL.createObjectURL(blob);
    const a=document.createElement("a");
