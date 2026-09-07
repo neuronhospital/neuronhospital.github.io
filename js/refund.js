@@ -1,6 +1,6 @@
 let selected=null;
 document.addEventListener('DOMContentLoaded',()=>{
- const cities=Object.keys(window.Schedule?{...window.Schedule}:{}).length?["Latur","Nilanga","Udgir","Beed","Ambajogai","Parli","Dharashiv","Omerga","Barshi"]:["Latur"];
+ const cities=Object.keys(window.Schedule?{...window.Schedule}:{}).length?["Latur","Nilanga","Udgir","Beed","Ambajogai","Dharashiv","Omerga","Barshi"]:["Latur"];
  const sel=document.getElementById('refundCity');
  if(sel){cities.forEach(c=>{let o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});sel.value=window.Schedule.cityAtNow(cities);}
  const w=document.getElementById('whatsapp');
