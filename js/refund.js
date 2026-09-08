@@ -64,7 +64,10 @@ function render(list){
  list.forEach((p,i)=>{
   let x=document.createElement('div');
   x.className='card patient-card';
-  x.innerHTML='<h3>'+p.name+'</h3><p>Date of Appointment: '+(p.date||'')+'</p><p>Visit Location: '+(p.city||'')+'</p>';
+  const paymentLines=[];
+  if(p.refundAvailable.opd) paymentLines.push('OPD Paid : ₹'+Number(p.opdTotalPaid||0));
+  if(p.refundAvailable.eeg) paymentLines.push('EEG Paid : ₹'+Number(p.eegTotalPaid||0));
+  x.innerHTML='<h3>'+U.esc(p.name||'')+'</h3>'+paymentLines.map(v=>'<p>'+U.esc(v)+'</p>').join('');
   x.onclick=()=>selectPatient(p,x);
   d.appendChild(x);
   if(list.length===1)selectPatient(p,x);

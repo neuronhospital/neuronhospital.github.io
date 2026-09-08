@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       r.patients.forEach((x,i)=>{
         const b=document.createElement('button');
         b.className='patient-option';
-        b.innerHTML=`<b>${U.esc(x.name)}</b><small>${x.age} ${U.esc(x.ageUnit)} • ${U.date(x.date)}</small>`;
+        b.innerHTML=`<strong>${U.esc(x.name)}</strong><span class="patient-meta">${U.esc(x.age)} ${U.esc(x.ageUnit)} • ${U.esc(x.city||"")} • ${U.date(x.date)}</span>`;
         b.onclick=()=>{
           sel=x;
           $('confirmation').hidden=true;

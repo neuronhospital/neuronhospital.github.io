@@ -442,7 +442,7 @@ $("patients").innerHTML="";
       // Display returned patients directly.
       const renderPatient=(x)=>{
         const b=document.createElement("button"); b.type="button"; b.className="patient-option";
-        b.innerHTML=`<b>${U.esc(x.name)}</b><small>${U.esc(x.age)} ${U.esc(x.ageUnit)} • ${U.esc(x.city)} • ${U.date(x.date)}</small>`;
+        b.innerHTML=`<strong>${U.esc(x.name)}</strong><span class="patient-meta">${U.esc(x.age)} ${U.esc(x.ageUnit)} • ${U.esc(x.city)} • ${U.date(x.date)}</span>`;
         b.onclick=()=>{
           // Selecting another patient must remove any confirmation belonging to a previous patient.
           $("confirmation").hidden=true;
@@ -497,8 +497,8 @@ if(patients.length===1) $("patients").querySelector(".patient-option").click();
           : "No patient found for this WhatsApp number.";
         $("followStatus").style.color="#b42318";
       }else{
-        $("followStatus").textContent=`${patients.length} patient(s) found.`;
-        $("followStatus").style.color="#168a4a";
+        $("followStatus").textContent="";
+        $("followStatus").style.color="";
       }
     }catch(e){
       $("followStatus").textContent="Unable to retrieve patient details: "+(e.message||"Network/server error.");
