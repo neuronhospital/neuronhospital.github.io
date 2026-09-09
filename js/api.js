@@ -47,8 +47,8 @@ window.NeuronAPI={
   }
  },
  verifyBooking:async(type,id,city,retries=3)=>{
-  const action=type==="EEG"?"checkEEGBookingRequest":"checkBookingRequest";
-  const key=type==="EEG"?"eegBookingRequestId":"bookingRequestId";
+  const action="checkBookingRequest";
+  const key="bookingRequestId";
   for(let i=0;i<retries;i++){
     try{
       const r=await NeuronAPI.call(action,{[key]:id,city},10000);
