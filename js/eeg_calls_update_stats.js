@@ -39,11 +39,11 @@ function eegCallsUpdateRenderMonth_(m,index){
     html+=`<div class="month-empty">No EEG Call Record Available for this Month</div></section>`;
     return {html,monthId};
   }
-  html+=`<div class="eeg-table-wrap"><table class="eeg-calls-table"><thead><tr><th>Sr No</th><th>Patient Name</th><th>Date of EEG</th><th>Address</th><th class="eeg-mobile-download" data-month-key="${eegCallsUpdateEsc_(String(m.key||""))}" tabindex="0" role="button" title="Download mobile numbers as CSV">Mobile Number</th><th>Payment</th><th>Referred By</th></tr></thead><tbody>`;
+  html+=`<div class="eeg-table-wrap"><div class="eeg-table-block"><table class="eeg-calls-table"><thead><tr><th>Sr No</th><th>Patient Name</th><th>Date of EEG</th><th>Address</th><th class="eeg-mobile-download" data-month-key="${eegCallsUpdateEsc_(String(m.key||""))}" tabindex="0" role="button" title="Download mobile numbers as CSV">Mobile Number</th><th>Payment</th><th>Referred By</th></tr></thead><tbody>`;
   patients.forEach((p,idx)=>{
     html+=`<tr><td>${idx+1}</td><td>${eegCallsUpdatePatientHtml_(p,!!m.editable)}</td><td>${eegCallsUpdateEsc_(eegCallsUpdateFormatDate_(p.date))}</td><td>${eegCallsUpdateEsc_(p.address)}</td><td>${eegCallsUpdateEsc_(p.whatsapp)}</td><td>${eegCallsUpdateEsc_(eegCallsUpdateMoney_(p.paymentReceived))}</td><td>${eegCallsUpdateEsc_(p.referredBy)}</td></tr>`;
   });
-  html+=`</tbody></table></div><div class="month-total">Total : Calls - ${patients.length},   Collection - ${eegCallsUpdateTotalMoney_(m.collection)}</div></section>`;
+  html+=`</tbody></table><div class="month-total">Total : Calls - ${patients.length},   Collection - ${eegCallsUpdateTotalMoney_(m.collection)}</div></div></div></section>`;
   return {html,monthId};
 }
 function eegCallsUpdateRender_(r){
