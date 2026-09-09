@@ -43,8 +43,26 @@ function eegCallsUpdateRenderMonth_(m,index){
   patients.forEach((p,idx)=>{
     html+=`<tr><td>${idx+1}</td><td>${eegCallsUpdatePatientHtml_(p,!!m.editable)}</td><td>${eegCallsUpdateEsc_(eegCallsUpdateFormatDate_(p.date))}</td><td>${eegCallsUpdateEsc_(p.address)}</td><td>${eegCallsUpdateEsc_(p.whatsapp)}</td><td>${eegCallsUpdateEsc_(eegCallsUpdateMoney_(p.paymentReceived))}</td><td>${eegCallsUpdateEsc_(p.referredBy)}</td></tr>`;
   });
-  html+=`</tbody></table><div class="month-total">Total : Calls - ${patients.length},   Collection - ${eegCallsUpdateTotalMoney_(m.collection)}</div></div></div></section>`;
+  html+=`</tbody></table></div></div><div class="month-total">Total : Calls - ${patients.length},   Collection - ${eegCallsUpdateTotalMoney_(m.collection)}</div></section>`;
   return {html,monthId};
+}
+function eegCallsUpdateSyncTotalWidths_(){
+  const root=document.getElementById("monthlyStats");
+  if(!root)return;
+  const mobile=window.matchMedia("(max-width:900px)").matches;
+  root.querySelectorAll(".month-card").forEach(card=>{
+    const table=card.querySelector(".eeg-calls-table");
+    const total=card.querySelector(".month-total");
+    if(!table||!total)return;
+    if(mobile){
+      total.style.removeProperty("--eeg-table-width");
+    }else{
+      total.style.setProperty("--eeg-table-width",`${table.getBoundingClientRect().width}px`);
+    }
+  });
+}
+function eegCallsUpdateScheduleTotalWidthSync_(){
+  requestAnimationFrame(()=>eegCallsUpdateSyncTotalWidths_());
 }
 function eegCallsUpdateRender_(r){
   const root=document.getElementById("monthlyStats");
@@ -54,6 +72,7 @@ function eegCallsUpdateRender_(r){
   let html="";
   months.forEach((m,i)=>{html+=eegCallsUpdateRenderMonth_(m,i).html;});
   root.innerHTML=html;
+  eegCallsUpdateScheduleTotalWidthSync_();
 }
 function eegCallsUpdateShowHistoryError_(message){
   const box=document.getElementById("historyError");
@@ -275,3 +294,5 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.getElementById("editWhatsapp").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,10);});
   if(!gate.hidden) password.focus();
 });
+
+window.addEventListener("resize",eegCallsUpdateScheduleTotalWidthSync_);
