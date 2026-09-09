@@ -132,13 +132,23 @@ document.addEventListener("DOMContentLoaded",()=>{
    const netCash=totalCash-totalRefund;
    const netOnline=totalOnline;
    const netTotal=netCash+netOnline;
-   html+=`<div class="summary-grid service-summary">
-     <div class="stat service-stat"><small></small><strong>OPD</strong></div>
-     <div class="stat service-stat"><small></small><strong>EEG</strong></div>
-     <div class="stat service-stat"><small>Total</small><strong>${rows.length}</strong></div>
-     <div class="stat service-stat"><small>Total</small><strong>${t.eegCount||eegRows.length}</strong></div>
-     <div class="stat service-stat"><small>Free</small><strong>${freeOPD}</strong></div>
-     <div class="stat service-stat"><small>Free</small><strong>${freeEEG}</strong></div>
+   html+=`<div class="service-summary">
+     <div class="service-card">
+       <div class="service-card-title">OPD</div>
+       <div class="service-card-body">
+         <div class="service-metric"><span>Total</span><strong>${rows.length}</strong></div>
+         <div class="service-divider"></div>
+         <div class="service-metric"><span>Free</span><strong>${freeOPD}</strong></div>
+       </div>
+     </div>
+     <div class="service-card">
+       <div class="service-card-title">EEG</div>
+       <div class="service-card-body">
+         <div class="service-metric"><span>Total</span><strong>${t.eegCount||eegRows.length}</strong></div>
+         <div class="service-divider"></div>
+         <div class="service-metric"><span>Free</span><strong>${freeEEG}</strong></div>
+       </div>
+     </div>
    </div>
    <div class="collection-card"><div class="collection-table-wrap"><table class="collection-table"><thead><tr><th></th><th>OPD</th><th>EEG</th><th>OPD+EEG</th><th>Net Total</th></tr></thead><tbody>
      <tr><th class="collection-label">Cash</th><td>${money(t.opdCash)}</td><td>${money(t.eegCash)}</td><td>${money(totalCash)}</td><td>${money(netCash)}</td></tr>
