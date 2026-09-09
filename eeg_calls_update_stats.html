@@ -6,7 +6,7 @@
 .month-heading{margin:0 0 12px;font-size:22px;font-weight:950;background:#f1f3f5;color:#111;padding:12px 14px;border-radius:10px}
 .eeg-table-wrap{max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
 .eeg-table-block{width:max-content;max-width:none}
-@media (max-width:900px){.eeg-table-block{width:100%;max-width:100%;box-sizing:border-box}}
+@media (max-width:900px){.eeg-table-block{width:100%;max-width:100%;box-sizing:border-box}.month-total{width:100%;max-width:100%}}
 .eeg-calls-table{table-layout:auto;width:auto;min-width:0;border-collapse:collapse;white-space:nowrap;background:#fff}
 .eeg-calls-table th,.eeg-calls-table td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:middle}
 .eeg-calls-table th{font-weight:900;background:#f8f9fa}
@@ -15,7 +15,7 @@
 .eeg-call-patient-name{font-weight:700}
 .eeg-mobile-download{cursor:pointer;user-select:none}
 .month-empty{color:var(--muted);font-size:13px;font-weight:600;padding:10px 0 2px}
-.month-total{text-align:center;font-size:13px;font-weight:650;padding:12px 8px 2px;white-space:nowrap}
+.month-total{text-align:center;font-size:13px;font-weight:650;padding:12px 8px 2px;white-space:nowrap;width:var(--eeg-table-width,max-content);max-width:100%;box-sizing:border-box;margin-left:0;margin-right:0}
 .secure-note{text-align:center;color:var(--muted);font-size:12px;margin-top:6px}
 .eeg-edit-separator{border:0;border-top:1px solid var(--line);margin:28px 0 22px}
 .selected-patient{font-size:18px;font-weight:900;margin-bottom:18px}
