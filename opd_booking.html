@@ -9,14 +9,15 @@
 @media(max-width:600px){.selected-patient-card-grid{grid-template-columns:1fr}}
 .followup-city-section{margin:12px 0 18px}.followup-city-heading{font-weight:700;font-size:15px;padding:9px 11px;margin-bottom:7px;border-radius:8px;background:#f3eef8;color:#5a1a78;border-left:4px solid #7b1fa2}.followup-city-section .patient-option{margin-bottom:6px}</style><script src="js/secure-preload.js"></script></head>
 <body data-title="OPD Booking"><div id="header"></div><main><div class="container">
+<section class="page-title"><h1>OPD Booking Portal</h1><p>Book a new or follow-up appointment</p></section>
 <section id="gate" class="card secure-wrap"><h2>🔐 Secure Access</h2><input id="password" type="password" inputmode="numeric" maxlength="6" placeholder="Password"><button id="enter" class="cta" style="width:100%;margin-top:10px">Access Portal</button></section>
 <section id="portal" hidden>
-<section class="page-title"><h1>OPD Booking Portal</h1><p>Book a new or follow-up appointment</p></section>
+
 
 <section class="card">
   <div class="choice-row">
-    <button id="follow" class="choice active" type="button">Follow-up</button>
-    <button id="new" class="choice" type="button">New</button>
+    <button id="follow" class="choice" type="button">Follow-up</button>
+    <button id="new" class="choice active" type="button">New</button>
   </div>
 
   <!-- Follow-up retrieval is shown ONLY in Follow-up mode. -->
