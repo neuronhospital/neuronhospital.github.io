@@ -25,11 +25,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
  if(!btn||!password) return;
 
- const focusPassword=()=>{
-   if(!g || g.hidden) return;
-   try{ password.focus({preventScroll:false}); }catch(e){ password.focus(); }
- };
-
  const verify=async()=>{
    if(verifying || password.value.length!==6) return;
    verifying=true;
@@ -55,5 +50,4 @@ document.addEventListener("DOMContentLoaded",()=>{
    if(password.value.length===6) verify();
  });
  btn.onclick=verify;
- focusPassword();
 });

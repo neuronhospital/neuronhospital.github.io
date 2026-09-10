@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded",()=>{
   const $=U.$, cities=NEURON_CONFIG.cities;
-  let type="Follow-up", verified=false, selected=null;
+  let type="New", verified=false, selected=null;
   let nextFollowupCityManuallyEdited=false;
   let cityChangeToken=0;
   let bookingInProgress=false;
@@ -629,7 +629,7 @@ if(patients.length===1) $("patients").querySelector(".patient-option").click();
       $("submitStatus").textContent="✓ Appointment submitted successfully.";
       $("submitStatus").style.color="#168a4a";
       const confirmationHTML=`<div class="success"><div class="success-icon">✓</div><h2>OPD Appointment Confirmed</h2><p class="city-confirm">For <b>${U.esc(payload.city||"")}</b> City</p><div class="confirm-row"><span>Appointment ID</span><b>${U.esc(r.appointmentId)}</b></div><div class="confirm-row"><span>Patient</span><b>${U.esc(r.patientName)}</b></div><div class="confirm-row"><span>Age</span><b>${r.age} ${r.ageUnit}</b></div><div class="confirm-row"><span>Address</span><b>${U.esc(r.address||payload.address)}</b></div><div class="confirm-row"><span>Date of Booking</span><b>${U.date(r.date)}</b></div><div class="confirm-row"><span>OPD Charges</span><b>${U.money(r.opdCharges)}</b></div><div class="confirm-row"><span>Cash</span><b>${U.money(r.opdCashPaid)}</b></div><div class="confirm-row"><span>Online</span><b>${U.money(r.opdOnlinePaid)}</b></div><div class="confirm-row"><span>Next Follow-up City</span><b>${U.esc(r.nextFollowupCity||payload.nextFollowupCity)}</b></div></div>`;
-      resetFields("Follow-up");
+      resetFields("New");
       // resetFields intentionally clears the booking form, so restore the
       // confirmation content AFTER the reset.
       $("confirmation").innerHTML=confirmationHTML;
@@ -643,7 +643,7 @@ if(patients.length===1) $("patients").querySelector(".patient-option").click();
         if(s&&s.found){
           try{await IDB.put("tx",{id,type:"OPD_BOOKING",status:"complete",payload,result:s});}catch(_){ }
           const recoveredHTML=`<div class="success"><div class="success-icon">✓</div><h2>OPD Appointment Recovered</h2><p>Appointment ID: <b>${U.esc(s.appointmentId)}</b></p><p>Original booking was already recorded. No duplicate was created.</p></div>`;
-          resetFields("Follow-up");
+          resetFields("New");
           $("confirmation").innerHTML=recoveredHTML;
           $("confirmation").hidden=false;
           return;
@@ -665,7 +665,7 @@ if(patients.length===1) $("patients").querySelector(".patient-option").click();
 
   initFollowupCity();
   fillCities();
-  resetFields("Follow-up");
+  resetFields("New");
   setNextAvailableDate($("city").value);
 
   // Mobile browsers may restore a page from the back-forward cache with

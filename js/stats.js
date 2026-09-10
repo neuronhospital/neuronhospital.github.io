@@ -163,17 +163,17 @@ document.addEventListener("DOMContentLoaded",()=>{
      <div class="service-card">
        <div class="service-card-title">OPD</div>
        <div class="service-card-body">
-         <div class="service-metric"><span>Total</span><strong>${rows.length}</strong></div>
+         <div class="service-metric"><span>Total</span><strong class="metric-total">${rows.length}</strong></div>
          <div class="service-divider"></div>
-         <div class="service-metric"><span>Free</span><strong>${freeOPD}</strong></div>
+         <div class="service-metric"><span>Free</span><strong class="metric-free">${freeOPD}</strong></div>
        </div>
      </div>
      <div class="service-card">
        <div class="service-card-title">EEG</div>
        <div class="service-card-body">
-         <div class="service-metric"><span>Total</span><strong>${t.eegCount||eegRows.length}</strong></div>
+         <div class="service-metric"><span>Total</span><strong class="metric-total">${t.eegCount||eegRows.length}</strong></div>
          <div class="service-divider"></div>
-         <div class="service-metric"><span>Free</span><strong>${freeEEG}</strong></div>
+         <div class="service-metric"><span>Free</span><strong class="metric-free">${freeEEG}</strong></div>
        </div>
      </div>
    </div>
