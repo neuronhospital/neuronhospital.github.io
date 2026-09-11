@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded",()=>{
-  const $=U.$, cities=NEURON_CONFIG.cities;
+  const $=U.$, cities=Schedule.cities;
   let type="New", verified=false, selected=null;
   let nextFollowupCityManuallyEdited=false;
   let cityChangeToken=0;
@@ -64,16 +64,6 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(scheduled)el.value=scheduled;
   };
 
-  // Follow-up ordering uses the numeric timestamp calculated by the backend.
-  // This avoids re-parsing Google Sheets Date/ISO/DD-MM-YYYY values in the
-  // browser and guarantees that the same timestamp used for server-side
-  // sorting is also used for display ordering.
-  const followupDateScore=(value)=>{
-    const s=String(value||"").replace(/\D/g,"");
-    if(s.length!==8)return 0;
-    return Number(s.slice(4)+s.slice(2,4)+s.slice(0,2));
-  };
-
   const isTodayFollowupRecord=(x)=>{
     const raw=String(x.date||x.bookingDate||x.visitDate||"").replace(/\D/g,"");
     const p=U.parts();
@@ -81,35 +71,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     return raw===today;
   };
 
+  // Backend returns follow-up patients in authoritative display order.
+  // Only remove same-day records here; do not re-sort them in the browser.
   const cleanFollowupPatients=(patients)=>{
-    const a=(patients||[]).filter(x=>!isTodayFollowupRecord(x)).slice(0);
-    a.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
-    return a.slice(0,10);
-  };
-
-  const sortFollowupPatients=(patients)=>{
-    patients.forEach((x,i)=>{x.__followupOriginalIndex=i;});
-    patients.sort((a,b)=>{
-      const at=Number.isFinite(Number(a.bookingTimestampMs))?Number(a.bookingTimestampMs):null;
-      const bt=Number.isFinite(Number(b.bookingTimestampMs))?Number(b.bookingTimestampMs):null;
-
-      // Primary rule: latest Booking Timestamp first, globally across cities.
-      if(at!==null||bt!==null){
-        if(at===null)return 1;
-        if(bt===null)return -1;
-        if(bt!==at)return bt-at;
-      }
-
-      // Legacy/invalid timestamp fallback: latest appointment date first.
-      const ad=followupDateScore(a.date);
-      const bd=followupDateScore(b.date);
-      if(bd!==ad)return bd-ad;
-
-      // Final deterministic tie-breaker: original backend order.
-      return a.__followupOriginalIndex-b.__followupOriginalIndex;
-    });
-    patients.forEach(x=>{delete x.__followupOriginalIndex;});
-    return patients;
+    return (patients||[]).filter(x=>!isTodayFollowupRecord(x)).slice(0,10);
   };
 
   const fillCities=()=>{
@@ -322,15 +287,12 @@ document.addEventListener("DOMContentLoaded",()=>{
   });
   $("followWa").oninput=e=>e.target.value=U.phone(e.target.value);
 
-  async function getCalendarDates(year,month,city){
+  function getCalendarDates(year,month,city){
     try{
-      const local=Schedule.dates(city,year,month);
-      if(local&&local.length)return local;
-    }catch(_){}
-    try{
-      const r=await NeuronAPI.call("getAvailableDates",{city,year,month},12000);
-      return r.dates||[];
-    }catch(_){return [];}
+      return Schedule.dates(city,year,month)||[];
+    }catch(_){
+      return [];
+    }
   }
 
   async function renderCalendar(){
