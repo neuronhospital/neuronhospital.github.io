@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#7b1fa2"><link rel="stylesheet" href="css/base.css"><title>EEG Calls : Update and Statistics | NEURON Hospital</title><style>
+[hidden]{display:none!important}
+.eeg-calls-loading{min-height:45vh;display:grid;place-items:center;text-align:center;font-size:18px;font-weight:900;color:var(--p)}
+.eeg-calls-error{background:#fff3f2;border:1px solid #f3c2bd;color:#b42318;border-radius:14px;padding:14px;font-weight:800;text-align:center}
+.month-card{margin-bottom:18px}
+.month-heading{margin:0 0 12px;font-size:22px;font-weight:950;background:#f1f3f5;color:#111;padding:12px 14px;border-radius:10px}
+.eeg-table-wrap{max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.eeg-table-block{width:max-content;max-width:none}
+@media (max-width:900px){.eeg-table-block{width:100%;max-width:100%;box-sizing:border-box}.month-total{width:100%;max-width:100%}}
+.eeg-calls-table{table-layout:auto;width:auto;min-width:0;border-collapse:collapse;white-space:nowrap;background:#fff}
+.eeg-calls-table th,.eeg-calls-table td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:middle}
+.eeg-calls-table th{font-weight:900;background:#f8f9fa}
+.eeg-calls-table td:first-child,.eeg-calls-table th:first-child{text-align:center}
+.eeg-call-patient-link{border:0;background:transparent;padding:0;margin:0;color:var(--p);font:inherit;font-weight:850;text-decoration:none;cursor:pointer;white-space:nowrap}
+.eeg-call-patient-name{font-weight:700}
+.eeg-mobile-download{cursor:pointer;user-select:none}
+.month-empty{color:var(--muted);font-size:13px;font-weight:600;padding:10px 0 2px}
+.month-total{text-align:center;font-size:13px;font-weight:650;padding:12px 8px 2px;white-space:nowrap;width:var(--eeg-table-width,max-content);max-width:100%;box-sizing:border-box;margin-left:0;margin-right:0}
+.secure-note{text-align:center;color:var(--muted);font-size:12px;margin-top:6px}
+.eeg-edit-separator{border:0;border-top:1px solid var(--line);margin:28px 0 22px}
+.selected-patient{font-size:18px;font-weight:900;margin-bottom:18px}
+.update-busy{background:#6b7280 !important;color:#fff !important;opacity:1}
+.update-wait{text-align:center;font-weight:800;color:var(--p);margin-top:8px}
+.update-error{background:#fff3f2;border:1px solid #f3c2bd;color:#b42318;border-radius:12px;padding:12px;margin-top:10px;font-weight:700}
+.edit-actions{display:flex;gap:10px;margin-top:10px}.edit-actions button{flex:1;min-height:46px;padding:12px 15px;border-radius:12px;white-space:nowrap}
+.changed-list{margin:8px 0 0;padding-left:22px;text-align:left}.success{text-align:left}.success h2{margin-top:0}
+</style><script src="js/secure-preload.js"></script></head><body data-title="EEG Calls : Update and Statistics"><div id="header"></div><main><div class="container">
+<section class="page-title"><h1>EEG Calls : Update and Statistics</h1></section>
+<section id="gate" class="card secure-wrap"><h2>🔐 Secure Access</h2><input id="password" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]*" autocomplete="off"><button id="enter" class="cta" style="width:100%;margin-top:10px" type="button">Access Portal</button><div class="secure-note">Enter secure password to access this section</div></section>
+<section id="loading" class="card eeg-calls-loading" hidden>Wait We are Loading EEG Calls Details ...</section>
+<section id="error" class="card eeg-calls-error" hidden></section>
+<section id="portal" hidden>
+  <section id="monthlyStats"></section>
+  <div id="historyError" class="update-error" hidden></div>
+  <hr class="eeg-edit-separator">
+  <section id="edit" class="card" hidden>
+    <div class="selected-patient">Selected Patient : <span id="selectedPatientName"></span></div>
+    <div class="grid">
+      <div class="field full"><label class="required-field">Patient Name</label><input id="editName"></div>
+      <div class="field full"><label class="required-field">Address</label><input id="editAddress"></div>
+      <div class="field full"><label class="required-field">Mobile Number</label><div class="prefix-wrap"><span class="prefix">+91</span><input id="editWhatsapp" maxlength="10" inputmode="numeric"></div></div>
+      <div class="field full"><label class="required-field">Referred By Dr / Hospital</label><input id="editReferredBy"></div>
+      <div class="field full"><label class="required-field">Payment</label><input id="editPayment" type="number" min="0" step="1" inputmode="decimal"></div>
+      <div class="field full"><div class="edit-actions"><button id="updateDetails" class="cta" type="button">Update Details</button><button id="cancelUpdate" class="btn btn-secondary" type="button">Cancel</button></div><div id="updateWait" class="update-wait" hidden>Wait EEG details are Updating</div><div id="updateError" class="update-error" hidden></div></div>
+    </div>
+  </section>
+  <section id="confirmation" hidden></section>
+</section>
+</div></main><div id="footer"></div>
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/utils.js"></script><script src="js/common.js"></script><script src="js/eeg_calls_update_stats.js"></script>
+</body></html>
