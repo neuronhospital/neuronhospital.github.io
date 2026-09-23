@@ -1,0 +1,184 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#7b1fa2"><link rel="stylesheet" href="css/base.css"><title>OPD Booking | NEURON Hospital</title><style>
+.selected-patient-card{margin-top:18px;padding:14px 16px;border:1px solid #d8c7df;border-radius:12px;background:#faf7fc;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.selected-patient-card-title{font-weight:700;font-size:15px;margin-bottom:11px;padding-bottom:8px;border-bottom:1px solid #e5dce8}
+.selected-patient-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+.selected-patient-card-grid>div{min-width:0}
+.selected-patient-card-grid span{display:block;font-size:12px;color:#667085;margin-bottom:2px}
+.selected-patient-card-grid strong{display:block;font-size:14px;overflow-wrap:anywhere}
+@media(max-width:600px){.selected-patient-card-grid{grid-template-columns:1fr}}
+.followup-city-section{margin:12px 0 18px}.followup-city-heading{font-weight:700;font-size:15px;padding:9px 11px;margin-bottom:7px;border-radius:8px;background:#f3eef8;color:#5a1a78;border-left:4px solid #7b1fa2}.followup-city-section .patient-option{margin-bottom:6px}.followup-edit-actions{display:flex;gap:8px;margin-top:14px;align-items:stretch}.followup-edit-actions button{height:48px;border-radius:8px;min-width:0;padding:10px 8px}.followup-edit-actions #editFollowup{flex:0 0 32%}.followup-edit-actions #book{flex:1 1 68%;white-space:nowrap}.followup-edit-actions.editing #book{flex:1 1 100%;width:100%}.followup-field-locked{background:#f2f4f7!important;color:#667085!important;border-color:#d0d5dd!important;cursor:not-allowed!important}.followup-field-locked::placeholder{color:#98a2b3}.followup-cache-tools{margin:0}.followup-cache-spacer{height:50vh;min-height:320px}.followup-cache-tools button{width:100%;min-height:48px}.followup-confirm-actions{display:flex;gap:12px;width:100%;margin-top:4px}.followup-confirm-actions button{flex:1 1 0;width:0;height:48px;min-height:48px;padding:0 12px;border-radius:9px}.followup-confirm-dialog{width:min(90vw,520px);padding:24px 24px 22px;border-radius:20px}.followup-confirm-dialog h2{font-size:20px;line-height:1.3;white-space:normal}.followup-confirm-dialog p{margin:10px 0 18px;font-size:14px}.followup-confirm-actions .opd-primary,.followup-confirm-actions .opd-secondary{font-size:15px}.followup-lock-popup{position:fixed;left:0;top:0;z-index:9999;background:#222;color:#fff;padding:8px 11px;border-radius:7px;font-size:12px;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:0;pointer-events:none;visibility:hidden;transition:opacity .16s ease;max-width:min(250px,calc(100vw - 24px));text-align:center}.followup-lock-popup.show{opacity:1;visibility:visible}
+.opd-modal-open{overflow:hidden}
+.opd-access-modal{position:fixed;inset:0;width:100%;height:100dvh;z-index:10000;display:block}
+.opd-access-modal[hidden]{display:none}
+.opd-access-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.42)}
+.opd-access-dialog{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:min(92vw,640px);padding:26px 28px 28px;border-radius:24px;background:#fff;box-shadow:0 14px 38px rgba(0,0,0,.24);font-family:Roboto,Arial,sans-serif}
+.opd-access-dialog h2{margin:0;display:flex;align-items:center;gap:10px;white-space:nowrap;font-size:23px;line-height:1.15;color:#1f2937;font-weight:700;letter-spacing:-.2px}.opd-restriction-dialog h2{font-size:19.55px;font-weight:600;letter-spacing:-.1px}.special-access-dialog h2{font-size:17.25px;font-weight:500;letter-spacing:0}.opd-access-title-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:23px;height:23px;color:#6a1b9a}.opd-access-title-icon svg{width:23px;height:23px;display:block;fill:currentColor}
+.opd-access-dialog p{margin:18px 0 18px;font-size:16px;line-height:1.45;color:#667085;font-weight:400}
+.opd-access-actions{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:4px auto 0}
+.opd-access-actions button{height:48px;min-height:48px;width:auto;min-width:0;padding:0 24px;border:0;border-radius:9px;font-size:16px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit}
+.opd-access-actions .opd-primary{background:#7b1fa2;color:#fff}.opd-access-actions .opd-secondary{background:#f1edf7;color:#5a1a78}
+.opd-access-dialog input{box-sizing:border-box;width:100%;height:54px;border:1px solid #c9ced6;border-radius:12px;padding:0 14px;font-size:22px;letter-spacing:.18em;outline:none}.opd-access-dialog input:focus{border-color:#7b1fa2;box-shadow:0 0 0 2px rgba(123,31,162,.14)}
+.opd-access-status{min-height:20px;margin:8px 0 10px;color:#b42318;font-size:14px;line-height:1.3;font-weight:500}
+.special-access-actions{width:80%;max-width:430px}
+.city-picker-dialog{padding:0;overflow:hidden;width:min(92vw,600px);border-radius:26px}
+.city-picker-list{max-height:min(72vh,560px);overflow:auto;background:#fff}
+.city-picker-option{position:relative;display:flex;align-items:center;justify-content:space-between;width:100%;height:57px;padding:0 22px;border:0;border-bottom:1px solid #e0e0e0;background:#fff;text-align:left;font-family:Roboto,Arial,sans-serif;font-size:20px;line-height:1;cursor:pointer}
+.city-picker-option:last-child{border-bottom:0}
+.city-picker-option.available{color:#168a4a;font-weight:600}.city-picker-option.restricted{color:#8b8f96;font-weight:400}
+.city-picker-radio{width:22px;height:22px;border:3px solid #757575;border-radius:50%;box-sizing:border-box;flex:0 0 auto;position:relative}.city-picker-option.available .city-picker-radio{border-color:#168a4a}.city-picker-option.selected .city-picker-radio{border-color:#168a4a}.city-picker-option.selected .city-picker-radio:after{content:"";position:absolute;inset:4px;border-radius:50%;background:#168a4a}
+.city-picker-option:active{background:#f7f7f7}.city-picker-option.restricted:active{background:#fafafa}
+.city-picker-dialog .city-picker-option.available.selected{color:#168a4a}
+@media(max-width:600px){
+  .opd-access-dialog{width:92vw;padding:24px 22px 24px;border-radius:22px}
+  .opd-access-dialog h2{font-size:21px;gap:8px}.opd-restriction-dialog h2{font-size:17.85px;font-weight:600}.special-access-dialog h2{font-size:15.75px;font-weight:500}.opd-access-title-icon,.opd-access-title-icon svg{width:21px;height:21px}
+  .opd-access-dialog p{font-size:15px;margin:16px 0 16px}
+  .opd-access-actions{gap:10px}.opd-access-actions button{font-size:15px;padding:0 20px}
+  .special-access-actions{width:80%;flex-wrap:nowrap}.special-access-actions button{flex:1 1 0;padding:0 12px}
+  .city-picker-dialog{width:92vw;border-radius:24px}.city-picker-option{height:57px;padding:0 20px;font-size:20px}.city-picker-radio{width:22px;height:22px}
+}
+@media(max-width:360px){.opd-access-dialog h2{gap:7px}.opd-restriction-dialog h2{font-size:16.6px;font-weight:600}.special-access-dialog h2{font-size:14.7px;font-weight:500}.opd-access-title-icon,.opd-access-title-icon svg{width:19px;height:19px}.opd-access-dialog{padding-left:18px;padding-right:18px}.opd-access-dialog p{font-size:14px}}
+.opd-hours-note-dialog{width:min(88vw,430px);padding:24px 24px 22px;border-radius:18px}.opd-hours-note-dialog h2{font-size:20px;font-weight:650;white-space:normal}.opd-hours-note-dialog p{margin:12px 0 18px;font-size:15px;line-height:1.45;color:#667085}.opd-hours-note-actions{margin-top:2px;gap:10px}.opd-hours-note-actions button{height:44px;min-height:44px;font-size:15px;padding:0 22px}.opd-hours-note-actions .opd-primary{min-width:100px}.opd-hours-note-actions .opd-secondary{min-width:92px}@media(max-width:600px){.opd-hours-note-dialog{width:88vw;padding:21px 20px 20px}.opd-hours-note-dialog h2{font-size:19px}.opd-hours-note-dialog p{font-size:14px;margin:10px 0 16px}}
+.city-picker-trigger{box-sizing:border-box;width:100%;height:58px;padding:0 16px;border:1px solid #b8bec8;border-radius:12px;background:#fff;color:#111827;display:flex;align-items:center;justify-content:space-between;text-align:left;font:inherit;font-size:20px;cursor:pointer}.city-picker-trigger:disabled{background:#f2f4f7;color:#667085;border-color:#d0d5dd;cursor:not-allowed}.city-picker-trigger:focus{outline:none;border-color:#7b1fa2;box-shadow:0 0 0 2px rgba(123,31,162,.12)}.city-picker-chevron{font-size:23px;line-height:1;color:#4b5563;margin-left:10px}</style><script src="js/secure-preload.js"></script></head>
+<body data-title="OPD Booking"><div id="header"></div><main><div class="container">
+<section class="page-title"><h1>OPD Booking Portal</h1><p>Book a new or follow-up appointment</p></section>
+<section id="gate" class="card secure-wrap"><h2>🔐 Secure Access</h2><input id="password" type="password" inputmode="numeric" maxlength="6" placeholder="Password"><button id="enter" class="cta" style="width:100%;margin-top:10px">Access Portal</button></section>
+<section id="portal" hidden>
+
+
+<section class="card">
+  <div class="choice-row">
+    <button id="follow" class="choice" type="button">Follow-up</button>
+    <button id="new" class="choice active" type="button">New</button>
+  </div>
+
+  <!-- Follow-up retrieval is shown ONLY in Follow-up mode. -->
+  <div id="followFields" style="margin-top:14px">
+    <label class="required-field">City</label>
+    <select id="followCity"></select>
+    <label class="required-field" style="margin-top:10px">WhatsApp Number</label>
+    <div class="input-row">
+      <div class="prefix-wrap" style="width:100%"><span class="prefix">+91</span><input id="followWa" maxlength="10" inputmode="numeric" autocomplete="tel"></div>
+    </div>
+    <button id="load" class="btn btn-secondary" type="button" style="width:100%;min-height:48px;margin-top:10px">Search Patient</button>
+    <div id="followStatus" class="status" aria-live="polite"></div>
+    <div id="patients" class="patient-list"></div>
+
+    <div id="selectedPatientCard" class="selected-patient-card" hidden aria-live="polite">
+      <div class="selected-patient-card-title">Selected Patient</div>
+      <div class="selected-patient-card-grid">
+        <div><span>Name</span><strong id="selectedPatientName">—</strong></div>
+        <div><span>Age</span><strong id="selectedPatientAge">—</strong></div>
+        <div><span>City</span><strong id="selectedPatientCity">—</strong></div>
+        <div><span>Previous Booking</span><strong id="selectedPatientBookingDate">—</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bookingFields" hidden>
+  <div id="newFields" hidden>
+    <div class="grid" style="margin-top:14px">
+      <div class="field"><label class="required-field">Patient's Name</label><input id="name" autocomplete="name"></div>
+      <div class="field"><label class="required-field">Age</label><div class="input-row"><input id="age" type="number" step=".1" min="0"><select id="unit"><option value="years">Years</option><option value="months">Months</option><option value="days">Days</option></select></div></div>
+      <div class="field full"><label class="required-field">Patient Address</label><input id="address" autocomplete="street-address"></div>
+      <div class="field full"><label>Referred By Dr./Hospital</label><input id="ref"></div>
+
+      <div id="newWhatsAppField" class="field full">
+        <label class="required-field">Enter WhatsApp Number</label>
+        <div class="input-row">
+          <div class="prefix-wrap"><span class="prefix">+91</span><input id="wa" maxlength="10" inputmode="numeric" autocomplete="tel" oncopy="return false" oncut="return false"></div>
+        </div>
+        <label class="required-field" style="margin-top:10px">Verify WhatsApp Number</label>
+        <div class="input-row">
+          <div class="prefix-wrap"><span class="prefix">+91</span><input id="verifyWa" maxlength="10" inputmode="numeric" autocomplete="off" oncopy="return false" oncut="return false"></div><span id="verifyTick" style="display:none;color:#168a4a;font-size:22px;font-weight:700;margin-left:8px">✓</span>
+        </div>
+        <div id="waStatus" class="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+    <div class="field"><label class="required-field">Payment Mode</label><select id="payMode"><option>Cash</option><option>Online</option><option>Split</option></select></div>
+
+    <!-- Cash/Online: visible. Split: replaced by Cash + Online only. -->
+    <div id="singleChargeField" class="field"><label id="opdChargesLabel" class="required-field">OPD Charges Paid in Cash</label><input id="amount" type="number" min="0" max="2000" value="500" inputmode="decimal"></div>
+    <div id="splitField" class="field full" hidden>
+      <div class="payment-grid">
+        <div><label class="required-field">Cash</label><input id="cash" type="number" min="0" max="2000" value="" inputmode="decimal"></div>
+        <div><label class="required-field">Online</label><input id="online" type="number" min="0" max="2000" value="" inputmode="decimal"></div>
+      </div>
+      <div id="splitTotal" class="payment-total">Total: ₹0</div>
+    </div>
+
+    <div class="field"><label class="required-field">Visit Location</label><button id="cityPickerTrigger" type="button" class="city-picker-trigger" aria-haspopup="dialog" aria-controls="cityPickerModal" aria-expanded="false"><span id="cityPickerValue">Latur</span><span aria-hidden="true" class="city-picker-chevron">⌄</span></button><select id="city" hidden aria-hidden="true"></select></div>
+    <div class="field"><label class="required-field">Date of Appointment</label><input id="date" readonly disabled placeholder="Today"></div>
+    <div class="field"><label class="required-field">Next Follow-up City</label><select id="next" disabled></select></div>
+
+    <div class="field full">
+      <div class="followup-edit-actions">
+        <button id="editFollowup" class="btn btn-secondary" type="button" hidden>Edit</button>
+        <button id="book" class="cta" disabled type="button">Book Appointment</button>
+      </div>
+      <div id="submitStatus" class="status" aria-live="polite"></div>
+      <div id="followupLockPopup" class="followup-lock-popup" role="status" aria-live="polite">Click Edit to enable this field.</div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section id="confirmation" hidden></section>
+<div id="followupCacheTools" hidden>
+  <div class="followup-cache-spacer" aria-hidden="true"></div>
+  <div class="followup-cache-tools">
+    <button id="rebuildFollowupCache" class="btn btn-secondary" type="button">Rebuild Follow-up Cache</button>
+  </div>
+</div>
+</div></main>
+<div id="cityPickerModal" class="opd-access-modal" hidden aria-hidden="true"><div class="opd-access-backdrop"></div><div class="opd-access-dialog city-picker-dialog" role="dialog" aria-modal="true" aria-label="Visit Location"><div id="cityPickerList" class="city-picker-list"></div></div></div>
+<div id="opdRestrictionModal" class="opd-access-modal" hidden aria-hidden="true">
+  <div class="opd-access-backdrop"></div>
+  <div class="opd-access-dialog opd-restriction-dialog" role="dialog" aria-modal="true" aria-labelledby="opd-restriction-title">
+    <h2 id="opd-restriction-title"><span class="opd-access-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17 8h-1V6a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Zm-7-2a2 2 0 0 1 4 0v2h-4V6Zm7 13H7v-9h10v9Zm-5-2a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg></span><span>OPD Booking Restricted</span></h2>
+    <p>Today's visit location is fixed according to the doctor's schedule.</p>
+    <div class="opd-access-actions">
+      <button id="opdRestrictionOk" type="button" class="opd-primary">OK</button>
+      <button id="opdRestrictionSpecial" type="button" class="opd-secondary">Enable Special Day Access</button>
+    </div>
+  </div>
+</div>
+<div id="opdHoursNoteModal" class="opd-access-modal" hidden aria-hidden="true">
+  <div class="opd-access-backdrop"></div>
+  <div class="opd-access-dialog opd-hours-note-dialog" role="dialog" aria-modal="true" aria-labelledby="opd-hours-note-title">
+    <h2 id="opd-hours-note-title">Important Note</h2>
+    <p>Usually Dr Maindad is available for consultation between 9 AM &amp; 9 PM</p>
+    <div class="opd-access-actions opd-hours-note-actions">
+      <button id="opdHoursNoteCancel" type="button" class="opd-secondary">Cancel</button>
+      <button id="opdHoursNoteProceed" type="button" class="opd-primary">Proceed</button>
+    </div>
+  </div>
+</div>
+<div id="rebuildFollowupConfirmModal" class="opd-access-modal" hidden aria-hidden="true">
+  <div class="opd-access-backdrop"></div>
+  <div class="opd-access-dialog followup-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="rebuild-followup-confirm-title">
+    <h2 id="rebuild-followup-confirm-title">Do you want to Rebuild or Update Followup Patient Database</h2>
+    <div class="followup-confirm-actions">
+      <button id="rebuildFollowupConfirmYes" type="button" class="opd-primary">Yes</button>
+      <button id="rebuildFollowupConfirmNo" type="button" class="opd-secondary">No</button>
+    </div>
+  </div>
+</div>
+<div id="specialAccessModal" class="opd-access-modal" hidden aria-hidden="true">
+  <div class="opd-access-backdrop"></div>
+  <div class="opd-access-dialog special-access-dialog" role="dialog" aria-modal="true" aria-labelledby="special-access-title">
+    <h2 id="special-access-title"><span class="opd-access-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17 8h-1V6a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Zm-7-2a2 2 0 0 1 4 0v2h-4V6Zm7 13H7v-9h10v9Zm-5-2a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg></span><span>Special Day Access Mode</span></h2>
+    <p>Enter Secure Access Password</p>
+    <input id="specialAccessPassword" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" aria-label="8-digit secure access password">
+    <div id="specialAccessStatus" class="opd-access-status" aria-live="polite"></div>
+    <div class="opd-access-actions special-access-actions">
+      <button id="specialAccessCancel" type="button" class="opd-secondary">Cancel</button>
+      <button id="specialAccessVerify" type="button" class="opd-primary">Verify</button>
+    </div>
+  </div>
+</div>
+<div id="footer"></div>
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/utils.js"></script><script src="js/idb.js"></script><script src="js/common.js"></script><script src="js/secure.js"></script><script src="js/schedule.js"></script><script src="js/opd_booking.js"></script><script src="js/recovery.js"></script>
+</body></html>
