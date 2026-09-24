@@ -627,15 +627,20 @@ document.addEventListener("DOMContentLoaded",()=>{
  }
  function downloadMobileNumbers(r){
    const rows=r.rows||[];
-   const out=[["Mobile Number"]];
-   rows.forEach(x=>out.push([x.mobileNumber]));
-   const csv="\uFEFF"+out.map(row=>row.map(csvCell).join(",")).join("\r\n");
+   const numbers=rows.map(x=>{
+     const digits=String(x.mobileNumber??"").replace(/\D/g,"");
+     if(/^91\d{10}$/.test(digits))return digits;
+     if(/^0\d{10}$/.test(digits))return `91${digits.slice(1)}`;
+     if(/^\d{10}$/.test(digits))return `91${digits}`;
+     return "";
+   }).filter(Boolean);
+   const csv=numbers.join("\r\n");
    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
    const url=URL.createObjectURL(blob);
    const a=document.createElement("a");
-   const safeCity=String(r.city||"All").replace(/[^a-z0-9]+/gi,"_");
-   const safePeriod=String(r.period||"report").replace(/[^a-z0-9-]+/gi,"_");
-   a.href=url;a.download=`NEURON_${safeCity}_${safePeriod}_both_Mobile_Numbers.csv`;
+   const safeCity=String(r.city||"All").replace(/[^a-z0-9]+/gi,"_").replace(/^_+|_+$/g,"");
+   const safePeriod=String(r.periodLabel||r.period||"report").replace(/[^a-z0-9]+/gi,"_").replace(/^_+|_+$/g,"");
+   a.href=url;a.download=`NEURON_${safeCity||"All"}_${safePeriod||"report"}_Mobile_Numbers.csv`;
    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
 
