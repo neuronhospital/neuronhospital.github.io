@@ -581,3 +581,16 @@ body.neuron-embedded{overflow-y:auto;overscroll-behavior-y:contain;-webkit-overf
 .statistics-table-card .combined-report{border-radius:0}
 @media(max-width:699px){.statistics-retrieval-actions{gap:8px}.statistics-summary-table th,.statistics-summary-table td{padding:8px 9px;font-size:11px}.statistics-table-title{font-size:14px;padding:10px 12px}}
 
+
+
+/* v213.1: Today's OPD manual-update status stays inside the existing list area. */
+#opdTodayList{min-height:0;overflow:hidden;padding:7px 13px 10px;display:grid;grid-template-rows:minmax(0,1fr) auto;-webkit-overflow-scrolling:touch}
+#opdTodayScroll{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#opdTodayStatus{display:block!important;margin:0;padding:4px 2px 1px;box-sizing:border-box;width:100%;max-width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:1.2;font-weight:700}
+#opdTodayStatus[hidden]{display:none!important}
+#opdTodayStatus.is-warning{color:#b42318}
+#opdTodayStatus.is-working{color:#168a4a}
+#opdTodayStatus.is-success{color:#168a4a}
+.opd-today-update.is-updating{width:100%!important;min-width:0!important;background:#168a4a!important;border-color:#168a4a!important;color:#fff!important}
+.opd-today-update.is-updating:disabled{opacity:1;cursor:wait}
+@media(max-width:520px){#opdTodayList{padding:7px 13px 10px}#opdTodayStatus{font-size:10.5px}}

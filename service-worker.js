@@ -24,7 +24,7 @@ self.addEventListener("fetch",e=>{
  }));
 });
 
-const BG={MAX_ATTEMPTS:3,RETRY_DELAY_MS:3000,LEASE_MS:15000,HEARTBEAT_MS:5000,OPD_GATE_MS:15*60*1000,DB_VERSION:7};
+const BG={MAX_ATTEMPTS:3,RETRY_DELAY_MS:3000,LEASE_MS:15000,HEARTBEAT_MS:5000,OPD_GATE_MS:15*60*1000,OPD_OTHER_GATE_MS:5*60*1000,DB_VERSION:7};
 let dbPromise=null;
 let apiUrl=null;
 let requestedCity="";
@@ -135,7 +135,8 @@ async function claimNewOPDCycle_(city,date,mode,requestId=null){
   const finish=()=>{if(settled||!gateDone||!statusDone)return;
    const running=current?.status==="RUNNING";
    if(running){result={allowed:false,reason:"RUNNING",status:current};return;}
-   if(gate?.startedAt&&now-Number(gate.startedAt)<BG.OPD_GATE_MS){result={allowed:false,reason:"WINDOW_ACTIVE",status:current||null};return;}
+   const gateMs=c==="Latur"?BG.OPD_GATE_MS:BG.OPD_OTHER_GATE_MS;
+   if(gate?.startedAt&&now-Number(gate.startedAt)<gateMs){result={allowed:false,reason:"WINDOW_ACTIVE",status:current||null};return;}
    const cycleId=`OPD_TODAY:${d}:${c}:${now}`,next={key:statusKey,cacheType:"OPD_TODAY",city:c,date:d,status:"RUNNING",mode,requestId:requestId?String(requestId):"",owner:`SW-${now}-${Math.random().toString(36).slice(2)}`,cycleId,startedAt:now,completedAt:null,durationMs:null,attemptCount:0,maxAttempts:BG.MAX_ATTEMPTS,rowsProcessed:0,rowsAdded:0,lastHeartbeatAt:now,leaseExpiresAt:now+BG.LEASE_MS,error:null,retryAt:0,resumeAttempt:1,updatedAt:now};
    st.put({key:gateKey,type:"OPD_BACKGROUND_START",date:d,startedAt:now,cycleId,updatedAt:now});st.put(next);result={allowed:true,claim:{claimed:true,status:next}};
   };
@@ -150,10 +151,13 @@ async function claimNewOPDCycle_(city,date,mode,requestId=null){
 
 function serialGap_(records){const nums=(Array.isArray(records)?records:[]).map(x=>Number(String(x?.appointmentId||"").match(/-(\d+)$/)?.[1])).filter(Number.isInteger).sort((a,b)=>a-b);for(let i=1;i<nums.length;i++)if(nums[i]!==nums[i-1]+1)return true;return false;}
 async function fullOPD_(city,date){
+ const requestStartedAt=Date.now();
  const r=await apiCall_("getTodayOPDFromProperties",{city,date},25000);if(!r||r.ok!==true)throw new Error(r?.error||"Unable to retrieve today's OPD patient mirror.");
  const serverDate=/^\d{8}$/.test(String(r.date||""))?String(r.date):date,serverCity=String(r.city||city).trim()||city,patients=Array.isArray(r.patients)?r.patients:[],now=Date.now(),key=`OPD_TODAY|${serverDate}|${serverCity}`;
  const cache={key,type:"OPD_TODAY",date:serverDate,city:serverCity,patients,status:r.complete===false?"CACHED_INCOMPLETE":"REFRESHED",complete:r.complete===true,lastServerRefreshAt:now,lastServerCheckAt:now,cachedAt:now,lastSerial:Number(r.syncState?.serial)||null,lastRowNumber:Number(r.syncState?.rowNumber)||null,source:r.source||"SCRIPT_PROPERTIES"};
  if(r.serialGapDetected===true||serialGap_(patients))cache.status="STALE";
+ const current=await idbGet_("cache",key).catch(()=>null);
+ if(Math.max(Number(current?.authoritativeMutationAt||0),Number(current?.lastServerRefreshAt||0))>requestStartedAt)return {mode:"CACHE_NEWER_THAN_SNAPSHOT",city,rowsLoaded:Array.isArray(current?.patients)?current.patients.length:0,cache:current};
  await idbReplace_("cache",key,cache);return {mode:"PROPERTIES",city,rowsLoaded:patients.length,cache};
 }
 async function syncOPD_(city,date){
@@ -215,7 +219,7 @@ async function runCycle_(kind,city,date,operation,mode,preclaimed=null,requestId
   let lastError=null,lastResult=null;
   for(;attempt<=BG.MAX_ATTEMPTS;attempt++){
    await updateAttempt_(key,owner,attempt,null);
-   try{await waitForCriticalOperations_();lastResult=await operation()}catch(e){lastResult={mode:"FAILED",error:e?.message||String(e)}}
+   try{lastResult=await operation()}catch(e){lastResult={mode:"FAILED",error:e?.message||String(e)}}
    if(lastResult&&lastResult.mode!=="FAILED"&&lastResult.mode!=="IN_PROGRESS"&&lastResult.mode!=="SKIPPED"){
     const finished=await finish_(key,owner,"SUCCESS",null,{rowsProcessed:Number(lastResult.rowsReceived||lastResult.rowsLoaded||lastResult.rowsScanned||0),rowsAdded:Number(lastResult.rowsAdded||lastResult.rowsInserted||0)});
     return {...lastResult,backgroundStatus:finished};
@@ -261,7 +265,7 @@ async function registerBackgroundRequest_(city,date,requestId,source){
  await idbPut_("meta",{key:"BACKGROUND_SYNC_REQUEST",type:"BACKGROUND_SYNC_REQUEST",requestId:durableRequestId,city:requestedCity,date:normalizedDate,createdAt:Date.now(),updatedAt:Date.now()});
  try{source?.postMessage?.({type:"NEURON_BACKGROUND_SYNC_ACCEPTED",requestId:durableRequestId,city:requestedCity,date:normalizedDate,acceptedAt:Date.now()});}catch(_){}
  try{await self.registration.sync?.register("neuron-background-sync")}catch(_){}
- try{await self.registration.periodicSync?.register("neuron-periodic-background-sync",{minInterval:BG.OPD_GATE_MS})}catch(_){}
+ try{const gateMs=String(requestedCity||"").trim()==="Latur"?BG.OPD_GATE_MS:BG.OPD_OTHER_GATE_MS;await self.registration.periodicSync?.register("neuron-periodic-background-sync",{minInterval:gateMs})}catch(_){}
  try{await runBackgroundSync_(requestedCity,normalizedDate,durableRequestId)}catch(e){postUpdate_();return;}
  const latest=await idbGet_("meta","BACKGROUND_SYNC_REQUEST").catch(()=>null);
  if(latest?.requestId===durableRequestId)await idbDelete_("meta","BACKGROUND_SYNC_REQUEST").catch(()=>{});

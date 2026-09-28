@@ -5,6 +5,7 @@ window.IDB={
  _backgroundSyncMessageBound:false,
  CACHE_FRESHNESS_MS:30*60*1000,
  OPD_BACKGROUND_SYNC_INTERVAL_MS:15*60*1000,
+ OPD_BACKGROUND_SYNC_OTHER_INTERVAL_MS:5*60*1000,
  MANUAL_FOLLOWUP_REBUILD_LEASE_MS:20000,
  MANUAL_FOLLOWUP_REBUILD_HEARTBEAT_MS:5000,
  _isConnectionLifecycleError_(e){
@@ -182,7 +183,7 @@ window.IDB={
   return bar;
  },
  async reconcileBackgroundSyncBarState_(){
-  const city=window.TodayCity?.resolve?.()||window.Schedule?.cityAtNow?.(window.NEURON_CONFIG?.cities||[])||"",date=this.todayKey_();
+  const city=window.TodayCity?.resolve?.()||"",date=this.todayKey_();
   if(!city)return {city:"",date,opd:null,follow:null};
   const [opd,follow]=await Promise.all([this.getBackgroundSyncStatus_("OPD_TODAY",city,date).catch(()=>null),this.getBackgroundSyncStatus_("FOLLOWUP",city,date).catch(()=>null)]);
   const terminal=x=>x&&["SUCCESS","FAILED","INCOMPLETE"].includes(x.status),active=x=>x?.status==="RUNNING";
@@ -209,7 +210,8 @@ window.IDB={
    this.get("followupCache",`META|${c}`)
   ]);
   if(opd?.status==="RUNNING"||follow?.status==="RUNNING")return true;
-  const opdDue=!gate?.startedAt||(Date.now()-Number(gate.startedAt)>=this.OPD_BACKGROUND_SYNC_INTERVAL_MS);
+  const opdInterval=String(c).trim()==="Latur"?this.OPD_BACKGROUND_SYNC_INTERVAL_MS:this.OPD_BACKGROUND_SYNC_OTHER_INTERVAL_MS;
+  const opdDue=!gate?.startedAt||(Date.now()-Number(gate.startedAt)>=opdInterval);
   const followDue=!followMeta||followMeta.status!=="READY"||String(followMeta.lastServerCheckDate||"")!==d;
   if(opdDue)return true;
   if(follow?.status==="RUNNING")return true;
@@ -279,9 +281,10 @@ window.IDB={
  startBackgroundCacheSync_(){
   if(this._backgroundTimersStarted)return;
   this._backgroundTimersStarted=true;
+  let timer=null;
   const run=async()=>{
    try{
-    const city=window.TodayCity?.resolve?.()||window.Schedule?.cityAtNow?.(window.NEURON_CONFIG?.cities||[])||"";
+    const city=window.TodayCity?.resolve?.()||"";
     if(!city)return;
     const date=this.todayKey_();
     await this.renderBackgroundSyncBar_();
@@ -290,10 +293,14 @@ window.IDB={
     if(shouldRequest)await this.requestBackgroundSyncToServiceWorker_(city);
     await this.renderBackgroundSyncBar_();
    }catch(_){}
+   finally{
+    const city=window.TodayCity?.resolve?.()||"";
+    const interval=String(city).trim()==="Latur"?this.OPD_BACKGROUND_SYNC_INTERVAL_MS:this.OPD_BACKGROUND_SYNC_OTHER_INTERVAL_MS;
+    timer=window.setTimeout(()=>{void run();},interval);
+   }
   };
   this.bindBackgroundServiceWorkerMessages_();
   void run();
-  window.setInterval(()=>{void run();},this.OPD_BACKGROUND_SYNC_INTERVAL_MS);
  },
  async getTodayOPDCache_(city,{forceRefresh=false}={}){
   const c=String(city||"").trim();
@@ -307,6 +314,7 @@ window.IDB={
   if(record && !forceRefresh && !stale)return record;
   if(this._todayOPDRefreshes[key])return this._todayOPDRefreshes[key];
   const request=(async()=>{
+   const requestStartedAt=Date.now();
    try{
     const r=await window.NeuronAPI.call("getTodayOPDFromProperties",{city:c,date:date},25000);
     if(!r||r.ok!==true)throw Error(r?.error||"Unable to retrieve today's OPD patient list.");
@@ -320,6 +328,8 @@ window.IDB={
       lastServerRefreshAt:now,lastServerCheckAt:now,cachedAt:now,
       lastSerial:Number(r.syncState?.serial)||null,lastRowNumber:Number(r.syncState?.rowNumber)||null};
     if(r.serialGapDetected===true||this.serialGap_(patients,"appointmentId"))fresh.status="STALE";
+    const current=await this.get("cache",serverKey).catch(()=>null);
+    if(Math.max(Number(current?.authoritativeMutationAt||0),Number(current?.lastServerRefreshAt||0))>Number(requestStartedAt||0))return current;
     await this.replace("cache",serverKey,fresh);
     return fresh;
    }catch(e){
@@ -742,7 +752,7 @@ window.IDB={
       return String(a?.time||"").localeCompare(String(b?.time||""));
     });
     const now=Date.now();
-    const next={...cache,patients,cacheUpdatedAt:now,lastServerCheckAt:cache.lastServerCheckAt||now};
+    const next={...cache,patients,cacheUpdatedAt:now,lastServerCheckAt:cache.lastServerCheckAt||now,authoritativeMutationAt:now};
     if(kind==="OPD_BOOKING"){
       const serial=Number(pick("serial",String(appointmentId).match(/-(\d+)$/)?.[1]))||null;
       const row=Number(pick("rowNumber",null))||null;

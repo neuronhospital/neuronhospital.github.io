@@ -65,7 +65,7 @@ window.TodayCity=window.TodayCity||(()=>{
   };
   const resolve=()=>{
     try { window.DailyCity?.init?.(); } catch (_) {}
-    const daily=validCity(window.DailyCity?.get?.());
+    const daily=String(window.DailyCity?.get?.()||"").trim();
     if(daily)return daily;
     try {
       const schedule=window.Schedule;

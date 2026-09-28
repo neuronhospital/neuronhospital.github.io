@@ -1,6 +1,6 @@
 (() => {
   const CACHE_PREFIX = "OPD_TODAY|";
-  const popupState = { open: false, city: "", key: "", updating: false };
+  const popupState = { open: false, city: "", key: "", updating: false, statusTimer: null, manualStatusUntil: 0 };
 
   const esc = v => U.esc(v == null ? "" : v);
   const todayKey = () => {
@@ -79,16 +79,46 @@
     });
   }
 
-  function setStatus(text, kind = "") {
+  function clearStatusTimer() {
+    if (popupState.statusTimer) {
+      clearTimeout(popupState.statusTimer);
+      popupState.statusTimer = null;
+    }
+  }
+
+  function setStatus(text, kind = "", autoHideMs = 0) {
     const el = $("opdTodayStatus");
     if (!el) return;
+    if (autoHideMs > 0) clearStatusTimer();
     el.textContent = text || "";
     el.className = `opd-today-status${kind ? ` is-${kind}` : ""}`;
     el.hidden = !text;
+    if (autoHideMs > 0 && text) {
+      popupState.manualStatusUntil = Date.now() + autoHideMs;
+      popupState.statusTimer = setTimeout(() => {
+        popupState.statusTimer = null;
+        if (Date.now() >= popupState.manualStatusUntil) {
+          setStatus("", "");
+          popupState.manualStatusUntil = 0;
+        }
+      }, autoHideMs);
+    }
+  }
+
+  function setUpdatingUI(updating) {
+    const button = $("opdTodayUpdate");
+    const close = $("opdTodayOk");
+    popupState.updating = updating === true;
+    if (button) {
+      button.textContent = popupState.updating ? "Updating..." : "Update";
+      button.classList.toggle("is-updating", popupState.updating);
+      button.disabled = popupState.updating;
+    }
+    if (close) close.hidden = popupState.updating;
   }
 
   function render(record) {
-    const list = $("opdTodayList");
+    const list = $("opdTodayScroll");
     if (!list) return;
     const patients = sortPatients(record?.patients || []);
     if (!patients.length) {
@@ -126,42 +156,28 @@
     el.hidden = false;
   }
 
-  function showCacheStatus(record) {
-    const status = String(record?.status || "");
-    const stale = window.IDB?.opdTodayCacheStale_?.(record, record?.patients, "appointmentId") === true;
-    if (status === "CACHED_INCOMPLETE" || status === "STALE" || stale) {
-      setStatus("⚠ This list is not up to date. Please Update.", "warning");
-    } else if (status === "REFRESHING") {
-      setStatus("Updating from server…", "working");
-    } else if (status === "REFRESHED") {
-      setStatus("Server refreshed • Local cache updated", "success");
-    } else {
-      setStatus("Local cache • Up to date", "success");
-    }
-  }
-
   async function refresh(city, existingRecord = null) {
     if (popupState.updating) return existingRecord || await IDB.get("cache", popupState.key).catch(() => null);
-    popupState.updating = true;
-    setStatus("Updating from server…", "working");
+    clearStatusTimer();
+    popupState.manualStatusUntil = 0;
+    setUpdatingUI(true);
+    setStatus("Updating Today's OPD Patient List from Server...", "working");
     try {
       const record = await IDB.getTodayOPDCache_(city, {forceRefresh:true});
       render(record);
       setLastUpdated(record);
-      showCacheStatus(record);
+      setStatus("✅ Update Successful", "success", 5000);
       return record;
     } catch (e) {
       const previous = existingRecord || await IDB.get("cache", popupState.key).catch(() => null);
       if (previous) {
         render(previous);
         setLastUpdated(previous);
-        showCacheStatus(previous);
-      } else {
-        setStatus(e?.message || "Unable to update patient list.", "warning");
       }
+      setStatus(`❌ ${e?.message || "Unable to update Today's OPD Patient List."}`, "warning", 5000);
       throw e;
     } finally {
-      popupState.updating = false;
+      setUpdatingUI(false);
     }
   }
 
@@ -175,24 +191,28 @@
     popupState.key = city ? cacheKey(date, city) : "";
     m.hidden = false;
     document.body.classList.add("opd-today-modal-open");
+    clearStatusTimer();
+    popupState.manualStatusUntil = 0;
     setStatus("", "");
     setLastUpdated(null);
+    setUpdatingUI(false);
     if (!city) {
-      $("opdTodayList").innerHTML = `<div class="opd-today-empty">Today's OPD city is not selected.</div>`;
+      $("opdTodayScroll").innerHTML = `<div class="opd-today-empty">Today's OPD city is not selected.</div>`;
       return;
     }
-    $("opdTodayList").innerHTML = '<div class="opd-today-loading">Loading…</div>';
+    $("opdTodayScroll").innerHTML = '<div class="opd-today-loading">Loading…</div>';
     try {
       const record = await IDB.getTodayOPDCache_(city);
       render(record);
       setLastUpdated(record);
-      showCacheStatus(record);
     } catch (_) {
-      $("opdTodayList").innerHTML = '<div class="opd-today-empty">Unable to retrieve today’s OPD list.</div>';
+      $("opdTodayScroll").innerHTML = '<div class="opd-today-empty">Unable to retrieve today’s OPD list.</div>';
     }
   }
 
   function closePopup() {
+    if (popupState.updating) return;
+    clearStatusTimer();
     const m = $("opdTodayPopup");
     if (m) m.hidden = true;
     popupState.open = false;
@@ -209,7 +229,6 @@
     if (!record) return;
     render(record);
     setLastUpdated(record);
-    showCacheStatus(record);
   }
 
   async function handleUpdate() {
@@ -218,8 +237,7 @@
     if (!city) { setStatus("Today's OPD city is not selected.", "warning"); return; }
     popupState.city = city;
     popupState.key = cacheKey(date, city);
-    const previous = await IDB.get("cache", popupState.key).catch(() => null);
-    try { await refresh(city, previous); } catch (_) {}
+    try { await refresh(city); } catch (_) {}
   }
 
 
@@ -230,9 +248,9 @@
     section.querySelector(".opd-patient-list-trigger")?.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openPopup(); } });
     section.querySelectorAll(".portal-action").forEach(a => a.addEventListener("click", e => e.stopPropagation()));
     $("opdTodayUpdate")?.addEventListener("click", handleUpdate);
-    $("opdTodayOk")?.addEventListener("click", closePopup);
-    $("opdTodayBackdrop")?.addEventListener("click", closePopup);
-    window.addEventListener("neuron:refresh-opd-today", () => { if (popupState.open) refreshFromCurrentCache().catch(() => {}); });
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && popupState.open) closePopup(); });
+    $("opdTodayOk")?.addEventListener("click", () => { if (!popupState.updating) closePopup(); });
+    $("opdTodayBackdrop")?.addEventListener("click", () => { if (!popupState.updating) closePopup(); });
+    window.addEventListener("neuron:refresh-opd-today", () => { if (popupState.open && !popupState.updating) refreshFromCurrentCache().catch(() => {}); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && popupState.open && !popupState.updating) closePopup(); });
   });
 })();
