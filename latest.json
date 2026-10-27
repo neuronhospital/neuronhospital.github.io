@@ -1,0 +1,11 @@
+{
+  "versionName": "1.8.1",
+  "versionCode": 81,
+  "apkUrl": "https://example.github.io/neuron/NEURON-v1.8.1.apk",
+  "sha256": "APK_SHA256_HASH",
+  "changelog": [
+    "Improved appointment management.",
+    "Improved synchronization and notifications.",
+    "Bug fixes and performance improvements."
+  ]
+}
