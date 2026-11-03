@@ -1,11 +1,11 @@
-/* NEURON web authentication. Browser session is tab-scoped; backend credentials remain authoritative. */
+/* NEURON web authentication. Browser login persists across same-origin pages and tabs; backend credentials remain authoritative. */
 (function(){
  "use strict";
  const KEY="neuron_web_auth_v1";
  const CITIES=Array.isArray(window.NEURON_CONFIG?.cities)?window.NEURON_CONFIG.cities:[];
- const read=()=>{try{const raw=sessionStorage.getItem(KEY);if(!raw)return null;const s=JSON.parse(raw);if(!s||!s.username||!s.password||!s.sessionId)return null;if(!s.installationId){sessionStorage.removeItem(KEY);return null;}return s;}catch(_){return null;}};
- const write=s=>{try{sessionStorage.setItem(KEY,JSON.stringify(s));return true;}catch(_){return false;}};
- const clear=()=>{try{sessionStorage.removeItem(KEY);}catch(_){}};
+ const read=()=>{try{const raw=localStorage.getItem(KEY);if(!raw)return null;const s=JSON.parse(raw);if(!s||!s.username||!s.password||!s.sessionId)return null;if(!s.installationId){localStorage.removeItem(KEY);return null;}return s;}catch(_){return null;}};
+ const write=s=>{try{localStorage.setItem(KEY,JSON.stringify(s));return true;}catch(_){return false;}};
+ const clear=()=>{try{localStorage.removeItem(KEY);}catch(_){}};
  const active=()=>{const s=read();if(!s)return null;const age=Date.now()-Number(s.loginAt||0);if(!s.admin&&age>=7*24*60*60*1000){clear();return null;}return s;};
  const newRequestId=()=>"LR_"+Date.now().toString(36)+"_"+Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b=>b.toString(16).padStart(2,"0")).join("");
  const newInstallationId=()=>"WEB_"+Array.from(crypto.getRandomValues(new Uint8Array(20))).map(b=>b.toString(16).padStart(2,"0")).join("");
