@@ -1,0 +1,96 @@
+/* NEURON Phase 9 — responsive layout and visual consistency layer.
+   Rules intentionally preserve existing feature-specific styling and data tables.
+   Tables retain their intrinsic width inside explicitly scrollable wrappers. */
+
+:root {
+  --neuron-page-gutter: clamp(10px, 2.5vw, 24px);
+  --neuron-touch-target: 44px;
+}
+
+html { max-width: 100%; overflow-x: clip; }
+body { min-width: 0; max-width: 100%; overflow-x: clip; }
+img, svg, video, canvas, iframe { max-width: 100%; }
+.container, main, .card, .grid, .portal-grid, .portal-section,
+.admin-panel, .pb-shell, .amb-panel, .secure-wrap {
+  min-width: 0;
+}
+
+/* Form controls remain usable at narrow widths and on touch devices. */
+:where(button, .btn, .cta, .choice, .portal-action, .portal-btn, .admin-tabs button) {
+  min-height: var(--neuron-touch-target);
+  touch-action: manipulation;
+}
+:where(input, select, textarea, button) { max-width: 100%; }
+:where(input, select, textarea) { min-width: 0; }
+input[type="checkbox"], input[type="radio"] { width: auto; min-width: 18px; min-height: 18px; }
+input[type="file"] { min-height: var(--neuron-touch-target); }
+
+/* Keep data-heavy views inside their own scroll region instead of widening the page. */
+:where(.table-wrap, .amb-table-wrap, .statistics-table-wrap,
+       .collection-table-wrap, .combined-table-wrap, .admin-table-wrap) {
+  max-width: 100%; overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch; overscroll-behavior-inline: contain;
+}
+:where(table, .amb-table, .admin-table, .statistics-summary-table) {
+  max-width: 100%;
+}
+
+/* Responsive dialogs: bounded by the visual viewport and safe-area insets. */
+:where(.opd-today-modal, .eeg-today-modal, .patient-action-modal,
+       .patient-action-form-modal, .charge-lock-modal, .neuron-recovery-modal,
+       .opd-access-modal, .footer-update-modal, .amb-dialog-backdrop) {
+  padding: max(8px, env(safe-area-inset-top, 0px))
+           max(8px, env(safe-area-inset-right, 0px))
+           max(8px, env(safe-area-inset-bottom, 0px))
+           max(8px, env(safe-area-inset-left, 0px));
+}
+:where(.opd-today-dialog, .eeg-today-dialog, .patient-action-dialog,
+       .patient-action-form-dialog, .charge-lock-dialog, .neuron-recovery-dialog,
+       .opd-access-dialog, .footer-update-dialog) {
+  max-width: 100%; max-height: min(92dvh, 900px);
+  overflow: auto; overscroll-behavior: contain;
+}
+
+/* Phone portrait. */
+@media (max-width: 599px) {
+  :root { --neuron-page-gutter: 10px; }
+  .container { width: calc(100% - 2 * var(--neuron-page-gutter)); }
+  main { padding-top: 12px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .header-inner { gap: 8px; flex-wrap: wrap; padding: 9px 0; }
+  .brand { min-width: 0; }
+  .brand-title { overflow-wrap: anywhere; }
+  .header-home { flex: 0 0 auto; }
+  .page-title { margin-bottom: 13px; }
+  .page-title h1 { font-size: clamp(23px, 7vw, 32px); line-height: 1.2; }
+  .card { padding: 12px; margin-bottom: 12px; }
+  .choice-row, .payment-grid { grid-template-columns: minmax(0, 1fr); }
+  .input-row { grid-template-columns: minmax(0, 1fr); }
+  .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-grid { grid-template-columns: minmax(0, 1fr); }
+  .footer-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-user-form, .admin-notification-item { padding: 10px; }
+  .admin-actions .btn { flex: 1 1 auto; }
+  .admin-date-item, .pb-record-head { flex-wrap: wrap; }
+  .pb-record-actions > *, .amb-actions > * { flex: 1 1 auto; }
+  .neuron-dialog, .neuron-login-card { margin: 12px auto; }
+}
+
+/* Tablet and small laptop: allow two-column form composition without over-stretching. */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .container { width: min(100% - 32px, 960px); }
+  .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid, .pb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .field.full, .pb-field.full { grid-column: 1 / -1; }
+}
+
+/* Wider desktop: preserve readable line lengths and avoid oversized form rows. */
+@media (min-width: 1024px) {
+  .container { width: min(100% - 48px, 1180px); }
+  .secure-wrap { max-width: 520px; }
+}
+
+/* Avoid sticky headers obscuring focused controls when the mobile keyboard opens. */
+:where(input, select, textarea, button, [tabindex]):focus { scroll-margin-block: 88px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+}
