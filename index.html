@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#25215f">
+  <meta name="description" content="NEURON Hospital — internal website interface foundation.">
+  <title>NEURON Hospital | Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="assets/neuron-logo.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="auth-screen" id="authScreen" aria-labelledby="loginTitle">
+    <div class="auth-card">
+      <div class="auth-brand"><img src="assets/neuron-logo.svg" alt="NEURON Hospital logo"><div><strong>NEURON</strong><span>HOSPITAL · LATUR</span></div></div>
+      <p class="eyebrow">SECURE STAFF ACCESS</p>
+      <h1 id="loginTitle">Sign in to NEURON</h1>
+      <p class="auth-description">Use your existing NEURON app credentials to access the website workspace.</p>
+      <form id="loginForm" novalidate>
+        <label for="loginUsername">Username</label>
+        <input id="loginUsername" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required pattern="[A-Za-z]+" placeholder="Username">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" name="password" type="password" autocomplete="current-password" required pattern="[0-9]+" inputmode="numeric" placeholder="Password">
+        <p class="auth-error" id="authError" role="alert" aria-live="polite"></p>
+        <button class="primary-button auth-submit" id="loginSubmit" type="submit">Sign in <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="auth-footnote">Credentials are checked by the existing NEURON backend.</p>
+    </div>
+  </section>
+
+  <div class="app-frame" id="appFrame" hidden>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <img src="assets/neuron-logo.svg" alt="NEURON Hospital logo" class="brand-logo">
+        <div class="brand-copy">
+          <strong>NEURON</strong>
+          <span>HOSPITAL · LATUR</span>
+        </div>
+        <button class="icon-button sidebar-close" id="sidebarClose" aria-label="Close navigation" type="button">×</button>
+      </div>
+
+      <div class="nav-caption">WORKSPACE</div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="home" type="button">
+          <span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="opd" type="button">
+          <span class="nav-icon" aria-hidden="true">▦</span><span>OPD Booking</span>
+        </button>
+        <button class="nav-item" data-view="today" type="button">
+          <span class="nav-icon" aria-hidden="true">▣</span><span>Today's OPD</span>
+        </button>
+        <button class="nav-item" data-view="eeg" type="button">
+          <span class="nav-icon" aria-hidden="true">∿</span><span>EEG</span>
+        </button>
+        <button class="nav-item" data-view="prebooking" type="button">
+          <span class="nav-icon" aria-hidden="true">◷</span><span>PreBooking</span>
+        </button>
+        <button class="nav-item" data-view="followup" type="button">
+          <span class="nav-icon" aria-hidden="true">↻</span><span>Follow-up</span>
+        </button>
+        <button class="nav-item" data-view="statistics" type="button">
+          <span class="nav-icon" aria-hidden="true">▥</span><span>Statistics & Reports</span>
+        </button>
+      </nav>
+
+      <div class="nav-caption nav-caption-lower">MANAGEMENT</div>
+      <nav class="nav-list">
+        <button class="nav-item" data-view="services" type="button">
+          <span class="nav-icon" aria-hidden="true">＋</span><span>Patient Services</span>
+        </button>
+        <button class="nav-item" data-view="settings" type="button">
+          <span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer" id="sidebarAccount">
+        <div class="status-dot"></div>
+        <div><strong id="sidebarAccountName">Signed in</strong><span id="sidebarAccountCity">Assigned city</span></div>
+      </div>
+    </aside>
+
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button menu-button" id="menuButton" aria-label="Open navigation" type="button">☰</button>
+          <div class="breadcrumb"><span>NEURON</span><span class="crumb-separator">/</span><strong id="breadcrumbCurrent">Dashboard</strong></div>
+        </div>
+        <div class="topbar-right">
+          <span class="preview-pill"><span class="preview-dot"></span><span id="sessionStatus">Signed in</span></span>
+          <div class="profile-chip" id="profileChip" aria-label="Signed-in user">
+            <div class="avatar" id="profileAvatar">N</div>
+            <div class="profile-copy"><strong id="profileUsername">NEURON</strong><span id="profileRole">Staff account</span></div>
+          </div>
+          <button class="secondary-button logout-button" id="logoutButton" type="button">Sign out</button>
+        </div>
+      </header>
+
+      <section class="page-content" id="pageContent" tabindex="-1">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">NEURON HOSPITAL · LATUR</p>
+            <h1 id="pageTitle">Dashboard</h1>
+            <p class="page-subtitle" id="pageSubtitle">A clear, unified workspace inspired by the NEURON Android app.</p>
+          </div>
+          <div class="date-chip"><span class="date-icon" aria-hidden="true">▦</span><span>Interface preview</span></div>
+        </div>
+
+        <section class="hero-card" aria-labelledby="heroTitle">
+          <div class="hero-content">
+            <div class="hero-badge"><span class="hero-badge-dot"></span>DESIGN SYSTEM · PHASE 1</div>
+            <h2 id="heroTitle">A familiar NEURON<br><span>experience on the web.</span></h2>
+            <p>Consistent branding, soft surfaces, rounded components, and responsive navigation—built as the foundation for the upcoming website workflows.</p>
+            <button class="primary-button" id="exploreButton" type="button">Explore interface <span aria-hidden="true">→</span></button>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+            <div class="art-glow"></div>
+            <div class="art-logo-wrap"><img src="assets/neuron-logo.svg" alt=""></div>
+            <div class="art-chip chip-top"><span class="chip-symbol">✦</span> NEURON</div>
+            <div class="art-chip chip-bottom"><span class="chip-pulse"></span> Patient care</div>
+          </div>
+        </section>
+
+        <div class="section-heading">
+          <div><h2>Workspace overview</h2><p>Visual cards for the app’s primary areas</p></div>
+          <span class="section-label">UI PREVIEW</span>
+        </div>
+
+        <section class="overview-grid" aria-label="Workspace sections">
+          <button class="overview-card card-lilac" data-view="opd" type="button">
+            <span class="card-icon icon-purple" aria-hidden="true">▦</span>
+            <span class="card-copy"><strong>OPD Booking</strong><small>Appointment workflow</small></span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="overview-card card-blue" data-view="today" type="button">
+            <span class="card-icon icon-blue" aria-hidden="true">▣</span>
+            <span class="card-copy"><strong>Today's OPD</strong><small>Daily patient view</small></span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="overview-card card-pink" data-view="eeg" type="button">
+            <span class="card-icon icon-pink" aria-hidden="true">∿</span>
+            <span class="card-copy"><strong>EEG</strong><small>EEG and call workflows</small></span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="overview-card card-mint" data-view="prebooking" type="button">
+            <span class="card-icon icon-green" aria-hidden="true">◷</span>
+            <span class="card-copy"><strong>PreBooking</strong><small>Pre-appointment queue</small></span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </button>
+        </section>
+
+        <section class="lower-grid">
+          <article class="surface-card quick-card">
+            <div class="surface-heading"><div><h2>Quick access</h2><p>Jump to a website section</p></div><span class="heading-mark">✦</span></div>
+            <div class="quick-links">
+              <button class="quick-link" data-view="followup" type="button"><span class="quick-icon">↻</span><span><strong>Follow-up</strong><small>Follow-up workspace</small></span><span class="quick-chevron">›</span></button>
+              <button class="quick-link" data-view="statistics" type="button"><span class="quick-icon">▥</span><span><strong>Statistics & Reports</strong><small>Analytics workspace</small></span><span class="quick-chevron">›</span></button>
+              <button class="quick-link" data-view="services" type="button"><span class="quick-icon">＋</span><span><strong>Patient Services</strong><small>Services and information</small></span><span class="quick-chevron">›</span></button>
+            </div>
+          </article>
+
+          <article class="surface-card design-card">
+            <div class="surface-heading"><div><h2>Design tokens</h2><p>Colors sampled from Android source</p></div><span class="heading-mark">◈</span></div>
+            <div class="token-list">
+              <div class="token-row"><span class="swatch swatch-navy"></span><span><strong>NEURON Navy</strong><small>#25215F</small></span></div>
+              <div class="token-row"><span class="swatch swatch-purple"></span><span><strong>Primary Purple</strong><small>#6D24D7</small></span></div>
+              <div class="token-row"><span class="swatch swatch-lavender"></span><span><strong>Lavender Surface</strong><small>#F4EEFE</small></span></div>
+              <div class="token-row"><span class="swatch swatch-magenta"></span><span><strong>Magenta Accent</strong><small>#E91E9A</small></span></div>
+            </div>
+          </article>
+        </section>
+
+        <footer class="page-footer"><span>NEURON Hospital · Latur</span><span>Phase 2 · Application shell and session</span></footer>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="storage.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
