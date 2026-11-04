@@ -244,8 +244,102 @@
       updatedAt: Date.now(),
       attempts: Number.isFinite(Number(input.attempts)) ? Number(input.attempts) : 0
     };
-    await runTransaction([STORES.mutations], "readwrite", (tx) => tx.objectStore(STORES.mutations).put(mutation));
+    const db = await openDatabase();
+    const tx = db.transaction(STORES.mutations, "readwrite");
+    const request = tx.objectStore(STORES.mutations).add(mutation);
+    let constraintError = null;
+    request.onerror = (event) => {
+      if (request.error && request.error.name === "ConstraintError") {
+        constraintError = request.error;
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    await transactionDone(tx);
+    if (constraintError) {
+      const existing = await getMutation(requestId);
+      if (existing && existing.scope === mutation.scope && existing.city === mutation.city &&
+          existing.date === mutation.date && JSON.stringify(existing.payload) === JSON.stringify(mutation.payload)) return existing;
+      throw storageError("This request ID is already associated with a different mutation payload.", constraintError);
+    }
     return mutation;
+  }
+
+  async function getMutation(requestId) {
+    const db = await openDatabase();
+    const tx = db.transaction(STORES.mutations, "readonly");
+    const request = tx.objectStore(STORES.mutations).get(requireText(requestId, "requestId"));
+    const result = await requestToPromise(request);
+    await transactionDone(tx);
+    return result || null;
+  }
+
+  // Add is intentionally used instead of put for first creation: an existing
+  // request identity must never be silently replaced by a second submit.
+  async function createMutationIfAbsent(input) {
+    if (!input || typeof input !== "object") throw new TypeError("Mutation must be an object.");
+    const mutation = {
+      requestId: requireText(input.requestId, "requestId"),
+      scope: validateScope(input.scope),
+      city: requireText(input.city, "city"),
+      date: requireText(input.date, "date"),
+      recordId: input.recordId == null ? null : String(input.recordId),
+      mutationId: requireText(input.mutationId, "mutationId"),
+      eventType: requireText(input.eventType, "eventType"),
+      payload: input.payload,
+      payloadFingerprint: requireText(input.payloadFingerprint, "payloadFingerprint"),
+      status: input.status || "PENDING",
+      createdAt: Number.isFinite(Number(input.createdAt)) ? Number(input.createdAt) : Date.now(),
+      updatedAt: Date.now(),
+      attempts: 0,
+      confirmedAt: 0,
+      confirmationSource: "",
+      appointmentId: "",
+      errorMessage: ""
+    };
+    const db = await openDatabase();
+    const tx = db.transaction(STORES.mutations, "readwrite");
+    const request = tx.objectStore(STORES.mutations).add(mutation);
+    let constraintError = null;
+    request.onerror = (event) => {
+      if (request.error && request.error.name === "ConstraintError") {
+        constraintError = request.error;
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    await transactionDone(tx);
+    if (constraintError) return { created: false, existing: await getMutation(mutation.requestId) };
+    return { created: true, existing: mutation };
+  }
+
+  // Update is serialized by IndexedDB and status-gated in the same transaction.
+  // The mutator is synchronous so no transaction is kept alive across awaits.
+  async function updateMutation(requestId, allowedStatuses, mutator) {
+    const key = requireText(requestId, "requestId");
+    if (!Array.isArray(allowedStatuses) || typeof mutator !== "function") throw new TypeError("Mutation update requires allowed statuses and a mutator.");
+    const db = await openDatabase();
+    const tx = db.transaction(STORES.mutations, "readwrite");
+    const store = tx.objectStore(STORES.mutations);
+    let outcome = { updated: false, mutation: null };
+    const request = store.get(key);
+    request.onsuccess = () => {
+      const current = request.result;
+      if (!current || !allowedStatuses.includes(current.status)) {
+        outcome = { updated: false, mutation: current || null };
+        return;
+      }
+      const next = mutator({ ...current });
+      if (!next || next.requestId !== current.requestId || next.mutationId !== current.mutationId) {
+        tx.abort();
+        return;
+      }
+      next.updatedAt = Date.now();
+      store.put(next);
+      outcome = { updated: true, mutation: next };
+    };
+    await transactionDone(tx);
+    return outcome;
   }
 
   async function listPendingMutations(status) {
@@ -303,7 +397,8 @@
     open: openDatabase,
     getRecords, getRecord, putRecord, putRecords, replaceSlice,
     getSyncState, markSliceStale,
-    savePendingMutation, listPendingMutations, deletePendingMutation,
+    savePendingMutation, createMutationIfAbsent, getMutation, updateMutation,
+    listPendingMutations, deletePendingMutation,
     setConfig, getConfig, clearScopeSlice,
     isQuotaError,
     constants: Object.freeze({ DB_NAME, DB_VERSION, STORES, VALID_SCOPES: Array.from(VALID_SCOPES) })

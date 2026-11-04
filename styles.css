@@ -216,3 +216,83 @@ h1 { margin: 0; color: var(--neuron-navy); font-size: clamp(25px, 2.7vw, 33px); 
 .auth-footnote { margin: 20px 0 0; color: #89869f; font-size: 11px; text-align: center; }
 .logout-button { white-space: nowrap; }
 @media (max-width: 560px) { .auth-card { border-radius: 21px; } .topbar-right { gap: 8px; } .profile-copy span { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .logout-button { padding-inline: 11px; } }
+
+/* Phase 5 — OPD booking workspace */
+[hidden] { display: none !important; }
+.opd-workspace { display: grid; gap: 18px; }
+.opd-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.opd-toolbar h2 { margin: 3px 0 8px; color: var(--navy, #25215f); font-size: clamp(1.45rem, 2.5vw, 1.9rem); }
+.opd-form-card, .opd-result-card, .opd-pending-card { padding: clamp(18px, 3vw, 30px); }
+.opd-section-heading { display: flex; align-items: center; gap: 12px; margin: 26px 0 16px; }
+.opd-section-heading:first-child { margin-top: 0; }
+.opd-section-icon { display: grid; place-items: center; flex: 0 0 38px; height: 38px; border-radius: 12px; background: #f1e8ff; color: #6d24d7; font-weight: 800; font-size: 12px; }
+.opd-section-heading h3 { margin: 0 0 4px; color: var(--navy, #25215f); font-size: 1.05rem; }
+.opd-section-heading p { margin: 0; color: #73728b; font-size: .82rem; }
+.opd-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.field-group { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.field-group > label { color: #39375f; font-weight: 650; font-size: .87rem; }
+.field-group > label span { color: #d12d83; }
+.field-group input:not([type="radio"]), .field-group select { width: 100%; min-height: 46px; border: 1px solid #dedbed; border-radius: 12px; padding: 10px 12px; color: #25215f; background: #fff; font: inherit; outline: none; }
+.field-group input:focus, .field-group select:focus { border-color: #8b4be5; box-shadow: 0 0 0 3px rgba(109,36,215,.10); }
+.field-inline { display: flex; gap: 9px; align-items: center; }
+.field-inline > input { flex: 1; min-width: 0; }
+.field-inline > select { flex: 0 0 112px; }
+.radio-inline { min-height: 46px; flex-wrap: wrap; }
+.radio-inline label { display: inline-flex; align-items: center; gap: 7px; color: #4f4c70; font-size: .86rem; }
+.field-hint { color: #7b7892; font-size: .76rem; line-height: 1.45; }
+.opd-form-error { margin-top: 18px; color: #b42318; font-size: .88rem; font-weight: 600; }
+.opd-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.opd-result-card h3, .opd-pending-card h3 { margin: 0 0 8px; color: var(--navy, #25215f); }
+.opd-result-card p, .opd-pending-card p { color: #66647e; line-height: 1.55; }
+.opd-result-card dl { display: grid; grid-template-columns: minmax(120px, .4fr) 1fr; gap: 9px 14px; padding: 15px; background: #f8f6ff; border-radius: 12px; }
+.opd-result-card dt { color: #77738f; font-size: .85rem; }
+.opd-result-card dd { margin: 0; color: #25215f; font-weight: 650; overflow-wrap: anywhere; }
+.opd-result-card.status-confirmed { border: 1px solid #b7e4cc; }
+.opd-result-card.status-unknown, .opd-result-card.status-pending, .opd-result-card.status-in_flight { border: 1px solid #f1d69b; }
+.opd-result-card.status-failed { border: 1px solid #f1b5b5; }
+.opd-pending-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eeebf6; }
+.opd-pending-row span { min-width: 0; overflow-wrap: anywhere; color: #55526f; font-size: .84rem; }
+.opd-pending-row button { flex: 0 0 auto; }
+@media (max-width: 680px) {
+  .opd-toolbar { flex-direction: column; }
+  .opd-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .opd-form-actions { flex-direction: column-reverse; }
+  .opd-form-actions button { width: 100%; }
+  .opd-result-card dl { grid-template-columns: 1fr; gap: 4px; }
+  .opd-result-card dd { margin-bottom: 8px; }
+  .opd-pending-row { align-items: flex-start; flex-direction: column; }
+}
+
+/* Phase 6.1 EEG booking workspace */
+#eegPatientList { display:grid; gap:8px; margin-top:12px; }
+#eegPatientList .opd-update-patient[aria-pressed="true"] { border-color:#6D24D7; background:#F4EEFE; }
+#eegPatientList .eeg-cache-empty { border:1px dashed #c9c4da; border-radius:12px; padding:16px; color:#5f5a73; background:#faf9fd; }
+#eegBookingResult { margin-top:14px; }
+
+/* Phase 6.2: persistent EEG mutation recovery list */
+#eegRecoveryList { display: grid; gap: 12px; }
+#eegRecoveryList .opd-pending-item { border: 1px solid var(--border, #e5e2ee); border-radius: 12px; padding: 14px; background: var(--surface, #fff); }
+#eegRecoveryList .opd-pending-item strong { display: block; color: var(--navy, #25215f); overflow-wrap: anywhere; }
+#eegRecoveryList .opd-pending-item .field-hint { overflow-wrap: anywhere; }
+
+/* Phase 6.3 EEG update controls */
+.eeg-mode-actions { margin: 0 0 1rem; justify-content: flex-start; }
+#eegUpdateWorkspace .opd-update-patient[aria-pressed="true"], #eegUpdateWorkspace .opd-update-patient.selected { border-color: var(--neuron-purple); background: var(--neuron-lavender); }
+#eegUpdateWorkspace .opd-form-error { color: #b42318; }
+
+.eeg-call-pending-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px; margin: 10px 0; border: 1px solid var(--line, #e7e2ef); border-radius: 14px; background: #fff; }
+.eeg-call-pending-item strong { flex: 1 1 240px; color: var(--ink, #241a3b); }
+.eeg-call-pending-item p { flex: 1 1 100%; margin: 0; color: var(--muted, #6f687d); font-size: .88rem; }
+
+/* Phase 6.5: independent Latur EEG Calls Update workspace */
+.eeg-calls-mode-actions { display:flex; gap:10px; margin:0 0 16px; }
+.eeg-calls-mode-actions button[aria-pressed="true"] { background:var(--neuron-purple,#6D24D7); color:#fff; border-color:var(--neuron-purple,#6D24D7); }
+#eegCallsLaturUpdatePatientList { display:grid; gap:8px; margin:12px 0; }
+#eegCallsLaturUpdatePatientList .opd-update-patient { display:flex; flex-direction:column; align-items:flex-start; gap:5px; width:100%; padding:13px 15px; border:1px solid #e4dfef; border-radius:13px; background:#fff; color:var(--navy,#25215f); text-align:left; cursor:pointer; font:inherit; }
+#eegCallsLaturUpdatePatientList .opd-update-patient strong { font-weight:750; }
+#eegCallsLaturUpdatePatientList .opd-update-patient span { color:var(--muted,#6f687d); font-size:.83rem; overflow-wrap:anywhere; }
+#eegCallsLaturUpdatePatientList .opd-update-patient[aria-pressed="true"] { border-color:var(--neuron-purple,#6D24D7); background:var(--neuron-lavender,#F4EEFE); }
+#eegCallsLaturUpdateWorkspace .opd-form-grid-full { grid-column:1/-1; }
+#eegCallsLaturUpdateWorkspace textarea { width:100%; border:1px solid #dedbed; border-radius:12px; padding:10px 12px; color:#25215f; background:#fff; font:inherit; resize:vertical; }
+#eegCallsLaturUpdateWorkspace .opd-pending-card { margin-top:18px; padding:14px; border:1px solid var(--line,#e7e2ef); border-radius:16px; background:#faf9fd; }
+@media(max-width:680px){.eeg-calls-mode-actions{display:grid;grid-template-columns:1fr 1fr;} }

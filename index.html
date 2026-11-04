@@ -53,6 +53,9 @@
         <button class="nav-item" data-view="eeg" type="button">
           <span class="nav-icon" aria-hidden="true">∿</span><span>EEG</span>
         </button>
+        <button class="nav-item" data-view="eegCallsLatur" type="button" id="eegCallsLaturNav">
+          <span class="nav-icon" aria-hidden="true">☎</span><span>Latur EEG Calls</span>
+        </button>
         <button class="nav-item" data-view="prebooking" type="button">
           <span class="nav-icon" aria-hidden="true">◷</span><span>PreBooking</span>
         </button>
@@ -99,6 +102,7 @@
       </header>
 
       <section class="page-content" id="pageContent" tabindex="-1">
+        <div id="dashboardContent">
         <div class="welcome-row">
           <div>
             <p class="eyebrow">NEURON HOSPITAL · LATUR</p>
@@ -174,11 +178,176 @@
         </section>
 
         <footer class="page-footer"><span>NEURON Hospital · Latur</span><span>Phase 2 · Application shell and session</span></footer>
+        </div>
+
+        <section id="opdContent" class="opd-workspace" hidden aria-labelledby="opdWorkspaceTitle">
+          <div class="opd-toolbar">
+            <div><p class="eyebrow">OPD · APPOINTMENT ENTRY</p><h2 id="opdWorkspaceTitle">Book OPD Appointment</h2><p class="page-subtitle">Enter patient and payment details. Appointment serial allocation and final confirmation come from the NEURON backend.</p></div>
+            <div class="opd-toolbar-actions"><button class="secondary-button" id="opdShowUpdateButton" type="button">Update existing OPD</button><button class="secondary-button" id="opdBackButton" type="button">Back to dashboard</button></div>
+          </div>
+          <div id="opdBookingPanel" class="surface-card opd-form-card">
+            <form id="opdBookingForm" novalidate>
+              <div class="opd-section-heading"><span class="opd-section-icon">01</span><div><h3>Patient details</h3><p>Use English text as required by the current booking workflow.</p></div></div>
+              <div class="opd-form-grid">
+                <div class="field-group"><label for="opdPatientType">Patient type <span>*</span></label><select id="opdPatientType" required><option value="New">New</option><option value="Follow-up">Follow-up</option></select><small id="opdFollowupNote" class="field-hint" hidden>Follow-up patient lookup from the Follow-up cache is part of the Follow-up phase. For now, enter the patient details manually.</small></div>
+                <div class="field-group"><label for="opdPatientName">Patient name <span>*</span></label><input id="opdPatientName" autocomplete="off" required placeholder="Patient's full name" maxlength="100"></div>
+                <div class="field-group"><label for="opdAge">Age <span>*</span></label><div class="field-inline"><input id="opdAge" inputmode="decimal" required placeholder="Age" maxlength="5"><select id="opdAgeUnit" aria-label="Age unit"><option value="years">Years</option><option value="months">Months</option><option value="days">Days</option></select></div></div>
+                <div class="field-group"><label for="opdAddress">Address <span>*</span></label><input id="opdAddress" required placeholder="Patient address" maxlength="180"></div>
+                <div class="field-group"><label for="opdWhatsapp">WhatsApp number <span>*</span></label><input id="opdWhatsapp" inputmode="numeric" autocomplete="off" required maxlength="10" placeholder="10 digit mobile number"></div>
+                <div class="field-group" id="opdVerifyGroup"><label for="opdVerifyWhatsapp">Verify WhatsApp number <span>*</span></label><input id="opdVerifyWhatsapp" inputmode="numeric" autocomplete="off" required maxlength="10" placeholder="Re-enter same number"></div>
+                <div class="field-group" id="opdReferralModeGroup"><label>Referral source <span>*</span></label><div class="field-inline radio-inline"><label><input type="radio" name="opdReferralMode" value="doctor" checked> Doctor / Hospital</label><label><input type="radio" name="opdReferralMode" value="self"> Direct / Self</label></div></div>
+                <div class="field-group" id="opdReferredByGroup"><label for="opdReferredBy">Doctor / Hospital name <span>*</span></label><input id="opdReferredBy" required placeholder="Referred by"></div>
+              </div>
+
+              <div class="opd-section-heading"><span class="opd-section-icon">02</span><div><h3>Visit information</h3><p>OPD booking is currently available for today's date only.</p></div></div>
+              <div class="opd-form-grid">
+                <div class="field-group"><label for="opdVisitingCity">Visiting city <span>*</span></label><select id="opdVisitingCity" required></select><small id="opdCityHint" class="field-hint"></small></div>
+                <div class="field-group"><label for="opdAppointmentDate">Appointment date <span>*</span></label><input id="opdAppointmentDate" type="date" required readonly><small class="field-hint">Date is set to today in India time (Asia/Kolkata).</small></div>
+                <div class="field-group"><label for="opdNextFollowupCity">Next Follow-up City <span>*</span></label><select id="opdNextFollowupCity" required></select><small id="opdNextCityHint" class="field-hint"></small></div>
+              </div>
+
+              <div class="opd-section-heading"><span class="opd-section-icon">03</span><div><h3>OPD payment</h3><p>Current app validation limits the total payment to ₹2,000.</p></div></div>
+              <div class="opd-form-grid">
+                <div class="field-group"><label for="opdPaymentMode">Payment mode <span>*</span></label><select id="opdPaymentMode"><option value="Cash">Cash</option><option value="Online">Online</option><option value="Split">Split</option></select></div>
+                <div class="field-group" id="opdCashGroup"><label for="opdCashPaid">Cash paid (₹) <span>*</span></label><input id="opdCashPaid" inputmode="numeric" value="500" maxlength="4"></div>
+                <div class="field-group" id="opdOnlineGroup" hidden><label for="opdOnlinePaid">Online paid (₹) <span>*</span></label><input id="opdOnlinePaid" inputmode="numeric" maxlength="4" placeholder="Amount"></div>
+              </div>
+              <div class="opd-form-error" id="opdFormError" role="alert" aria-live="polite"></div>
+              <div class="opd-form-actions"><button class="secondary-button" id="opdResetButton" type="button">Reset form</button><button class="primary-button" id="opdSubmitButton" type="submit">Submit OPD booking <span aria-hidden="true">→</span></button></div>
+            </form>
+          </div>
+          <section id="opdUpdateWorkspace" class="surface-card opd-update-card" hidden aria-labelledby="opdUpdateTitle">
+            <div class="opd-update-heading"><div><h3 id="opdUpdateTitle">Update existing OPD</h3><p>Load today's OPD cache for the selected city, choose the exact appointment, and edit its details.</p></div><button class="secondary-button" id="opdBackToBookingButton" type="button">Back to booking</button></div>
+            <div class="opd-update-controls"><div class="field-group"><label for="opdUpdateCity">City</label><select id="opdUpdateCity"></select></div><button class="secondary-button" id="opdUpdateRefreshButton" type="button">Refresh patients</button></div>
+            <p id="opdUpdateMessage" class="field-hint" role="status" aria-live="polite"></p>
+            <div id="opdUpdatePatientList" class="opd-update-patient-list"></div>
+            <form id="opdUpdateForm" class="opd-update-form" novalidate hidden>
+              <h4 id="opdUpdateSelectedHeading">Edit selected patient</h4>
+              <div class="opd-form-grid">
+                <div class="field-group"><label for="opdUpdateName">Patient name *</label><input id="opdUpdateName" required></div>
+                <div class="field-group"><label for="opdUpdateAge">Age *</label><div class="field-inline"><input id="opdUpdateAge" inputmode="decimal" required><select id="opdUpdateAgeUnit"><option value="years">Years</option><option value="months">Months</option><option value="days">Days</option></select></div></div>
+                <div class="field-group"><label for="opdUpdateAddress">Address *</label><input id="opdUpdateAddress" required></div>
+                <div class="field-group"><label for="opdUpdateWhatsapp">WhatsApp number *</label><input id="opdUpdateWhatsapp" inputmode="numeric" maxlength="10" required></div>
+                <div class="field-group"><label for="opdUpdateReferredBy">Referred by</label><input id="opdUpdateReferredBy"></div>
+                <div class="field-group"><label for="opdUpdateNextCity">Next Follow-up City *</label><select id="opdUpdateNextCity"></select></div>
+                <div class="field-group"><label for="opdUpdateCharges">OPD charges (₹) *</label><input id="opdUpdateCharges" inputmode="numeric" required></div>
+                <div class="field-group"><label for="opdUpdatePaymentMode">Payment mode *</label><select id="opdUpdatePaymentMode"><option value="Cash">Cash</option><option value="Online">Online</option><option value="Split">Split</option></select></div>
+                <div class="field-group" id="opdUpdateCashGroup"><label for="opdUpdateCash">Cash paid (₹)</label><input id="opdUpdateCash" inputmode="numeric"></div>
+                <div class="field-group" id="opdUpdateOnlineGroup"><label for="opdUpdateOnline">Online paid (₹)</label><input id="opdUpdateOnline" inputmode="numeric"></div>
+              </div>
+              <p id="opdUpdateFormError" class="opd-form-error" role="alert"></p>
+              <div class="opd-form-actions"><button class="primary-button" id="opdUpdateSubmitButton" type="submit">Save OPD update</button></div>
+            </form>
+            <div id="opdUpdateResult" class="opd-result-card" hidden aria-live="polite"></div>
+          </section>
+          <div id="opdResultPanel" class="surface-card opd-result-card" hidden aria-live="polite"></div>
+          <div id="opdPendingPanel" class="surface-card opd-pending-card" hidden aria-live="polite"></div>
+        </section>
+
+        <section id="eegContent" class="opd-workspace" hidden aria-labelledby="eegWorkspaceTitle">
+          <div class="opd-toolbar"><div><p class="eyebrow">EEG · BOOKING & UPDATE</p><h2 id="eegWorkspaceTitle">EEG Workspace</h2><p class="page-subtitle">Book an EEG from the local OPD cache or update an existing EEG booking.</p></div><div class="opd-toolbar-actions"><button class="secondary-button" id="eegBackButton" type="button">Back to dashboard</button></div></div>
+          <div class="opd-form-actions eeg-mode-actions"><button class="primary-button" id="eegShowBookingButton" type="button">EEG Booking</button><button class="secondary-button" id="eegShowUpdateButton" type="button">Update EEG</button></div>
+          <div id="eegBookingPanel" class="surface-card opd-form-card">
+            <div class="opd-form-grid">
+              <div class="field-group"><label for="eegCity">City</label><select id="eegCity"></select></div>
+              <div class="field-group"><label for="eegPatientSearch">Search cached patients</label><input id="eegPatientSearch" autocomplete="off" placeholder="Name, appointment ID, WhatsApp"></div>
+              <div class="field-group"><label for="eegCharges">EEG Charges (₹)</label><input id="eegCharges" inputmode="decimal" value="1100" maxlength="8"></div>
+              <div class="field-group"><label for="eegPaymentMode">Payment mode</label><select id="eegPaymentMode"><option>Cash</option><option>Online</option><option>Split</option></select></div>
+              <div class="field-group" id="eegCashGroup"><label for="eegCash">Cash paid (₹)</label><input id="eegCash" inputmode="decimal" value="1100" maxlength="8"></div>
+              <div class="field-group" id="eegOnlineGroup" hidden><label for="eegOnline">Online paid (₹)</label><input id="eegOnline" inputmode="decimal" maxlength="8"></div>
+            </div>
+            <p id="eegCacheStatus" class="field-hint" role="status" aria-live="polite">Loading locally cached OPD patients…</p>
+            <div id="eegPatientList" class="opd-update-patient-list"></div>
+            <p id="eegSelectedPatient" class="field-hint"></p>
+            <p id="eegBookingError" class="opd-form-error" role="alert" aria-live="polite"></p>
+            <div class="opd-form-actions"><button class="secondary-button" id="eegRefreshButton" type="button">Reload local cache</button><button class="primary-button" id="eegSubmitButton" type="button" disabled>Book EEG</button></div>
+            <div id="eegBookingResult" class="opd-result-card" hidden aria-live="polite"></div>
+            <section id="eegRecoverySection" class="opd-pending-card" aria-labelledby="eegRecoveryTitle">
+              <div class="opd-toolbar"><div><h3 id="eegRecoveryTitle">Unresolved EEG booking requests</h3><p class="page-subtitle">Review uncertain submissions and retry only with their original request identity.</p></div><button class="secondary-button" id="eegRecoveryRefresh" type="button">Refresh status</button></div>
+              <div id="eegRecoveryList" aria-live="polite"><p class="field-hint">Checking saved requests…</p></div>
+            </section>
+          </div>
+          <section id="eegUpdateWorkspace" class="surface-card opd-update-card" hidden aria-labelledby="eegUpdateTitle">
+            <div class="opd-update-heading"><div><h3 id="eegUpdateTitle">Update existing EEG booking</h3><p>Load EEG-booked patients for a city, select the correct appointment, and edit charges/payment details.</p></div></div>
+            <div class="opd-update-controls"><div class="field-group"><label for="eegUpdateCity">City</label><select id="eegUpdateCity"></select></div><button class="secondary-button" id="eegUpdateRefreshButton" type="button">Refresh patients</button></div>
+            <p id="eegUpdateMessage" class="field-hint" role="status" aria-live="polite"></p><div id="eegUpdatePatientList" class="opd-update-patient-list"></div>
+            <form id="eegUpdateForm" class="opd-update-form" novalidate hidden>
+              <h4 id="eegUpdateSelectedHeading">Edit selected EEG booking</h4>
+              <div class="opd-form-grid">
+                <div class="field-group"><label for="eegUpdateCharges">EEG charges (₹) *</label><input id="eegUpdateCharges" inputmode="decimal" required></div>
+                <div class="field-group"><label for="eegUpdatePaymentMode">Payment mode *</label><select id="eegUpdatePaymentMode"><option value="Cash">Cash</option><option value="Online">Online</option><option value="Split">Split</option></select></div>
+                <div class="field-group" id="eegUpdateCashGroup"><label for="eegUpdateCash">Cash paid (₹)</label><input id="eegUpdateCash" inputmode="decimal"></div>
+                <div class="field-group" id="eegUpdateOnlineGroup"><label for="eegUpdateOnline">Online paid (₹)</label><input id="eegUpdateOnline" inputmode="decimal"></div>
+              </div>
+              <p id="eegUpdateFormError" class="opd-form-error" role="alert" aria-live="polite"></p><div class="opd-form-actions"><button class="primary-button" id="eegUpdateSubmitButton" type="submit">Save EEG update</button></div>
+            </form>
+            <div id="eegUpdateResult" class="opd-result-card" hidden aria-live="polite"></div>
+          </section>
+        </section>
+
+        <section id="eegCallsLaturContent" class="opd-workspace" hidden aria-labelledby="eegCallsLaturTitle">
+          <div class="opd-toolbar"><div><p class="eyebrow">EEG CALLS · LATUR</p><h2 id="eegCallsLaturTitle">Latur EEG Calls</h2><p class="page-subtitle">Register an EEG Call appointment using the existing NEURON booking workflow.</p></div><div class="opd-toolbar-actions"><button class="secondary-button" id="eegCallsLaturBackButton" type="button">Back to dashboard</button></div></div>
+          <div class="eeg-calls-mode-actions" role="group" aria-label="Latur EEG Calls section">
+            <button class="primary-button" id="eegCallsLaturBookingTab" type="button" aria-pressed="true">Booking</button>
+            <button class="secondary-button" id="eegCallsLaturUpdateTab" type="button" aria-pressed="false">Update existing call</button>
+          </div>
+          <div id="eegCallsLaturBookingWorkspace">
+          <section class="surface-card opd-form-card" aria-labelledby="eegCallsLaturFormTitle">
+            <div class="opd-update-heading"><div><h3 id="eegCallsLaturFormTitle">EEG Call Booking</h3><p>Enter patient details, referral, technician, and payment received.</p></div></div>
+            <form id="eegCallsLaturForm" novalidate>
+              <div class="opd-form-grid">
+                <div class="field-group"><label for="eegCallsLaturName">Patient name *</label><input id="eegCallsLaturName" autocomplete="name" maxlength="120" required></div>
+                <div class="field-group"><label for="eegCallsLaturAge">Age *</label><input id="eegCallsLaturAge" inputmode="decimal" maxlength="8" required></div>
+                <div class="field-group"><label for="eegCallsLaturAgeUnit">Age unit *</label><select id="eegCallsLaturAgeUnit"><option value="years">Years</option><option value="months">Months</option><option value="days">Days</option></select></div>
+                <div class="field-group"><label for="eegCallsLaturWhatsapp">WhatsApp number *</label><input id="eegCallsLaturWhatsapp" inputmode="numeric" maxlength="10" autocomplete="tel" required></div>
+                <div class="field-group"><label for="eegCallsLaturWhatsappVerify">Verify WhatsApp number *</label><input id="eegCallsLaturWhatsappVerify" inputmode="numeric" maxlength="10" required></div>
+                <div class="field-group"><label for="eegCallsLaturReferredBy">Referred by Dr / Hospital *</label><input id="eegCallsLaturReferredBy" maxlength="120" required></div>
+                <div class="field-group"><label for="eegCallsLaturTechnician">EEG Technician *</label><input id="eegCallsLaturTechnician" value="Sanket Katke" maxlength="120" required></div>
+                <div class="field-group"><label for="eegCallsLaturPayment">Payment received (₹) *</label><input id="eegCallsLaturPayment" inputmode="numeric" value="1000" maxlength="4" required></div>
+                <div class="field-group opd-form-grid-full"><label for="eegCallsLaturAddress">Patient address *</label><textarea id="eegCallsLaturAddress" rows="2" maxlength="300" required></textarea></div>
+              </div>
+              <p id="eegCallsLaturError" class="opd-form-error" role="alert" aria-live="polite"></p>
+              <div class="opd-form-actions"><button class="secondary-button" id="eegCallsLaturResetButton" type="button">Clear form</button><button class="primary-button" id="eegCallsLaturSubmitButton" type="submit">Book EEG Call Appointment</button></div>
+            </form>
+            <div id="eegCallsLaturResult" class="opd-result-card" hidden aria-live="polite"></div>
+          </section>
+          <section class="surface-card opd-pending-card" aria-labelledby="eegCallsLaturPendingTitle"><div class="opd-toolbar"><div><h3 id="eegCallsLaturPendingTitle">Unresolved Latur EEG Calls requests</h3><p class="page-subtitle">Check or retry only the original saved request. Never create a new identity for an uncertain result.</p></div><button class="secondary-button" id="eegCallsLaturPendingRefresh" type="button">Refresh</button></div><div id="eegCallsLaturPendingList" aria-live="polite"><p class="field-hint">Loading saved requests…</p></div></section>
+          </div>
+          <section id="eegCallsLaturUpdateWorkspace" class="surface-card opd-update-card" hidden aria-labelledby="eegCallsLaturUpdateTitle">
+            <div class="opd-update-heading"><div><h3 id="eegCallsLaturUpdateTitle">Update existing Latur EEG Call</h3><p>Refresh the authoritative Latur EEG Calls records, select an appointment, and edit its patient/payment details.</p></div></div>
+            <div class="opd-update-controls"><div class="field-group"><label for="eegCallsLaturUpdateSearch">Search patient / appointment</label><input id="eegCallsLaturUpdateSearch" type="search" placeholder="Name, WhatsApp, appointment ID" autocomplete="off"></div><button class="secondary-button" id="eegCallsLaturUpdateRefresh" type="button">Refresh records</button></div>
+            <p id="eegCallsLaturUpdateMessage" class="field-hint" role="status" aria-live="polite">Records have not been loaded yet.</p>
+            <div id="eegCallsLaturUpdatePatientList" class="opd-update-patient-list" aria-live="polite"></div>
+            <form id="eegCallsLaturUpdateForm" class="opd-update-form" novalidate hidden>
+              <h4 id="eegCallsLaturUpdateSelectedHeading">Edit selected EEG Call</h4>
+              <div class="opd-form-grid">
+                <div class="field-group"><label for="eegCallsLaturUpdateName">Patient name *</label><input id="eegCallsLaturUpdateName" maxlength="120" required></div>
+                <div class="field-group"><label for="eegCallsLaturUpdateAge">Age *</label><input id="eegCallsLaturUpdateAge" inputmode="decimal" maxlength="8" required></div>
+                <div class="field-group"><label for="eegCallsLaturUpdateAgeUnit">Age unit *</label><select id="eegCallsLaturUpdateAgeUnit"><option value="years">Years</option><option value="months">Months</option><option value="days">Days</option></select></div>
+                <div class="field-group"><label for="eegCallsLaturUpdateWhatsapp">WhatsApp number *</label><input id="eegCallsLaturUpdateWhatsapp" inputmode="numeric" maxlength="10" required></div>
+                <div class="field-group"><label for="eegCallsLaturUpdateReferral">Referred by Dr / Hospital *</label><input id="eegCallsLaturUpdateReferral" maxlength="120" required></div>
+                <div class="field-group"><label for="eegCallsLaturUpdatePayment">Payment received (₹) *</label><input id="eegCallsLaturUpdatePayment" inputmode="numeric" maxlength="8" required></div>
+                <div class="field-group opd-form-grid-full"><label for="eegCallsLaturUpdateAddress">Patient address *</label><textarea id="eegCallsLaturUpdateAddress" rows="2" maxlength="300" required></textarea></div>
+              </div>
+              <p id="eegCallsLaturUpdateError" class="opd-form-error" role="alert" aria-live="polite"></p>
+              <div class="opd-form-actions"><button class="secondary-button" id="eegCallsLaturUpdateCancel" type="button">Cancel</button><button class="primary-button" id="eegCallsLaturUpdateSubmit" type="submit">Save EEG Call update</button></div>
+            </form>
+            <section class="opd-pending-card" aria-labelledby="eegCallsLaturUpdatePendingTitle"><div class="opd-toolbar"><div><h4 id="eegCallsLaturUpdatePendingTitle">Unresolved update requests</h4><p class="page-subtitle">Resolve the saved mutation before creating another update for the same appointment.</p></div><button class="secondary-button" id="eegCallsLaturUpdatePendingRefresh" type="button">Refresh</button></div><div id="eegCallsLaturUpdatePendingList" aria-live="polite"></div></section>
+          </section>
+        </section>
+
       </section>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="storage.js" defer></script>
+  <script src="mutation.js" defer></script>
+  <script src="opd-booking.js" defer></script>
+  <script src="opd-update.js" defer></script>
+  <script src="eeg-booking.js" defer></script>
+  <script src="eeg-update.js" defer></script>
+  <script src="eeg-calls-latur.js" defer></script>
+  <script src="eeg-calls-latur-update.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>
