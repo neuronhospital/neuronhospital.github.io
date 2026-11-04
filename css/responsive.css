@@ -94,3 +94,74 @@ input[type="file"] { min-height: var(--neuron-touch-target); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
 }
+
+/* NEURON app-aligned home dashboard — Phase 1 (frontend only) */
+:root{--neuron-navy:#171d50;--neuron-purple:#7100bd;--neuron-pink:#ec0060;--neuron-lilac:#eee7ff;--neuron-softpink:#ffe8f0;--neuron-softblue:#e2f2ff;--neuron-softorange:#fff0d5}
+.site-header{background:linear-gradient(110deg,#7100bd 0%,#a9009d 52%,#ed0060 100%);border:0;color:#fff}
+.site-header .header-inner{padding:14px 0}
+.site-header .brand-title{color:#fff;font-size:clamp(16px,3vw,24px);letter-spacing:.15px;line-height:1.2}
+.site-header .brand-sub{color:rgba(255,255,255,.88);font-size:clamp(11px,2vw,15px);margin-top:3px}
+.site-header .brand-logo{width:54px;height:54px;object-fit:contain;background:#fff;border-radius:16px;padding:5px}
+.site-header .header-home img{width:28px;height:28px;filter:brightness(0) invert(1)}
+body[data-title="Home"] main{background:#f6f7fc;padding-top:18px}
+body[data-title="Home"] main>.container{max-width:1180px}
+body[data-title="Home"] .doctor-hero{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:center;text-align:left;background:#fff5fa;border:0;border-radius:34px;box-shadow:none;padding:20px 24px;margin:0 0 16px;position:relative;overflow:hidden}
+body[data-title="Home"] .doctor-hero:after{content:"";position:absolute;z-index:0;left:-5%;right:-5%;bottom:-22px;height:76px;background:#f8d3e9;border-radius:50% 50% 0 0;opacity:.85}
+body[data-title="Home"] .doctor-logo-wrap,body[data-title="Home"] .doctor-info{position:relative;z-index:1;min-width:0}
+body[data-title="Home"] .hospital-logo-circle{width:140px;height:140px;max-width:100%;border:8px solid #fbe0ef;box-shadow:none;background:white;padding:5px}
+body[data-title="Home"] .doctor-info{border-left:2px solid #dfc9db;padding-left:20px}
+body[data-title="Home"] .doctor-info h1{font-size:clamp(19px,3vw,30px);font-weight:850;line-height:1.2;letter-spacing:.2px;color:var(--neuron-navy);margin:0 0 5px}
+body[data-title="Home"] .doctor-info .speciality{font-size:clamp(14px,2.1vw,20px);color:#242957;margin:0 0 10px}
+body[data-title="Home"] .doctor-tagline{display:inline-block;background:#f7c5e2;border-radius:28px;padding:9px 18px;color:#171d50;font-weight:800;font-size:clamp(13px,1.8vw,17px);margin:0}
+body[data-title="Home"] .hospital-info-card{background:#f8f3fc;border:0;border-radius:28px;padding:22px 26px;margin:0 0 18px;color:#36384f}
+body[data-title="Home"] .hospital-info-card h2{font-size:clamp(17px,2.5vw,24px);font-weight:800;color:var(--neuron-navy);margin:0 0 12px}
+body[data-title="Home"] .hospital-info-card p{font-size:clamp(14px,2vw,19px);margin:8px 0}
+body[data-title="Home"] .hospital-info-card .hospital-closed-days{color:#b42318;font-size:14px;margin-top:15px}
+body[data-title="Home"] .hospital-contact-line{margin-top:18px!important}
+body[data-title="Home"] .hospital-contact-line a{color:#7021a2;font-weight:850;text-decoration:underline;text-underline-offset:3px}
+body[data-title="Home"] .app-dashboard-wide{margin:0 0 14px;border-radius:28px;overflow:hidden}
+body[data-title="Home"] .app-dashboard-wide a{display:flex;align-items:center;gap:20px;min-height:104px;padding:16px 24px;text-decoration:none;color:var(--neuron-navy);font-size:clamp(17px,2.7vw,27px);font-weight:750}
+body[data-title="Home"] .app-dashboard-wide a:before{content:"";height:70px;width:1px;background:#c8b5e5;order:2;margin-left:4px}
+body[data-title="Home"] .app-dashboard-wide a .dashboard-icon{width:76px;height:76px;display:grid;place-items:center;border-radius:50%;font-size:36px;font-weight:800;flex:0 0 76px;order:1}
+body[data-title="Home"] .app-dashboard-wide a span:last-child{order:3}
+body[data-title="Home"] .app-dashboard-wide{background:var(--neuron-lilac)}
+body[data-title="Home"] .dashboard-purple{background:#e1d2ff;color:#7100bd}
+body[data-title="Home"] .pending-dashboard-entry{background:var(--neuron-softpink)}
+body[data-title="Home"] .dashboard-pink{background:#ffd4e3;color:#ec0060}
+body[data-title="Home"] .app-dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+body[data-title="Home"] .app-dashboard-grid .portal-section{border:0;border-radius:30px;box-shadow:none;overflow:hidden;padding:20px 12px 16px;min-width:0}
+body[data-title="Home"] .app-dashboard-grid .portal-section-opd{background:var(--neuron-lilac)}
+body[data-title="Home"] .app-dashboard-grid .portal-section-eeg{background:var(--neuron-softblue)}
+body[data-title="Home"] .app-dashboard-grid .portal-section-calls{background:var(--neuron-softorange)}
+body[data-title="Home"] .app-dashboard-grid .portal-section-admin{background:var(--neuron-softpink)}
+body[data-title="Home"] .app-dashboard-grid .portal-section-title{margin:0 auto 12px;max-width:100%;padding:7px 14px;border-radius:16px;background:transparent!important;color:var(--neuron-navy)!important;font-size:clamp(17px,2.2vw,22px);font-weight:800}
+body[data-title="Home"] .app-dashboard-grid .portal-actions{display:grid;grid-template-columns:1fr;gap:8px;min-height:0;margin:0}
+body[data-title="Home"] .app-dashboard-grid .portal-action{background:rgba(255,255,255,.88);border:0;border-radius:16px;justify-content:flex-start;padding:12px;min-height:60px;gap:10px;font-size:clamp(13px,1.8vw,16px);box-shadow:0 3px 12px rgba(27,30,75,.04)}
+body[data-title="Home"] .app-dashboard-grid .portal-action strong{white-space:normal}
+body[data-title="Home"] .app-dashboard-grid .portal-action .portal-icon{width:32px;height:32px;flex-basis:32px}
+body[data-title="Home"] .app-dashboard-grid .portal-action:active{background:#fff}
+/* Mobile app-style persistent bottom navigation */
+@media(max-width:699px){
+ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+ body[data-title="Home"] .doctor-hero{grid-template-columns:100px minmax(0,1fr);gap:12px;padding:16px;border-radius:28px}
+ body[data-title="Home"] .hospital-logo-circle{width:100px;height:100px;border-width:6px}
+ body[data-title="Home"] .doctor-info{padding-left:12px}
+ body[data-title="Home"] .doctor-tagline{padding:7px 10px}
+ body[data-title="Home"] .hospital-info-card{padding:18px;border-radius:24px}
+ body[data-title="Home"] .app-dashboard-wide a{min-height:84px;padding:12px 16px;gap:12px}
+ body[data-title="Home"] .app-dashboard-wide a .dashboard-icon{width:58px;height:58px;flex-basis:58px;font-size:28px}
+ body[data-title="Home"] .app-dashboard-wide a:before{height:56px}
+ body[data-title="Home"] .app-dashboard-grid .portal-section{border-radius:25px;padding:15px 9px 12px}
+ body[data-title="Home"] .app-dashboard-grid .portal-actions{grid-template-columns:1fr}
+ .footer{position:fixed;left:0;right:0;bottom:0;z-index:50;border-top:1px solid #e4e3ed;background:#fff;padding:7px 0 calc(7px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 18px rgba(25,25,60,.06)}
+ .footer>.container{width:100%;padding:0 10px}
+ .footer-nav{grid-template-columns:repeat(4,minmax(0,1fr));border:0;border-radius:0;gap:4px;background:transparent;overflow:visible}
+ .footer-nav a,.footer-nav button{min-height:58px;border:0!important;border-radius:18px;background:transparent;color:#4a4a56;padding:5px 2px;font-size:11px;font-weight:650;gap:3px}
+ .footer-nav .nav-icon{width:24px;height:24px;object-fit:contain}
+ .footer-nav .footer-eeg-link,.footer-nav .footer-update-trigger,.footer-nav .footer-refund-link{display:none!important}
+ .footer-nav .footer-home-link{order:1}.footer-nav .footer-opd-link{order:2}.footer-nav .footer-today-opd-link{display:flex!important;order:3}.footer-nav .footer-stats-link{order:4}
+ .footer-nav .is-current{background:#eee5fa;color:#6e169e;box-shadow:none}
+ .footer-contact{display:none}
+}
+@media(min-width:700px){body[data-title="Home"] .app-dashboard-grid .portal-actions{grid-template-columns:1fr 1fr}body[data-title="Home"] .app-dashboard-grid .portal-action{justify-content:center}}
+@media(max-width:380px){body[data-title="Home"] .doctor-hero{grid-template-columns:82px minmax(0,1fr);gap:9px;padding:12px}body[data-title="Home"] .hospital-logo-circle{width:82px;height:82px}body[data-title="Home"] .doctor-info h1{font-size:17px}body[data-title="Home"] .doctor-info .speciality{font-size:12px}body[data-title="Home"] .doctor-tagline{font-size:11px}}
