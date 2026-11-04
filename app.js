@@ -316,7 +316,7 @@ async function refreshAppConfigurationSummary() {
   const requestId = "CFG_" + makeRequestId() + makeRequestId();
   try {
     const request = () => fetchWithTimeout(BACKEND_URL, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8", "Cache-Control": "no-cache" },
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "getAppConfiguration", requestId, username: activeUser.username,
         password: activeUser.password, installationId: getInstallationId(), sessionId: activeUser.sessionId || "" }),
       cache: "no-store", redirect: "follow"
@@ -908,7 +908,7 @@ async function authenticate(username, password) {
   try {
     response = await fetchWithTimeout(BACKEND_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8", "Cache-Control": "no-cache" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
       cache: "no-store",
       redirect: "follow"
